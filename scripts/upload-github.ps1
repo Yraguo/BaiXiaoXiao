@@ -77,14 +77,26 @@ function Stop-WithError($msg, $hint) {
 function Invoke-GitCapture {
     param([string[]]$GitArgs)
     $prev = $ErrorActionPreference
-    # SilentlyContinue 而不是 Continue：stderr 转成的 ErrorRecord 不该刷屏，
-    # 成败统一靠 $LASTEXITCODE 判断
-    $ErrorActionPreference = 'SilentlyContinue'
+    # 必须是 Continue：用 SilentlyContinue 会把 stderr 连同内容一起丢掉，
+    # 失败时连原因都看不到（踩过）。噪音交给 Show-GitLog 过滤。
+    $ErrorActionPreference = 'Continue'
     try {
         $log = (& git @GitArgs 2>&1 | Out-String)
         return @{ Ok = ($LASTEXITCODE -eq 0); Log = $log }
     } finally {
         $ErrorActionPreference = $prev
+    }
+}
+
+# 打印 git 输出。PowerShell 会把原生命令的 stderr 包成 NativeCommandError 记录，
+# 只留 git 的原文，包装行去掉。
+function Show-GitLog($log) {
+    foreach ($line in ($log -split "`r?`n")) {
+        $l = $line.Trim()
+        if (-not $l) { continue }
+        if ($l -match '^git\.exe\s*:\s*(.*)$') { $l = $Matches[1] }
+        elseif ($l -match '^(所在位置|\+|CategoryInfo|FullyQualifiedErrorId|RemoteException)') { continue }
+        Write-Host ('        ' + $l) -ForegroundColor DarkGray
     }
 }
 
@@ -483,9 +495,7 @@ try {
 
     function Invoke-Push {
         $r = Invoke-GitCapture -GitArgs $pushArgs
-        foreach ($line in ($r.Log -split "`r?`n")) {
-            if ($line.Trim()) { Write-Host ('        ' + $line.Trim()) -ForegroundColor DarkGray }
-        }
+        Show-GitLog $r.Log
         return $r
     }
 
@@ -496,16 +506,15 @@ try {
     # 首推会被拒（non-fast-forward）。合并一次再推，不用让用户去仓库页删重建。
     # -X ours：远程那个 Initial commit 里通常只有 GitHub 自动生成的 README 和
     # .gitignore，会和本地同名文件 add/add 冲突。冲突按本地版本解决（本地是完整项目），
-    # 远程独有的文件（如 README.md）仍会正常保留。
+    # 远程独有的文件（如 README.md / LICENSE）仍会正常保留。
     if (-not $result.Ok -and $result.Log -match 'non-fast-forward|fetch first|\[rejected\]') {
         Write-Warn2 '远程仓库已有内容（多半是建仓库时勾了 README）'
         Write-Info '先把远程内容合并进来，再推一次…'
         $pull = Invoke-GitCapture -GitArgs @('pull', '--no-rebase', '--allow-unrelated-histories', '-X', 'ours', 'origin', $Branch)
-        foreach ($line in ($pull.Log -split "`r?`n")) {
-            if ($line.Trim()) { Write-Host ('        ' + $line.Trim()) -ForegroundColor DarkGray }
-        }
+        Show-GitLog $pull.Log
         if (-not $pull.Ok) {
-            Write-Warn2 '自动合并没成功，请手动处理（git status 看冲突文件）'
+            Write-Warn2 '自动合并没成功，仓库停在冲突状态'
+            Write-Info '处理办法：git status 看冲突文件 → 改好后 git add . → git commit，再重跑本脚本'
         }
         $result = Invoke-Push
     }
