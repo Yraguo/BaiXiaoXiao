@@ -71,6 +71,21 @@ function Stop-WithError($msg, $hint) {
     exit 1
 }
 
+# git 把进度写到 stderr。在 $ErrorActionPreference='Stop' 下，`2>&1` 会把 stderr 变成
+# ErrorRecord 直接抛异常，脚本随之中断（实测：push 刚开始就挂，远程一个字节没收到）。
+# 所有需要读输出的 git 调用都走这里，临时把偏好降成 Continue。
+function Invoke-GitCapture {
+    param([string[]]$GitArgs)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $log = (& git @GitArgs 2>&1 | Out-String)
+        return @{ Ok = ($LASTEXITCODE -eq 0); Log = $log }
+    } finally {
+        $ErrorActionPreference = $prev
+    }
+}
+
 # ------------------------------------------------------------------ 0. 定位项目根
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) { $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path }
@@ -465,11 +480,11 @@ try {
     $pushArgs = @('-c', 'credential.helper=', '-c', "http.extraHeader=AUTHORIZATION: basic $b64", 'push', '-u', 'origin', $Branch)
 
     function Invoke-Push {
-        $log = (& git @pushArgs 2>&1 | Out-String)
-        foreach ($line in ($log -split "`r?`n")) {
-            if ($line.Trim()) { Write-Host ('        ' + $line) -ForegroundColor DarkGray }
+        $r = Invoke-GitCapture -GitArgs $pushArgs
+        foreach ($line in ($r.Log -split "`r?`n")) {
+            if ($line.Trim()) { Write-Host ('        ' + $line.Trim()) -ForegroundColor DarkGray }
         }
-        return @{ Ok = ($LASTEXITCODE -eq 0); Log = $log }
+        return $r
     }
 
     Write-Info "推送到 $remoteUrl ($Branch)"
@@ -480,8 +495,9 @@ try {
     if (-not $result.Ok -and $result.Log -match 'non-fast-forward|fetch first|\[rejected\]') {
         Write-Warn2 '远程仓库已有内容（多半是建仓库时勾了 README）'
         Write-Info '先把远程内容合并进来，再推一次…'
-        & git pull --no-rebase --allow-unrelated-histories origin $Branch 2>&1 | ForEach-Object {
-            if ($_ -and $_.ToString().Trim()) { Write-Host ('        ' + $_) -ForegroundColor DarkGray }
+        $pull = Invoke-GitCapture -GitArgs @('pull', '--no-rebase', '--allow-unrelated-histories', 'origin', $Branch)
+        foreach ($line in ($pull.Log -split "`r?`n")) {
+            if ($line.Trim()) { Write-Host ('        ' + $line.Trim()) -ForegroundColor DarkGray }
         }
         $result = Invoke-Push
     }
