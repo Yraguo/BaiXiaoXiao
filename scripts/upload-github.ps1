@@ -77,7 +77,9 @@ function Stop-WithError($msg, $hint) {
 function Invoke-GitCapture {
     param([string[]]$GitArgs)
     $prev = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
+    # SilentlyContinue 而不是 Continue：stderr 转成的 ErrorRecord 不该刷屏，
+    # 成败统一靠 $LASTEXITCODE 判断
+    $ErrorActionPreference = 'SilentlyContinue'
     try {
         $log = (& git @GitArgs 2>&1 | Out-String)
         return @{ Ok = ($LASTEXITCODE -eq 0); Log = $log }
@@ -492,12 +494,18 @@ try {
 
     # 建仓库时如果勾了「Add a README file」，远程已有提交且与本地无共同祖先，
     # 首推会被拒（non-fast-forward）。合并一次再推，不用让用户去仓库页删重建。
+    # -X ours：远程那个 Initial commit 里通常只有 GitHub 自动生成的 README 和
+    # .gitignore，会和本地同名文件 add/add 冲突。冲突按本地版本解决（本地是完整项目），
+    # 远程独有的文件（如 README.md）仍会正常保留。
     if (-not $result.Ok -and $result.Log -match 'non-fast-forward|fetch first|\[rejected\]') {
         Write-Warn2 '远程仓库已有内容（多半是建仓库时勾了 README）'
         Write-Info '先把远程内容合并进来，再推一次…'
-        $pull = Invoke-GitCapture -GitArgs @('pull', '--no-rebase', '--allow-unrelated-histories', 'origin', $Branch)
+        $pull = Invoke-GitCapture -GitArgs @('pull', '--no-rebase', '--allow-unrelated-histories', '-X', 'ours', 'origin', $Branch)
         foreach ($line in ($pull.Log -split "`r?`n")) {
             if ($line.Trim()) { Write-Host ('        ' + $line.Trim()) -ForegroundColor DarkGray }
+        }
+        if (-not $pull.Ok) {
+            Write-Warn2 '自动合并没成功，请手动处理（git status 看冲突文件）'
         }
         $result = Invoke-Push
     }
