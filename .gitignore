@@ -24,3 +24,7 @@ desktop.ini
 
 # 脚本运行日志（临时文件，不入库）
 scripts/.*.txt
+
+# 上传工具（脚本内含 token，绝不入库）
+一键上传GitHub*.bat
+upload-github.ps1
