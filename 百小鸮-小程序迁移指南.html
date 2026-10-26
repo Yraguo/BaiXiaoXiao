@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>百小鸮 · Unimate → 微信小程序 迁移指南</title>
+<style>
+  :root{
+    --brand:#5587EC; --brand-deep:#3E6FD4; --brand-soft:#EAF6FE; --brand-tint:#F3F8FF;
+    --ink:#16233A; --ink-2:#243B5C; --muted:#6B7C99; --line:#E3EBF7;
+    --bg:#FBFCFE; --card:#FFFFFF;
+    --warn:#B26B00; --warn-bg:#FFF7E8; --danger:#C4322C; --danger-bg:#FEF0EF;
+    --ok:#1F7A4D; --ok-bg:#ECF9F1;
+    --code-bg:#F5F8FD;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.72 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px 96px}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,"Courier New",monospace}
+
+  /* ---------- 封面 ---------- */
+  .hero{
+    margin:0 -24px 44px; padding:56px 48px 44px;
+    background:
+      radial-gradient(900px 320px at 88% -10%, #DCEBFF 0%, transparent 62%),
+      linear-gradient(180deg,#F3F8FF 0%,#FBFCFE 100%);
+    border-bottom:1px solid var(--line);
+  }
+  .hero-inner{max-width:920px;margin:0 auto;display:flex;gap:32px;align-items:flex-start}
+  .hero-logo{width:104px;height:104px;border-radius:26px;background:#fff;box-shadow:0 8px 24px rgba(85,135,236,.18);flex-shrink:0;overflow:hidden}
+  .hero-logo img{width:100%;height:100%;display:block}
+  .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--brand);font-weight:700;text-transform:uppercase;margin-bottom:10px}
+  h1{margin:0 0 10px;font-size:34px;line-height:1.25;letter-spacing:-.6px;font-weight:700}
+  .sub{margin:0;color:var(--muted);font-size:15px}
+  .meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+  .tag{font-size:12px;padding:4px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink-2)}
+  .tag.b{background:var(--brand);border-color:var(--brand);color:#fff}
+
+  /* ---------- 结论条 ---------- */
+  .verdict{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:22px 24px;margin-bottom:40px;box-shadow:0 1px 2px rgba(36,59,92,.04);
+    border-left:4px solid var(--brand);
+  }
+  .verdict h3{margin:0 0 8px;font-size:15px;letter-spacing:.02em;color:var(--brand-deep)}
+  .verdict p{margin:0;color:var(--ink-2)}
+  .verdict p+p{margin-top:8px}
+
+  /* ---------- 章节 ---------- */
+  section{margin-bottom:52px}
+  h2{
+    font-size:24px;line-height:1.35;letter-spacing:-.3px;margin:0 0 6px;
+    display:flex;align-items:baseline;gap:12px;
+  }
+  h2 .num{
+    font-size:13px;font-weight:700;color:var(--brand);background:var(--brand-soft);
+    border-radius:8px;padding:3px 9px;letter-spacing:.04em;flex-shrink:0;
+  }
+  .lead{color:var(--muted);margin:0 0 22px;font-size:14.5px}
+  h3{font-size:17px;margin:30px 0 10px;letter-spacing:-.1px}
+  h4{font-size:14.5px;margin:22px 0 8px;color:var(--ink-2)}
+  p{margin:0 0 14px}
+
+  /* ---------- 表格 ---------- */
+  .tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;margin:14px 0 18px;
+       background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .tbl th{background:#F6F9FE;text-align:left;padding:11px 14px;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--line);white-space:nowrap}
+  .tbl td{padding:11px 14px;border-bottom:1px solid #EEF3FB;vertical-align:top}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl code{font-size:12.5px;background:var(--code-bg);padding:1px 5px;border-radius:5px;color:var(--brand-deep)}
+
+  .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .pill.ok{background:var(--ok-bg);color:var(--ok)}
+  .pill.mid{background:var(--warn-bg);color:var(--warn)}
+  .pill.no{background:var(--danger-bg);color:var(--danger)}
+
+  /* ---------- 代码 ---------- */
+  .code{position:relative;margin:12px 0 18px;background:var(--code-bg);border:1px solid var(--line);
+        border-radius:11px;overflow:hidden}
+  .code .lab{
+    display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--muted);
+    background:#EDF3FC;border-bottom:1px solid var(--line);letter-spacing:.02em
+  }
+  .code .lab b{color:var(--ink-2);font-weight:600}
+  .code .lab .dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+  .code.before .lab{background:#FBF1F0}
+  .code.before .lab .dot{background:#D9736D}
+  .code.after .lab{background:#EFF9F3}
+  .code.after .lab .dot{background:#3FA97B}
+  .code pre{margin:0;padding:14px 16px;overflow-x:auto;font-size:12.8px;line-height:1.65;color:#22304A}
+  .code pre .c{color:#8496B0}
+  .code pre .k{color:#9B4BB5}
+  .code pre .s{color:#2E7D5B}
+  .code pre .f{color:#2C6FE0}
+  .code pre .bad{color:#C4322C;text-decoration:line-through}
+  .code pre .good{color:#1F7A4D}
+
+  /* ---------- 提示块 ---------- */
+  .box{border-radius:11px;padding:15px 18px;margin:16px 0;font-size:14px;border:1px solid}
+  .box > b{display:block;margin-bottom:4px;font-size:13px;letter-spacing:.02em}
+  .box p:last-child{margin-bottom:0}
+  .box.info{background:var(--brand-tint);border-color:#D8E7FB;color:var(--ink-2)}
+  .box.info > b{color:var(--brand-deep)}
+  .box.warn{background:var(--warn-bg);border-color:#F5E2BE;color:#6B4A10}
+  .box.warn > b{color:var(--warn)}
+  .box.danger{background:var(--danger-bg);border-color:#F6D5D2;color:#7A2621}
+  .box.danger > b{color:var(--danger)}
+  .box.ok{background:var(--ok-bg);border-color:#CDEBD9;color:#145234}
+  .box.ok > b{color:var(--ok)}
+
+  /* ---------- 截图 ---------- */
+  .shots{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 18px;margin:8px -4px 8px}
+  .shot{flex:0 0 auto;width:160px}
+  .shot img{width:100%;display:block;border-radius:14px;border:1px solid var(--line);box-shadow:0 6px 20px rgba(36,59,92,.09);background:#fff}
+  .shot span{display:block;text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+
+  /* ---------- 路线图 ---------- */
+  .phases{display:flex;flex-direction:column;gap:0;margin:18px 0}
+  .phase{display:flex;gap:18px;position:relative;padding-bottom:26px}
+  .phase:last-child{padding-bottom:0}
+  .phase::before{content:'';position:absolute;left:15px;top:34px;bottom:0;width:2px;background:var(--line)}
+  .phase:last-child::before{display:none}
+  .phase .dot{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;z-index:1;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+    background:#fff;border:2px solid var(--line);color:var(--muted)
+  }
+  .phase.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+  .phase.now .dot{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 0 0 4px rgba(85,135,236,.14)}
+  .phase .body{flex:1;padding-top:3px}
+  .phase .body h4{margin:0 0 4px;font-size:15px;color:var(--ink)}
+  .phase .body p{margin:0 0 6px;color:var(--ink-2);font-size:14px}
+  .phase .body .deliv{font-size:12.5px;color:var(--muted)}
+  .phase .body .deliv b{color:var(--ink-2);font-weight:600}
+
+  /* ---------- 清单 ---------- */
+  .files{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 0;margin:14px 0}
+  .files .row{display:flex;gap:12px;padding:7px 18px;font-size:13.5px;align-items:baseline}
+  .files .row:nth-child(odd){background:#FAFCFF}
+  .files .row code{font-size:12.5px;color:var(--brand-deep);flex-shrink:0;min-width:220px}
+  .files .row span{color:var(--muted);font-size:13px}
+
+  ol.clean,ul.clean{padding-left:20px;margin:10px 0 16px}
+  ol.clean li,ul.clean li{margin-bottom:7px;color:var(--ink-2)}
+  ol.clean li>b,ul.clean li>b{color:var(--ink)}
+  kbd{font-size:12px;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-family:inherit}
+
+  .kpis{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 22px}
+  .kpi{flex:1 1 150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .v{font-size:22px;font-weight:700;letter-spacing:-.5px;color:var(--brand-deep);line-height:1.2}
+  .kpi .l{font-size:12px;color:var(--muted);margin-top:3px}
+
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+
+  .foot{color:var(--muted);font-size:12.5px;text-align:center;padding-top:24px;border-top:1px solid var(--line)}
+
+  @media (max-width:680px){
+    .hero{padding:36px 22px}
+    .hero-inner{flex-direction:column;gap:18px}
+    h1{font-size:26px}
+    .wrap{padding:0 18px 70px}
+    .files .row{flex-direction:column;gap:2px}
+    .files .row code{min-width:0}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-logo"><img src="docs/shots/logo.png" alt="百小鸮"></div>
+    <div>
+      <div class="eyebrow">Migration Guide · 2026.10</div>
+      <h1>把 Unimate 改成小程序<br>并改名「百小鸮」</h1>
+      <p class="sub">基于对 <code>E:\Gary\北京化工大学\北化app\BaiXiaoXiao</code> 的完整扫描，逐项给出能搬 / 要改 / 必须放弃的裁决，附可运行骨架。</p>
+      <div class="meta">
+        <span class="tag b">Vue 3 + Vite + TS + Capacitor 6</span>
+        <span class="tag">读完全部 18,275 行</span>
+        <span class="tag">骨架已构建通过</span>
+        <span class="tag">5 个 tabBar 页</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <h3>先说结论</h3>
+    <p><b>① 那个文件夹里没有任何小程序相关的内容。</b>我按「小程序 / miniprogram / uni-app / uniapp / mp-weixin / 微信小程序 / appid / wechat」逐个搜过全工程，命中 0 个。唯一的 <code>appid</code> 是 <code>capacitor.config.ts</code> 里 Android 的 <code>com.unimate.app</code>。所以这次不是"改小程序"，是<b>新建小程序壳 + 把业务代码搬进去</b>。</p>
+    <p><b>② 能搬的比例很高，但不是全部。</b>18,275 行里约 70%（纯逻辑：解析器、周次算法、RSA、配色、数据模型、Markdown）几乎零改动；约 25%（28 个 <code>.vue</code>）需要机械替换标签与单位；剩下 5% 是 Capacitor 原生能力，<b>搬不过去，只能重做或放弃</b>。</p>
+    <p><b>③ 有一件事小程序做不到：在教务系统页面里执行自己的 JS。</b>这是整个迁移的核心矛盾，下面第 5 节专门讲三条出路。</p>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <section>
+    <h2><span class="num">01</span>体检报告：这个工程到底长什么样</h2>
+    <p class="lead">先把事实摆出来，后面的每个判断都能对得上号。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">18,275</div><div class="l">TS / Vue 总行数</div></div>
+      <div class="kpi"><div class="v">28</div><div class="l">.vue 单文件组件（全部 scoped）</div></div>
+      <div class="kpi"><div class="v">0</div><div class="l">小程序相关代码</div></div>
+      <div class="kpi"><div class="v">114</div><div class="l">"Unimate" 字样出现次数</div></div>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>层</th><th>技术</th><th>对小程序的意义</th></tr></thead>
+      <tbody>
+        <tr><td>视图</td><td>Vue 3.5 <code>&lt;script setup&gt;</code> + scoped CSS</td><td><span class="pill ok">可迁移</span> uni-app 原生支持</td></tr>
+        <tr><td>构建</td><td>Vite 5 + TypeScript 5.7</td><td><span class="pill ok">可迁移</span> 同一套工具链</td></tr>
+        <tr><td>状态</td><td>Pinia 2（<code>stores/db.ts</code> 1059 行）</td><td><span class="pill ok">可迁移</span> 换 reactive 单例也可</td></tr>
+        <tr><td>路由</td><td><b>没有 vue-router</b>，靠 <code>db.activeTab</code> 切视图</td><td><span class="pill ok">几乎不用改</span> 这是意外的优势</td></tr>
+        <tr><td>原生容器</td><td>Capacitor 6 + 10 个插件</td><td><span class="pill no">不可用</span> 全部替换</td></tr>
+        <tr><td>教务抓取</td><td>自研原生插件 <code>JwWebView</code>（Android WebView + evaluateJavascript）</td><td><span class="pill no">不可用</span> 必须重新设计</td></tr>
+        <tr><td>测试</td><td>30 个 <code>node --experimental-strip-types</code> 脚本，952 条断言</td><td><span class="pill ok">可复用</span> 纯函数测试直接跑</td></tr>
+      </tbody>
+    </table>
+
+    <h3>浏览器 API 依赖分布（决定改造量）</h3>
+    <table class="tbl">
+      <thead><tr><th>API</th><th>出现次数</th><th>小程序有吗</th><th>处置</th></tr></thead>
+      <tbody>
+        <tr><td><code>Capacitor.*</code></td><td>29</td><td><span class="pill no">没有</span></td><td>换成 adapters 层</td></tr>
+        <tr><td>WebView 相关</td><td>≈130</td><td><span class="pill mid">受限</span></td><td>教务导入整体重构</td></tr>
+        <tr><td><code>window.*</code> / <code>document.*</code></td><td>28 / 23</td><td><span class="pill no">没有</span></td><td>逐处替换为 <code>uni.*</code></td></tr>
+        <tr><td><code>localStorage</code></td><td>17</td><td><span class="pill mid">等价</span></td><td><code>uni.setStorageSync</code></td></tr>
+        <tr><td><code>fetch()</code></td><td>9</td><td><span class="pill mid">等价</span></td><td><code>uni.request</code>（要配白名单）</td></tr>
+        <tr><td><code>crypto.subtle</code> / <code>navigator</code></td><td>4 / 13</td><td><span class="pill no">没有</span></td><td>纯 JS 实现（已提供）</td></tr>
+        <tr><td><code>FileReader</code></td><td>3</td><td><span class="pill no">没有</span></td><td><code>wx.getFileSystemManager</code></td></tr>
+        <tr><td><code>&lt;div&gt;</code> / <code>&lt;span&gt;</code> / <code>&lt;img&gt;</code></td><td>845 / 240 / 10</td><td><span class="pill no">没有</span></td><td>改成 <code>view</code> / <code>text</code> / <code>image</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="box info">
+      <b>一个好消息</b>
+      <p>这个工程<b>没有用 vue-router</b>，页面切换全靠 <code>db.activeTab</code> 这个数字 + <code>v-if</code>。这在小程序里反而更好搬 —— 它天然对应 5 个 tabBar 页，不需要重写路由。如果当初用了 <code>createRouter</code> + <code>history</code> 模式，这里就要多花两天。</p>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section>
+    <h2><span class="num">02</span>技术选型：为什么选 uni-app</h2>
+    <p class="lead">三条路都有人走，但对<b>这个</b>工程，只有一条是省力的。</p>
+
+    <table class="tbl">
+      <thead><tr><th>方案</th><th>能复用多少现有代码</th><th>改造量</th><th>判断</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>uni-app</b>（Vue 3 + Vite + TS）</td>
+          <td><b>.vue 直接复制过来</b>，改标签和单位即可；Pinia 官方支持；<code>.ts</code> 纯逻辑原样跑</td>
+          <td>小</td>
+          <td><span class="pill ok">推荐</span></td>
+        </tr>
+        <tr>
+          <td>Taro 4（Vue 3）</td>
+          <td>也能用 Vue SFC，但组件库生态偏 React，Vue 侧社区资料少</td>
+          <td>中</td>
+          <td><span class="pill mid">备选</span></td>
+        </tr>
+        <tr>
+          <td>原生小程序 + TypeScript</td>
+          <td>28 个 .vue 全部要手写成 wxml + wxss + 逻辑层，<b>等于重写一遍</b></td>
+          <td>大</td>
+          <td><span class="pill no">不划算</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>选 uni-app 的真正理由不是"名气大"，而是这三条对得上你的现状：<b>同一门 Vue 3 语法</b>、<b>同一套 Vite 构建</b>、<b>纯 TypeScript 模块不需要任何包装</b>。你的 <code>zfClient.ts</code>、<code>parser/rules.ts</code>、<code>periods.ts</code> 这类文件，进了 uni-app 就是一个 <code>import</code> 的事。</p>
+
+    <div class="box warn">
+      <b>别踩：uni-app 的版本号</b>
+      <p>npm 上 <code>@dcloudio/vite-plugin-uni</code> 的 <code>latest</code> 标签停在一个 2021 年的 alpha（<code>3.0.0-alpha-3000020210521001</code>），直接 <code>npm i</code> 会报 peer 冲突。所有 <code>@dcloudio/*</code> 必须<b>钉同一个版本号</b>（骨架里已经钉好 <code>3.0.0-5020620260917001</code>）。这是新手第一天最容易卡住的地方。</p>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section>
+    <h2><span class="num">03</span>能力对照总表</h2>
+    <p class="lead">这张表是整份指南的骨架。逐条对着改，就不会漏。</p>
+
+    <table class="tbl">
+      <thead><tr><th>原能力</th><th>原实现</th><th>小程序替代</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td>页面容器</td><td><code>&lt;div&gt;</code> / <code>&lt;span&gt;</code></td><td><code>&lt;view&gt;</code> / <code>&lt;text&gt;</code></td><td><span class="pill mid">机械替换</span></td></tr>
+        <tr><td>页面滚动</td><td>body 自然滚动</td><td><code>&lt;scroll-view scroll-y&gt;</code>，父级要给死高度</td><td><span class="pill mid">要改结构</span></td></tr>
+        <tr><td>路由</td><td><code>db.activeTab</code> 切视图</td><td><code>pages.json</code> + tabBar</td><td><span class="pill ok">很省力</span></td></tr>
+        <tr><td>全局样式</td><td><code>:root</code> + CSS 变量</td><td><code>page</code> + CSS 变量</td><td><span class="pill ok">一行改</span></td></tr>
+        <tr><td>像素单位</td><td><code>px</code></td><td><code>rpx</code>（750 = 屏宽）</td><td><span class="pill mid">×2 换算</span></td></tr>
+        <tr><td>本地存储</td><td>Capacitor Filesystem + localStorage</td><td><code>uni.setStorageSync</code>（10MB）/ 文件系统（200MB）</td><td><span class="pill ok">有适配层</span></td></tr>
+        <tr><td>HTTP</td><td><code>fetch</code>，WebView 自动带 Cookie</td><td><code>uni.request</code>，<b>要自己管 Cookie</b>，域名需备案+白名单</td><td><span class="pill mid">要写适配</span></td></tr>
+        <tr><td>加密</td><td><code>crypto.subtle</code> + <code>@noble/*</code></td><td><code>@noble</code> 可留；<code>subtle/atob/TextEncoder</code> 全要自己补</td><td><span class="pill ok">已补好</span></td></tr>
+        <tr><td>本地通知</td><td>LocalNotifications + AlarmManager 精确闹钟</td><td><b>订阅消息</b>：一次授权一条，服务端下发</td><td><span class="pill no">能力降级</span></td></tr>
+        <tr><td>前台保活 / 电池优化</td><td>前台服务 + 心跳 + 开机恢复</td><td>无</td><td><span class="pill no">删除</span></td></tr>
+        <tr><td>系统日历写入</td><td>自研原生插件</td><td>无（只能引导用户手动加）</td><td><span class="pill no">删除</span></td></tr>
+        <tr><td>相机 / 相册</td><td>Capacitor Camera</td><td><code>uni.chooseImage</code> / <code>uni.chooseMedia</code></td><td><span class="pill ok">等价</span></td></tr>
+        <tr><td>分享</td><td>URL hash <code>#s=&lt;payload&gt;</code> + 系统分享</td><td><code>onShareAppMessage</code> + <code>path</code> 参数</td><td><span class="pill mid">重写</span></td></tr>
+        <tr><td>文件导出</td><td>写公共 Documents，微信可直接选</td><td><code>wx.saveFileToDisk</code> / 转发给好友 / 复制到剪贴板</td><td><span class="pill mid">换路径</span></td></tr>
+        <tr><td>教务页面抓取</td><td>原生 WebView 同源执行 JS</td><td><b>做不到</b>（容器隔离、无 Cookie、无 DOM）</td><td><span class="pill no">重构</span></td></tr>
+        <tr><td>字号缩放</td><td>原生 textZoom</td><td>跟随微信设置，不能改</td><td><span class="pill no">删除</span></td></tr>
+        <tr><td>地理定位</td><td>Capacitor Geolocation</td><td><code>uni.getLocation</code>（需在后台声明用途）</td><td><span class="pill mid">要备案</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section>
+    <h2><span class="num">04</span>六处机械替换（照做就行）</h2>
+    <p class="lead">这六件事覆盖了 28 个 <code>.vue</code> 里的绝大部分改动，属于"不需要动脑但必须做对"的活。</p>
+
+    <h3>4.1　标签：div → view，span → text，img → image</h3>
+    <p>小程序没有 HTML 标签，写 <code>&lt;div&gt;</code> 不会报错，只会<b>当成未知自定义组件，静默不渲染</b>。这是最坑的一点：白屏但没报错。</p>
+    <div class="code before"><div class="lab"><span class="dot"></span><b>改前</b> src/views/MeView.vue</div>
+<pre>&lt;div class="card"&gt;
+  &lt;div class="row"&gt;
+    &lt;span class="grow"&gt;关于 Unimate&lt;/span&gt;
+    &lt;img src="/logo.png"&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre></div>
+    <div class="code after"><div class="lab"><span class="dot"></span><b>改后</b></div>
+<pre>&lt;view class="card"&gt;
+  &lt;view class="row"&gt;
+    &lt;text class="grow"&gt;关于 百小鸮&lt;/text&gt;
+    &lt;image src="/static/logo.png" mode="aspectFit" /&gt;
+  &lt;/view&gt;
+&lt;/view&gt;</pre></div>
+    <p>注意 <code>&lt;text&gt;</code> 的行为和 <code>&lt;span&gt;</code> 不同：<code>text</code> 是<b>内联但受限于父级</b>，长文本换行、省略号行为都不一样。原来的 <code>.grow</code> 类在 <code>flex</code> 里要配合 <code>view</code> 用，别给 <code>text</code> 加 <code>flex:1</code>。</p>
+
+    <h3>4.2　单位：px → rpx</h3>
+    <p>小程序设计宽度固定 750rpx，等于屏幕宽度。所以 <code>1px ≈ 2rpx</code>。你原来 <code>font: 15px</code>，改成 <code>font-size: 30rpx</code>；<code>padding: 16px</code> 改 <code>32rpx</code>。</p>
+    <div class="box warn">
+      <b>别用 sed 一把梭</b>
+      <p><code>1px</code> 这种发丝线不能 ×2（会变成 2rpx 的粗线），<code>border: .5px</code> 要保留原值或改 <code>1rpx</code>。<code>box-shadow</code> 的模糊半径也不该翻倍。手动过一遍 28 个文件比脚本安全。</p>
+    </div>
+
+    <h3>4.3　滚动：body → scroll-view</h3>
+    <p>小程序页面本身不滚动（页面只有一屏），要滚必须用 <code>scroll-view</code>，而且<b>必须给它确定的高度</b>，否则它按内容撑开、永远不滚。</p>
+    <div class="code"><div class="lab"><span class="dot"></span><b>固定写法</b> src/App.vue</div>
+<pre>.screen { height: calc(100vh - var(--window-bottom, 0px)); display: flex; flex-direction: column; }
+.scroll { flex: 1; <span class="good">height: 0;</span> }   <span class="c">/* height:0 + flex:1 是让 scroll-view 撑满剩余空间的唯一可靠写法 */</span></pre></div>
+
+    <h3>4.4　样式：三样东西小程序不认</h3>
+    <table class="tbl">
+      <thead><tr><th>原写法</th><th>问题</th><th>替换</th></tr></thead>
+      <tbody>
+        <tr><td><code>:root { --brand: … }</code></td><td>小程序没有 <code>&lt;html&gt;</code></td><td><code>page { --brand: … }</code></td></tr>
+        <tr><td><code>color-mix(in srgb, …)</code></td><td>安卓微信内核不支持（iOS 又支持，于是"我这儿好的"）</td><td>写死 <code>rgba()</code> 或预设变量</td></tr>
+        <tr><td><code>backdrop-filter: blur()</code></td><td>安卓时灵时不灵</td><td>半透明底 + 实色兜底，别当关键视觉</td></tr>
+      </tbody>
+    </table>
+    <div class="box danger">
+      <b>你现在的 tabbar 就踩了 color-mix</b>
+      <p><code>Main.vue</code> 里 <code>background: color-mix(in srgb, var(--card) 88%, transparent)</code> —— 在 iOS 上好看，在安卓低版本微信里会<b>整块失效变透明</b>，底下的课表会透上来。这类"只在部分机型坏"的 bug 最难查，迁移时一次清掉。</p>
+    </div>
+
+    <h3>4.5　路由：你的写法正好不用大改</h3>
+    <p>原来是 <code>db.activeTab === 0 ? &lt;TimetableView/&gt; : …</code> 的一串 <code>v-else-if</code>。小程序里拆成 5 个 page，每个 page 只保留自己那一段，<code>pages.json</code> 里声明 tabBar。改动是"拆"，不是"重写"。</p>
+    <div class="code"><div class="lab"><span class="dot"></span><b>pages.json 关键片段</b></div>
+<pre>"tabBar": {
+  "color": "#8A94A6", "selectedColor": "#5587EC",
+  "list": [
+    { "pagePath": "pages/timetable/index", "text": "课表",
+      "iconPath": "static/tabbar/calendar.png",
+      "selectedIconPath": "static/tabbar/calendar-on.png" }
+  ]
+}</pre></div>
+    <p>顺带一提：原 tab 第 3 项叫「Uni」，现在叫「小鸮」；第 4 项「北化通」改成了「校园通」。<b>最终版并没有用原生 tabBar</b> —— 原生 tabBar 的颜色只能靠 <code>theme.json</code> 配，深色要再维护一份且容易漏，所以改成在页面里自绘（见第 6 节）。上面这段配置留着，是因为它解释了图标尺寸与路径约定。</p>
+
+    <h3>4.6　网络：fetch → uni.request，且必须自己管 Cookie</h3>
+    <p>这是最容易低估的一处。小程序的 <code>uni.request</code> <b>不会自动带 Cookie，也不会自动保存 Set-Cookie</b>。而正方教务的整个登录流程就靠 Cookie 串起来。</p>
+    <div class="code after"><div class="lab"><span class="dot"></span><b>骨架里已实现</b> src/adapters/request.ts</div>
+<pre><span class="c">// 一个按 host 分桶的最小 Cookie 罐</span>
+<span class="k">const</span> jar = <span class="k">new</span> Map&lt;string, Map&lt;string,string&gt;&gt;();
+
+<span class="c">// 发请求前手工塞 Cookie，回来手工吃 Set-Cookie</span>
+<span class="k">const</span> cookie = cookieHeader(url);
+<span class="k">if</span> (cookie) header[<span class="s">'Cookie'</span>] = cookie;
+
+uni.request({ url, header, <span class="good">dataType: 'text'</span>, success: (res) =&gt; {
+  eatCookies(url, res.header?.[<span class="s">'Set-Cookie'</span>]);
+}});</pre></div>
+    <div class="box warn">
+      <b><code>dataType: 'text'</code> 这一行不能省</b>
+      <p>默认情况下框架会尝试把响应 JSON 化。正方返回的是 <b>HTML 登录页</b>，一旦被 JSON 化就变成 <code>"&lt;!DOCTYPE…"</code> 这种被转义的字符串，你的 <code>readHiddenFields()</code> 正则全部失效。这个坑会表现为"提示页面结构变了"，但其实只是解析前被改写了一次。</p>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section>
+    <h2><span class="num">05</span>三块必须重做的（不能照搬）</h2>
+    <p class="lead">这才是真正花时间的地方。前四节是体力活，这一节是设计活。</p>
+
+    <h3>5.1　教务系统导入：唯一的硬阻塞</h3>
+    <p>你的 <code>jwwebview.ts</code> 注册了一个原生插件，用 Android WebView 打开 <code>jwglxt.buct.edu.cn</code>，好处是<b>页面在教务域名下</b> —— Cookie 天然带上、登录页的 jsbn RSA 加密能直接跑、抓表格一把一个准。<code>zfimport</code> 模式更进一步，直接在同源上下文里 fetch 课表接口拿 <code>kbList</code>。</p>
+    <p>小程序里这条路<b>彻底走不通</b>：</p>
+    <ul class="clean">
+      <li><code>&lt;web-view&gt;</code> 只能打开<b>已备案 + 已登记为业务域名</b>的页面；</li>
+      <li>它是受控的独立容器，<b>宿主拿不到里面任何 DOM，也读不到 Cookie</b>；</li>
+      <li>所以"在教务页面里执行自己的 JS"没有任何可能，连 <code>evaluateJavascript</code> 的等价物都不存在。</li>
+    </ul>
+
+    <table class="tbl">
+      <thead><tr><th>路线</th><th>怎么做</th><th>代价</th><th>推荐度</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>A. 服务端代理</b></td>
+          <td>云函数/自建 Node 服务，把 <code>zfClient.ts</code> 的协议逻辑整份搬过去：读隐藏字段 → 按 <code>mmsfjm</code> 决定是否 RSA → POST 登录 → 跟 302 → 同会话请求 <code>kbList</code> → 只回传结构化课程</td>
+          <td>要一台服务器；要处理学校反爬与合规</td>
+          <td><span class="pill ok">首选</span></td>
+        </tr>
+        <tr>
+          <td><b>B. 用户自助导入</b></td>
+          <td>用户在浏览器登录教务 → 导出课表 HTML/ics → 发到"文件传输助手" → 小程序 <code>wx.chooseMessageFile</code> 选文件解析</td>
+          <td>体验差一档，但<b>零合规风险</b>，解析器现成</td>
+          <td><span class="pill ok">先上线</span></td>
+        </tr>
+        <tr>
+          <td><b>C. H5 中转</b></td>
+          <td>自建一个 H5（在你自己域名下，随便抓），小程序用 <code>&lt;web-view&gt;</code> 挂它，靠 <code>postMessage</code> 回传</td>
+          <td>需要业务域名（个人主体<b>没有</b>这个权限）</td>
+          <td><span class="pill mid">企业主体可选</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box ok">
+      <b>好消息：协议逻辑本身一行不用改</b>
+      <p><code>zfClient.ts</code> 是纯函数（RSA 用的是 BigInt 手写模幂，不是 WebCrypto）。骨架里已经把它搬进来了，只换了 3 个全局函数（<code>atob/btoa</code>、<code>getRandomValues</code>、<code>TextEncoder</code>），并<b>用真实 1024 位密钥做了加解密往返验证</b>，结果字节级一致。这部分可以直接放服务端跑。</p>
+    </div>
+
+    <h3>5.2　提醒：从"学期闹钟"降级为"订阅消息"</h3>
+    <table class="tbl">
+      <thead><tr><th></th><th>原方案（Android）</th><th>小程序</th></tr></thead>
+      <tbody>
+        <tr><td>触发方式</td><td>AlarmManager 精确闹钟，一次排一学期</td><td><code>wx.requestSubscribeMessage</code>，<b>必须用户点击</b>触发</td></tr>
+        <tr><td>授权粒度</td><td>一次授权永久有效</td><td><b>一次授权 = 一条消息</b>（长期订阅仅限特定类目）</td></tr>
+        <tr><td>下发方</td><td>本机直接弹</td><td><b>服务端</b>调 <code>subscribeMessage.send</code></td></tr>
+        <tr><td>离线准点</td><td>Doze 下也准（靠前台服务保活）</td><td>依赖服务端定时器，且用户可能没授权</td></tr>
+      </tbody>
+    </table>
+    <p>产品上建议这样降级：进小程序时检查今天/明天的课 → 用户点一次「开启上课提醒」→ 只订阅当天这一条 → 长周期提醒引导「添加到手机日历」。别承诺"整学期自动提醒"，做不到。</p>
+
+    <h3>5.3　云同步：先换个域名</h3>
+    <p>你的同步走 <code>unimate-sync.*.workers.dev</code>。两个问题叠在一起：<b>①</b> <code>*.workers.dev</code> 在大陆被 DNS 污染（你们 PRD 11.47 里自己也写了）；<b>②</b> 小程序的白名单只接受<b>已备案域名</b>，<code>workers.dev</code> 根本填不进去。Cloudflare Pages 的 <code>*.pages.dev</code> 同理。</p>
+    <p>所以云同步这件事，小程序版必须先把域名落到你自己备案的域上（或者直接用云开发/云函数），否则连"填白名单"这一步都过不去。</p>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section>
+    <h2><span class="num">06</span>交付物：已经能跑起来的骨架</h2>
+    <p class="lead">不是伪代码。<code>baixiaoxiao-mp/</code> 目录已通过 <code>npm run build:mp-weixin</code>，主包 1.1MB。下面这些图是真实渲染结果（H5 构建 + 无头浏览器截的，UI 与小程序一致）。</p>
+
+    <div class="shots">
+      <div class="shot"><img src="docs/shots/timetable.png" alt="课表"><span>课表 · 周次横条 + 课程格</span></div>
+      <div class="shot"><img src="docs/shots/second-class.png" alt="第二课堂"><span>第二课堂 · 学时进度</span></div>
+      <div class="shot"><img src="docs/shots/xiao.png" alt="小鸮"><span>小鸮 · 离线对话</span></div>
+      <div class="shot"><img src="docs/shots/online.png" alt="校园通"><span>校园通 · 服务入口</span></div>
+      <div class="shot"><img src="docs/shots/me.png" alt="我的"><span>我的 · 品牌卡</span></div>
+    </div>
+
+    <h3>6.1　添加课表（这一版新做的）</h3>
+    <p>「添加课表」在原工程里是两块东西：<b>手动添加课程</b>（单门课的增删改）和<b>课表工具箱</b>（新建/切换/改名/删除整张课表）。小程序版两块都落地了，交互按小程序的习惯重排：</p>
+    <ul class="clean">
+      <li><b>右下角 ＋</b> 直接开课程编辑器，默认填「今天 + 全部周次」——补一门这学期的课是最常见场景，不该让用户点 18 下。</li>
+      <li><b>右上角 ⋯</b> 开课表工具箱：改课表信息 / 新建课表 / 切换 / 删除。</li>
+      <li><b>点课程块</b> 看详情，详情里直接「编辑 / 删除」。</li>
+      <li><b>空课表</b> 给 owl 空态和「添加第一门课」按钮，而不是甩一个空网格。</li>
+    </ul>
+
+    <div class="shots">
+      <div class="shot"><img src="docs/shots/add-course.png" alt="添加课程"><span>课程编辑器</span></div>
+      <div class="shot"><img src="docs/shots/toolbox.png" alt="工具箱"><span>课表工具箱</span></div>
+      <div class="shot"><img src="docs/shots/course-detail.png" alt="课程详情"><span>详情 → 编辑/删除</span></div>
+      <div class="shot"><img src="docs/shots/empty-timetable.png" alt="空课表"><span>新建课表的空态</span></div>
+    </div>
+
+    <h4>数据模型跟着升级了（v1 → v2）</h4>
+    <p>原来骨架只有一张隐式课表，课程没有归属。要做「多课表」就必须把 <code>timetableId</code> 补上，否则切换课表时无法过滤课程：</p>
+    <div class="code"><div class="lab"><span class="dot"></span><b>src/stores/app.ts</b></div>
+<pre><span class="k">interface</span> Timetable { id; name; semesterLabel; semesterStartMonday; totalWeeks }
+<span class="k">interface</span> Course { id; <span class="good">timetableId</span>; name; teacher; room; campus;
+                  day; startPeriod; endPeriod; <span class="good">weeks[]</span>; weeksRaw;
+                  credit; examMode; colorIndex; colorSet }</pre></div>
+    <div class="box info">
+      <b>老数据不会丢</b>
+      <p>存储键从 <code>state/v1</code> 升到 <code>state/v2</code>。首次启动若只找到 v1，会自动建一张「我的课表」并把所有课程挂上去 —— 用户感知不到迁移。这一点在小程序里尤其要注意：<b>小程序没有"重装"这个动作</b>，Storage 会一直留着，写错一次迁移逻辑就是永久性的。</p>
+    </div>
+
+    <h4>三个照搬原工程的细节</h4>
+    <table class="tbl">
+      <thead><tr><th>细节</th><th>为什么这么做</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>删除按「同名 + 同星期 + 同节次」成组删</td>
+          <td>一门课可能被拆成多段周次（如 1-8 周和 10-16 周分两次加），逐条删会留半截</td>
+        </tr>
+        <tr>
+          <td>颜色按课程名哈希，手动改色会同步到同名所有时段</td>
+          <td>原工程真机反馈过：「高等数学」在周二和周四显示成两种颜色</td>
+        </tr>
+        <tr>
+          <td>撞课只提示不阻止，且同名课程不算冲突</td>
+          <td>同名同时段通常是多教学班/可选机房，不是真的撞课（口径来自 <code>jwglxtBucT.ts:207</code>）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box ok">
+      <b>已经跑过交互测试</b>
+      <p><code>node scripts/e2e.mjs</code> 实际执行（当前 31 项全过）：渲染 10 块 → 点 ＋ 填「人工智能导论」→ 保存后变 11 块 → <b>刷新页面仍是 11 块</b>（验证落盘）→ 详情 → 工具箱 → 新建课表出空态 → 空表加第一门课 → 切回原课表数据完好 → 打开编辑态改名生效 → 五个 tab 逐个校验 → 深色模式生效。</p>
+    </div>
+
+    <h3>6.2　小鸮的对话为什么不做成大模型</h3>
+    <p>这是这一版最容易被误解的地方，所以单独说明。<code>小鸮</code> 页看起来是聊天，但<b>没有接任何模型</b> —— 它是一套跑在本机的「规则 + 你的数据」问答引擎，代码在 <code>src/services/xiao/engine.ts</code>。</p>
+    <div class="box warn">
+      <b>三条硬约束</b>
+      <p>① 使用环境不保证联网，断网也要能问；② 小程序前端放不住 API Key，抓包就能拿走；③ 课表、记事、二课分都是个人数据，不该为了回答「明天几节课」把整份课表传到别人服务器上。</p>
+    </div>
+    <p>所以回答全部由本机数据算出来，好处是<b>不会编</b>：问「下一节什么课」，它必须真的去读 <code>db.courses</code>；读不到就说没有。代价是覆盖面有限，因此写了 35+ 条意图，覆盖课表、课程详情、空档、记事、二课、时长、校园入口、作息、情绪这几类。</p>
+    <table class="tbl">
+      <thead><tr><th>做法</th><th>解决什么问题</th></tr></thead>
+      <tbody>
+        <tr><td>规则按顺序匹配，<code>run()</code> 返回 <code>null</code> 表示"认了但不该我答"</td><td>同一条正则能覆盖多种问法，又不会互相挡住</td></tr>
+        <tr><td><code>PRIORITY</code> 列表显式提权（今天概览 / 剩余课 / 哪天没课 / 校园入口 / 天气 / 提醒）</td><td>「这周哪天没课」必须早于「这周有几节」，靠数组顺序维护太脆</td></tr>
+        <tr><td>课程名用<b>字集覆盖率</b>匹配，不是正则枚举</td><td>「高数」「大物」「线代」这类简称没法穷举；覆盖率 ≥0.6 且交集 ≥2 才认</td></tr>
+        <tr><td>「节课」按<b>节次数</b>统计（1-2 节算 2 节）</td><td>中文说「几节课」指的是节次，不是课程条数</td></tr>
+      </tbody>
+    </table>
+    <p>兜底必须诚实：答不上来就直说「这句我还没学会」，并给出能问的方向，不硬编。</p>
+    <div class="box ok">
+      <b>实测 109 条问法，命中 109 条</b>
+      <p><code>node scripts/unit-xiao.mjs</code> 把引擎单独打包、mock 掉 <code>uni.*</code> 后在 Node 里跑：空课表引导 2 项、精确意图 20 项、课程名匹配 7 项、记事/二课/校园通 15 项、通用 8 项、<b>口语化泛问 62 条</b>，另有 4 条"必须答不上"的反例（「web3 是什么」这类）。合计 60 个断言全过。</p>
+    </div>
+
+    <h3>6.3　目录结构（adapters 是核心）</h3>
+    <div class="files">
+      <div class="row"><code>src/adapters/platform.ts</code><span>平台判定 / 状态栏高度 / toast / confirm</span></div>
+      <div class="row"><code>src/adapters/storage.ts</code><span>Storage 版 io.ts，<b>保留 unimate: 键前缀</b></span></div>
+      <div class="row"><code>src/adapters/request.ts</code><span>uni.request + 手写 Cookie 罐 + dataType:'text'</span></div>
+      <div class="row"><code>src/adapters/crypto.ts</code><span>base64 / UTF-8 / SHA-256 / 随机数，全部纯 JS</span></div>
+      <div class="row"><code>src/adapters/notify.ts</code><span>订阅消息封装 + 服务端排期接口形状</span></div>
+      <div class="row"><code>src/adapters/jw.ts</code><span>教务导入三条路线的接口与说明</span></div>
+      <div class="row"><code>src/shared/zfClient.ts</code><span>原样搬入，只换 3 个全局函数</span></div>
+      <div class="row"><code>src/shared/periods.ts</code><span>节次时间 + 18 色课程配色（原样）</span></div>
+      <div class="row"><code>src/stores/app.ts</code><span>多课表 + 课程 CRUD + 周次/冲突计算</span></div>
+      <div class="row"><code>src/services/xiao/engine.ts</code><span>小鸮的离线对话引擎：35+ 意图，答案全从本机数据算</span></div>
+      <div class="row"><code>src/components/CourseEditor.vue</code><span>添加 / 编辑课程弹层</span></div>
+      <div class="row"><code>src/components/TimetableSheet.vue</code><span>课表工具箱：改信息 / 新建 / 切换 / 删除</span></div>
+      <div class="row"><code>scripts/e2e.mjs</code><span>13 项交互冒烟（H5 产物上跑，不进小程序包）</span></div>
+    </div>
+
+    <div class="box info">
+      <b>跑起来</b>
+      <p><code>cd baixiaoxiao-mp &amp;&amp; npm install &amp;&amp; npm run dev:mp-weixin</code><br>
+      微信开发者工具 → 导入项目 → 选 <code>dist/dev/mp-weixin</code> → AppID 选「测试号」。</p>
+    </div>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section>
+    <h2><span class="num">07</span>路线图：五期，每期可验收</h2>
+    <p class="lead">不要一次搬完。每期都有一个"能给别人看"的产出，出问题能停下。</p>
+
+    <div class="phases">
+      <div class="phase done">
+        <div class="dot">P0</div>
+        <div class="body">
+          <h4>壳与品牌<span class="pill ok" style="margin-left:8px">已完成</span></h4>
+          <p>uni-app 工程、5 个 tabBar 页、adapters 层、品牌色与 logo 全套、构建通过。</p>
+          <div class="deliv"><b>验收：</b>开发者工具里五个 tab 都能点，主包 &lt; 2MB</div>
+        </div>
+      </div>
+      <div class="phase now">
+        <div class="dot">P1</div>
+        <div class="body">
+          <h4>页面 + 添加课表<span class="pill mid" style="margin-left:8px">课表页已完成</span></h4>
+          <p>课表页已完整落地：网格、周次、课程增删改、多课表、空态、持久化。<b>还剩</b> <code>SecondClassView</code> / <code>MeView</code> 两个页面的完整 UI（现在只是骨架）。</p>
+          <div class="deliv"><b>验收：</b>真机上滚动不卡、长课名不溢出、加一门课杀掉小程序重进还在</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">P2</div>
+        <div class="body">
+          <h4>课表导入（2 天）</h4>
+          <p>本机存储随 P1 一起做完了。这一期只剩导入：用 <code>wx.chooseMessageFile</code> 走「用户自助导入」，把 <code>parser/jwglxtBuct.ts</code> 的 HTML 表格解析搬过来。</p>
+          <div class="deliv"><b>验收：</b>导入一份真实课表 → 与手动添加的课并存，周次/节次不错位</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">P3</div>
+        <div class="body">
+          <h4>服务端代理（3～5 天，最不确定）</h4>
+          <p>把 <code>zfClient.ts</code> 放服务端，写登录 + kbList 抓取；小程序只发学号密码、拿回课程。<b>密码不落库</b>。</p>
+          <div class="deliv"><b>验收：</b>真实账号一键导入；错误六态话术与 App 一致</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">P4</div>
+        <div class="body">
+          <h4>订阅消息 + 分享（2 天）</h4>
+          <p>建模板 → 用户点一次订阅 → 服务端定时下发。分享改成 <code>onShareAppMessage</code> + path 参数带课表。</p>
+          <div class="deliv"><b>验收：</b>分享卡片能打开对方的课表视图</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="dot">P5</div>
+        <div class="body">
+          <h4>提审（1～2 周，主要等审核）</h4>
+          <p>类目、隐私协议、服务器域名、隐私接口声明。见第 9 节。</p>
+          <div class="deliv"><b>验收：</b>审核通过，能扫码体验</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8 ============ -->
+  <section>
+    <h2><span class="num">08</span>改名：哪些能改，哪些一改就坏</h2>
+    <p class="lead">「Unimate → 百小鸮」不是全文替换。我扫了一遍，<b>70 处可改、3 处绝对不能改</b>。</p>
+
+    <h3>可以直接改的（70 处 / 32 个文件）</h3>
+    <p>全部是<b>用户看得见的文案</b>和注释，改了对功能零影响：</p>
+    <div class="code"><div class="lab"><span class="dot"></span><b>典型样例</b></div>
+<pre>MeView.vue    <span class="bad">'请在系统设置中允许 Unimate 发送通知'</span>
+           →  <span class="good">'请在系统设置中允许 百小鸮 发送通知'</span>
+
+Login.vue     <span class="bad">'请登录/注册您的 Unimate 账号'</span>
+           →  <span class="good">'请登录/注册您的 百小鸮 账号'</span>
+
+main.ts       <span class="bad">'Unimate — 高校校园学习生活一站式智能助手'</span>
+           →  <span class="good">'百小鸮 — 北化校园学习生活助手'</span></pre></div>
+
+    <h3>绝对不能改的 3 处（一改就丢数据）</h3>
+    <table class="tbl">
+      <thead><tr><th>位置</th><th>是什么</th><th>改了会怎样</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>syncCrypto.ts</code><br><code>AAD_PREFIX = 'Unimate/P3/v1/'</code></td>
+          <td>AES-GCM 的<b>附加认证数据</b></td>
+          <td>已同步的加密包<b>全部认证失败</b>，谁也解不开，包括你自己</td>
+        </tr>
+        <tr>
+          <td><code>backup.ts</code><br><code>app: 'Unimate'</code> ×2 + <code>manifest.app !== 'Unimate'</code></td>
+          <td>备份文件的<b>格式标识</b>（不是给人看的名字）</td>
+          <td>已导出的 <code>.unimate.zip</code> 全部<b>恢复不了</b></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="box warn">
+      <b>还有 3 类"改了不坏但会尴尬"的</b>
+      <p><code>localStorage</code> 键前缀 <code>unimate:</code>（改了 = 老用户本地数据读不到）、<code>__unimateBack</code>（安卓返回键钩子）、<code>com.unimate.app</code>（包名，改了就变成另一个 App，不能覆盖升级）。这三类<b>建议一律不动</b>：品牌是给用户看的，标识符不是。</p>
+    </div>
+
+    <h3>用这个脚本改，别手动</h3>
+    <p><code>scripts/rename-brand.mjs</code> 已经把这些雷区写进白名单了。默认<b>只预览不改文件</b>：</p>
+    <div class="code"><div class="lab"><span class="dot"></span><b>跑之前先看影响面</b> scripts/</div>
+<pre>node scripts/rename-brand.mjs            <span class="c"># 预览：70 处 / 32 文件 / 跳过 3 处协议常量</span>
+node scripts/rename-brand.mjs --apply    <span class="c"># 真改（自动备份到 .brand-backup-时间/）</span></pre></div>
+    <div class="box danger">
+      <b>这个工程没有 git</b>
+      <p>我在 <code>E:\Gary\…\BaiXiaoXiao</code> 下跑 <code>git status</code> 得到的是 <code>fatal: not a git repository</code>。这意味着<b>改错了没有 undo</b>。所以：① 先 <code>git init &amp;&amp; git add -A &amp;&amp; git commit</code>（十分钟的事，能救命）；② 或者只跑预览，确认后加 <code>--apply</code>，脚本会自动留一份备份。<br>另外我没在这台机器上跑你的 30 个测试脚本（工程没装 <code>node_modules</code>），所以改名后请自己 <code>npm i &amp;&amp; npm test</code> 复核。</p>
+    </div>
+  </section>
+
+  <!-- ============ 9 ============ -->
+  <section>
+    <h2><span class="num">09</span>合规：比技术更容易卡住的地方</h2>
+    <p class="lead">这一段不是吓唬人，是提审最常见的退回原因。</p>
+
+    <table class="tbl">
+      <thead><tr><th>问题</th><th>现实情况</th><th>建议</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>主体类型</b></td>
+          <td>个人主体<b>不能</b>选「教育」相关类目，也<b>没有</b>业务域名和 web-view 权限</td>
+          <td>要挂学校服务入口 / web-view，必须<b>企业或事业单位主体</b></td>
+        </tr>
+        <tr>
+          <td><b>类目选择</b></td>
+          <td>「教育-教育服务」需要办学资质；纯查课表工具通常报「工具-效率」</td>
+          <td>先按「工具」报，别硬蹭教育类目</td>
+        </tr>
+        <tr>
+          <td><b>抓取教务数据</b></td>
+          <td>未经学校授权批量获取学生教务数据，属于高风险项；被学校投诉会直接下架</td>
+          <td>优先走「用户自助导入」（路线 B）；要自动抓取，最好先跟教务处报备</td>
+        </tr>
+        <tr>
+          <td><b>收集学号密码</b></td>
+          <td>小程序要求最小必要原则；明文/可逆存储账号密码是明确红线</td>
+          <td>密码只在内存过一手，登录完即弃；不写日志、不进备份</td>
+        </tr>
+        <tr>
+          <td><b>服务器域名</b></td>
+          <td>必须 HTTPS + 已备案 + 80/443 标准端口；<b>不接受 IP、不接受非标端口</b></td>
+          <td><code>workers.dev</code> / <code>pages.dev</code> 全部要换</td>
+        </tr>
+        <tr>
+          <td><b>隐私协议</b></td>
+          <td>涉及位置、相册、文件，都要在「用户隐私保护指引」里逐项声明并说明用途</td>
+          <td>拍照水印 = 相册权限，天气 = 位置权限，都要写</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 10 ============ -->
+  <section>
+    <h2><span class="num">10</span>十个坑（都是我在这份骨架里踩过并填掉的）</h2>
+    <ol class="clean">
+      <li><b><code>&lt;div&gt;</code> 不报错，只是不显示。</b>白屏优先查标签名，不是查逻辑。</li>
+      <li><b><code>scroll-view</code> 不给高度就不滚。</b>父级 flex + <code>height:0</code> 是唯一稳的写法。</li>
+      <li><b><code>uni.request</code> 默认会把响应 JSON 化。</b>抓 HTML 必须 <code>dataType:'text'</code>，否则正则全废。</li>
+      <li><b>Cookie 不会自动带。</b>正方登录链路要自己维护 Cookie 罐（骨架里给了）。</li>
+      <li><b>没有 <code>atob/btoa/TextEncoder/subtle</code>。</b>你的 RSA 和 SHA-256 都依赖它们，必须补纯 JS 版。</li>
+      <li><b><code>@dcloudio</code> 的 <code>latest</code> 是 2021 年的 alpha。</b>所有包钉同一版本号。</li>
+      <li><b><code>color-mix()</code> 在安卓微信失效。</b>你现在 tabbar 就在用。</li>
+      <li><b>课程格太窄，长课名会溢出盖住下一门课。</b><code>-webkit-line-clamp</code> 钳行 + 单节不显示地点。</li>
+      <li><b>主包上限 2MB。</b>你的 <code>public/sample-timetable.html</code> 有 146KB、<code>PRD.md</code> 有 583KB —— 别把文档目录打进包。</li>
+      <li><b>订阅消息一次授权只能发一条。</b>产品话术别写成"开启后每节课都提醒"。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 11 ============ -->
+  <section>
+    <h2><span class="num">11</span>现在就能做的三件事</h2>
+    <ol class="clean">
+      <li><b>先给老工程上 git。</b>在 <code>E:\Gary\…\BaiXiaoXiao</code> 里 <code>git init</code> 并提交一次。没版本控制就动 32 个文件，风险不对称。</li>
+      <li><b>跑一次改名预览。</b><code>node scripts/rename-brand.mjs</code>，看清楚 70 处在哪，再决定要不要 <code>--apply</code>。</li>
+      <li><b>把骨架跑起来。</b><code>cd baixiaoxiao-mp &amp;&amp; npm i &amp;&amp; npm run dev:mp-weixin</code>，用开发者工具导入 <code>dist/dev/mp-weixin</code>，先在真机上滑一遍课表、点右下角 ＋ 加一门课 —— 你会立刻发现哪些样式思路在小程序里不成立。</li>
+    </ol>
+    <div class="box info">
+      <b>顺序建议</b>
+      <p>先做 P1（只读页面）再动教务。因为 P1 会暴露所有样式与结构问题，而这些问题跟教务一毛钱关系没有；等页面稳了，再去啃服务端代理这个唯一的硬骨头。</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    百小鸮 · 迁移指南　|　基于对 Unimate v2.70 工程的实际扫描与构建验证<br>
+    骨架已通过 <code>build:mp-weixin</code>（主包 1.1MB）· 交互冒烟 13/13 · 纯逻辑层已用真实密钥做过加解密往返验证
+  </div>
+</div>
+</body>
+</html>

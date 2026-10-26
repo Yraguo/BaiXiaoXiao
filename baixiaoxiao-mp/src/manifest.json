@@ -1,0 +1,27 @@
+{
+  "name": "百小鸮",
+  "appid": "",
+  "description": "北化校园学习生活助手",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "touristappid",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true,
+      "postcss": true
+    },
+    "usingComponents": true,
+    "darkmode": false,
+    "permission": {},
+    "requiredPrivateInfos": []
+  },
+  "h5": {
+    "router": {
+      "base": "/"
+    }
+  },
+  "vueVersion": "3"
+}

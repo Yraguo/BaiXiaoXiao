@@ -1,0 +1,25 @@
+{
+  "pages": [
+    {
+      "path": "pages/main/index",
+      "style": {
+        "navigationStyle": "custom",
+        "disableScroll": true
+      }
+    },
+    {
+      "path": "pages/import/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "backgroundColor": "#F2F2F7",
+    "backgroundColorTop": "#F2F2F7",
+    "backgroundColorBottom": "#F2F2F7",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "百小鸮",
+    "navigationBarBackgroundColor": "#FFFFFF"
+  }
+}

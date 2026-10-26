@@ -1,0 +1,32 @@
+{
+  "name": "baixiaoxiao-mp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "百小鸮 — 北化校园学习生活助手（微信小程序版）",
+  "scripts": {
+    "dev:mp-weixin": "uni -p mp-weixin",
+    "build:mp-weixin": "uni build -p mp-weixin",
+    "dev:h5": "uni",
+    "build:h5": "uni build"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "3.0.0-5020620260917001",
+    "@dcloudio/uni-components": "3.0.0-5020620260917001",
+    "@dcloudio/uni-h5": "3.0.0-5020620260917001",
+    "@dcloudio/uni-mp-weixin": "3.0.0-5020620260917001",
+    "sharp": "^0.35.5",
+    "vue": "^3.4.21",
+    "vue-i18n": "^9.1.9"
+  },
+  "devDependencies": {
+    "@dcloudio/types": "^3.4.8",
+    "@dcloudio/uni-cli-shared": "3.0.0-5020620260917001",
+    "@dcloudio/vite-plugin-uni": "3.0.0-5020620260917001",
+    "@vue/runtime-core": "^3.4.21",
+    "sass": "^1.77.0",
+    "typescript": "^4.9.4",
+    "vite": "5.2.8",
+    "sharp": "^0.34.0",
+    "playwright-core": "^1.49.0"
+  }
+}

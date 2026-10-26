@@ -1,0 +1,23 @@
+# 依赖与构建产物
+node_modules/
+dist/
+unpackage/
+.tmp/
+
+# 工具与流水线产物（属于本机数据，不进仓库）
+.workbuddy/
+output/
+.request_id
+
+# 密钥与本地配置
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# 系统文件
+Thumbs.db
+.DS_Store
+desktop.ini
