@@ -3,10 +3,10 @@
 课表、记事、校园入口，一个**不联网也能用**的校园小程序。原生微信小程序实现，零第三方运行时依赖，没有后端。
 
 <p align="center">
-  <img src="bxx/assets/owl/owl-hello.png" width="140" alt="百小鸮">
+  <img src="assets/owl/owl-hello.png" width="140" alt="百小鸮">
 </p>
 
-> 本仓库早期是一版 uni-app 实现，现已整体替换为 `bxx/` 下的原生小程序版本；旧代码仍可在提交历史里找到。
+> 本仓库早期是一版 uni-app 实现，现已整体替换为根目录下的原生小程序版本；旧代码仍可在提交历史里找到。
 
 ## 功能
 
@@ -23,12 +23,12 @@
 
 ```bash
 # 单元测试（Node 18+，不需要 npm install）
-cd bxx && npm test
+npm test
 ```
 
 在微信开发者工具里：
 
-1. 选择「导入项目」，目录选 **`bxx/`**（不是仓库根目录）
+1. 选择「导入项目」，目录选**本仓库根目录**（就是能看到 `app.json` 的那一层）
 2. `project.config.json` 里的 AppID 已填好，直接编译；要发布自己的版本就换成你自己的
 3. 点击「编译」
 
@@ -85,7 +85,7 @@ cd bxx && npm test
 调参时可以直接看打分，不用猜：
 
 ```bash
-node -e "console.log(require('./bxx/utils/agent/index.js').explain('周三下午有什么课', {}))"
+node -e "console.log(require('./utils/agent/index.js').explain('周三下午有什么课', {}))"
 # [ { name: 'day_schedule', score: 7 } ]
 ```
 
@@ -102,7 +102,8 @@ node -e "console.log(require('./bxx/utils/agent/index.js').explain('周三下午
 ## 工程实现
 
 ```
-bxx/
+.
+├── app.js / app.json / app.wxss   小程序入口、全局配置与样式
 ├── pages/           课表、记事（日历）、小鸮、校园、我的 + 课程/记事编辑、设置、两个导入页
 ├── utils/
 │   ├── jw/          正方协议层（RSA、登录页解析、Cookie 罐、四个请求）与课程映射
@@ -128,7 +129,7 @@ bxx/
 ## 测试
 
 ```bash
-cd bxx && npm test
+npm test
 ```
 
 当前 **103 个用例，99 通过 / 0 失败 / 4 跳过**（跳过的是需要真实课表 PDF 的样本测试，样本含个人信息，不随仓库分发）。
