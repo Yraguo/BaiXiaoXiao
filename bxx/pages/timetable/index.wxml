@@ -19,25 +19,7 @@
     >›</view>
   </view>
 
-  <view class="week-tools">
-    <text>左右滑动切换周次</text>
-    <text wx:if="{{week !== currentWeek}}" class="back-current" bindtap="goCurrentWeek">回到本周</text>
-  </view>
-
-  <view class="import-bar" bindtap="openImport">
-    <text class="import-bar-icon">⇩</text>
-    <text class="import-bar-text">导入课表</text>
-    <text class="chevron">›</text>
-  </view>
-
-  <view wx:if="{{nextCourse}}" class="next-card" data-id="{{nextCourse.id}}" bindtap="showCourse">
-    <view class="next-dot" style="background:{{nextCourse.color}}"></view>
-    <view class="next-content">
-      <view class="next-title">{{nextCourse.name}} <text>{{nextCourse.countdown}}</text></view>
-      <view class="next-meta">{{nextCourse.dayLabel}} · 第 {{nextCourse.startPeriod}}–{{nextCourse.endPeriod}} 节 {{nextCourse.timeText}} · {{nextCourse.room}}</view>
-    </view>
-    <text class="chevron">›</text>
-  </view>
+  <view wx:if="{{week !== currentWeek}}" class="back-current" bindtap="goCurrentWeek">回到本周（第 {{currentWeek}} 周）</view>
 
   <view wx:if="{{!hasCourses}}" class="empty-state">
     <image class="empty-owl" src="/assets/owl/owl-study.png" mode="aspectFit"></image>
@@ -93,6 +75,23 @@
         </view>
       </view>
     </view>
+  </view>
+
+  <view wx:if="{{nextCourse}}" class="next-card" data-id="{{nextCourse.id}}" bindtap="showCourse">
+    <view class="next-dot" style="background:{{nextCourse.color}}"></view>
+    <view class="next-content">
+      <view class="next-title">{{nextCourse.name}} <text>{{nextCourse.countdown}}</text></view>
+      <view class="next-meta">{{nextCourse.dayLabel}} · 第 {{nextCourse.startPeriod}}–{{nextCourse.endPeriod}} 节 {{nextCourse.timeText}} · {{nextCourse.room}}</view>
+    </view>
+    <text class="chevron">›</text>
+  </view>
+
+  <view wx:if="{{hasCourses}}" class="import-entry" bindtap="openImport" aria-role="button" aria-label="导入课表">
+    <view class="import-entry-main">
+      <view class="import-entry-title">导入课表</view>
+      <view class="import-entry-copy">从课表 PDF 导入，可替换或追加</view>
+    </view>
+    <text class="chevron">›</text>
   </view>
 
   <view class="floating-actions">

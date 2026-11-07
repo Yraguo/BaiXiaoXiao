@@ -42,43 +42,28 @@
 .week-range { margin-left: 8rpx; color: var(--muted); font-size: 21rpx; font-weight: 400; }
 .semester { margin-top: 4rpx; overflow: hidden; color: var(--muted); font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
 
-.week-tools {
-  display: flex;
-  justify-content: space-between;
-  min-height: 50rpx;
-  padding: 10rpx 8rpx 6rpx;
-  color: var(--muted);
-  font-size: 21rpx;
-}
+/* 「回到本周」：只在翻到别的周时出现，做成一条可点的提示，不占常驻空间 */
+.back-current { margin-top: 12rpx; padding: 14rpx; border-radius: 16rpx; background: rgba(0, 122, 255, .08); color: var(--brand); font-size: 23rpx; text-align: center; }
+.back-current:active { background: rgba(0, 122, 255, .16); }
 
-.back-current { color: var(--brand); font-weight: 600; }
-
-.import-bar {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-bottom: 14rpx;
-  padding: 18rpx 18rpx;
-  border-radius: 20rpx;
-  background: var(--brand-light);
-  color: var(--brand);
-  font-size: 25rpx;
-  font-weight: 600;
-}
-.import-bar-icon { flex: none; font-size: 26rpx; }
-.import-bar-text { flex: 1; }
-.import-bar .chevron { color: rgba(0, 122, 255, .5); }
+/* 导入入口下沉到课表下方：这是低频操作，不该占着首屏 */
+.import-entry { display: flex; align-items: center; gap: 16rpx; margin-top: 14rpx; padding: 22rpx 20rpx; border-radius: 20rpx; background: #fff; box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .05); }
+.import-entry:active { background: #f8f8fa; }
+.import-entry-main { flex: 1; min-width: 0; }
+.import-entry-title { font-size: 26rpx; font-weight: 600; }
+.import-entry-copy { margin-top: 5rpx; color: var(--muted); font-size: 21rpx; }
 
 .next-card {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  margin-bottom: 14rpx;
+  margin-top: 16rpx;
   padding: 16rpx 18rpx;
   border-radius: 20rpx;
   background: var(--card);
   box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .06);
 }
+.next-card:active { background: #f8f8fa; }
 
 .next-dot { width: 18rpx; height: 18rpx; flex: none; border-radius: 6rpx; }
 .next-content { flex: 1; min-width: 0; }
