@@ -1,9 +1,9 @@
-const { loadHistory, loadNotes, saveHistory } = require('../../utils/appStore');
+const { loadHistory, loadNotes, saveHistory, saveNotes } = require('../../utils/appStore');
 const { confirmDelete } = require('../../utils/confirm');
 const { loadCourses, loadSettings } = require('../../utils/storage');
-const { answer } = require('../../utils/uni');
+const { ask } = require('../../utils/uni');
 
-const SUGGESTIONS = ['我这周几节课', '下节课在哪上', '今天有什么待办'];
+const SUGGESTIONS = ['我这周几节课', '高数在哪上', '记一下 周五交实验报告'];
 
 Page({
   data: {
@@ -51,9 +51,18 @@ Page({
     const text = String(raw || '').trim();
     if (!text) return;
     const now = Date.now();
+    // memory 让"那周三呢""哪门课？→高等数学"这类多轮对话能接上
+    const result = ask(text, this.buildContext(), this.memory);
+    this.memory = result.memory;
+
+    let reply = result.text;
+    if (result.action && !this.applyAction(result.action)) {
+      reply = '记事没保存成功，去「记事」页手动加一条吧。';
+    }
+
     const messages = this.data.messages.concat(
       { id: `u-${now}`, role: 'user', text, at: now },
-      { id: `a-${now}`, role: 'assistant', text: answer(text, this.buildContext()), at: now + 1 }
+      { id: `a-${now}`, role: 'assistant', text: reply, at: now + 1 }
     );
     saveHistory(messages);
     this.setData({
@@ -62,6 +71,22 @@ Page({
       keyboardHint: '',
       scrollTop: this.bottomScrollTop(messages.length)
     });
+  },
+
+  /**
+   * 执行小鸮返回的动作。Agent 只负责"想清楚要做什么"，真正写存储放在页面，
+   * 这样 utils 层保持纯函数、可单测，也不会因为一次误判就默默改数据。
+   */
+  applyAction(action) {
+    if (!action || action.type !== 'createNote' || !action.note) return true;
+    try {
+      const notes = loadNotes();
+      notes.unshift(action.note);
+      saveNotes(notes);
+      return true;
+    } catch (error) {
+      return false;
+    }
   },
 
   openKeyboardVoice() {

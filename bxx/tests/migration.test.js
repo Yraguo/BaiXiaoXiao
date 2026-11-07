@@ -29,7 +29,7 @@ test('小鸮提供历史记录与系统键盘语音提示', () => {
 
 test('小鸮的周次取自课表设置，不再是写死的数字', () => {
   const page = read('pages/uni/index.js');
-  const brain = read('utils/uni.js');
+  const brain = read('utils/agent/index.js') + read('utils/agent/nlu.js');
   assert.match(page, /loadSettings\(/, '页面要把学期设置传给小鸮');
   assert.match(page, /loadCourses\(/, '页面要把真实课程传给小鸮');
   assert.match(brain, /currentWeek\(/, '周次要按学期开始日期算');
