@@ -73,16 +73,9 @@
     </scroll-view>
 
     <view class="preview-actions">
-      <view class="action-head">这份课表要怎么放？</view>
-      <view class="choice" bindtap="replaceAll" aria-role="button">
-        <view class="choice-title">替换现有课表</view>
-        <view class="choice-copy">清空现有 {{preview.existing}} 个时间段，只保留这份</view>
-      </view>
-      <view class="choice" bindtap="appendToExisting" aria-role="button">
-        <view class="choice-title">追加到现有课表</view>
-        <view class="choice-copy">保留原有，只补充这份里还没有的</view>
-      </view>
-      <view class="action-cancel" bindtap="cancelPreview">取消</view>
+      <button class="primary-button" bindtap="replaceAll" disabled="{{saving}}">替换现有课表</button>
+      <button class="secondary-button" bindtap="appendToExisting" disabled="{{saving}}">追加到现有课表</button>
+      <button class="ghost-button" bindtap="cancelPreview" disabled="{{saving}}">取消</button>
     </view>
   </view>
 

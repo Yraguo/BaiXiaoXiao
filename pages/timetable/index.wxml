@@ -1,5 +1,5 @@
 <view class="page" bindtouchstart="rememberTouch" bindtouchend="finishTouch">
-  <view class="week-card">
+  <view class="week-card {{weekAnim}}">
     <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
     <view
       class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
@@ -29,7 +29,7 @@
     <button class="secondary-button empty-button" bindtap="openImport">导入课表</button>
   </view>
 
-  <view wx:else class="timetable-card">
+  <view wx:else class="timetable-card {{weekAnim}}">
     <view class="table-head">
       <view class="period-head">节次</view>
       <view

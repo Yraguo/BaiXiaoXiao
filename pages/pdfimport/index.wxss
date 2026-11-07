@@ -45,23 +45,7 @@
 .preview-meta { margin-top: 6rpx; color: #5c6b80; font-size: 21rpx; }
 .preview-meta.light { color: var(--muted); }
 .preview-more { padding: 16rpx 0 8rpx; color: var(--muted); font-size: 21rpx; text-align: center; }
-.preview-actions { margin-top: 22rpx; display: flex; flex-direction: column; gap: 12rpx; }
-.action-head { margin-bottom: 4rpx; color: var(--muted); font-size: 22rpx; text-align: center; }
-.choice {
-  padding: 22rpx 20rpx;
-  border-radius: 20rpx;
-  background: #f6f8fb;
-  text-align: center;
-}
-.choice-title { color: var(--text); font-size: 27rpx; font-weight: 700; }
-.choice-copy { margin-top: 6rpx; color: var(--muted); font-size: 21rpx; }
-.action-cancel {
-  margin-top: 6rpx;
-  padding: 18rpx;
-  color: var(--muted);
-  font-size: 25rpx;
-  text-align: center;
-}
+.preview-actions { margin-top: 20rpx; display: flex; flex-direction: column; gap: 14rpx; }
 .ghost-button { height: 84rpx; border-radius: 20rpx; background: transparent; color: var(--muted); font-size: 26rpx; }
 
 .tips { margin-top: 26rpx; padding: 0 8rpx; }

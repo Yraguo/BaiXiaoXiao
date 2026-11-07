@@ -30,6 +30,8 @@ Page({
     week: 1,
     currentWeek: 1,
     weekTitle: '',
+    // 切换周次时的入场动画类名，'week-in-right' / 'week-in-left'
+    weekAnim: '',
     dayColumns: [],
     periodRows: [],
     weekOptions: [],
@@ -47,6 +49,11 @@ Page({
   onShow() {
     if (this.loadedOnce) this.reload(false);
     this.loadedOnce = true;
+  },
+
+  onUnload() {
+    // 动画收尾的定时器别留到页面销毁之后
+    clearTimeout(this.weekAnimTimer);
   },
 
   onPullDownRefresh() {
@@ -219,8 +226,18 @@ Page({
   changeWeek(value) {
     const week = Math.min(Math.max(Number(value), 1), this.settings.totalWeeks);
     if (week === this.data.week) return;
-    this.setData({ week, showWeekPicker: false });
+    const forward = week > this.data.week;
+    this.setData({ week, showWeekPicker: false, weekAnim: '' });
     this.buildView();
+    const anim = forward ? 'week-in-right' : 'week-in-left';
+    const play = () => {
+      this.setData({ weekAnim: anim });
+      // 播完就摘掉类名：否则下次还是同一个类，keyframes 不会重新触发
+      clearTimeout(this.weekAnimTimer);
+      this.weekAnimTimer = setTimeout(() => this.setData({ weekAnim: '' }), 280);
+    };
+    if (typeof wx !== 'undefined' && wx.nextTick) wx.nextTick(play);
+    else setTimeout(play, 16);
   },
 
   openWeekPicker() {

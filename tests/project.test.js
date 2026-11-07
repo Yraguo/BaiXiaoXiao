@@ -60,11 +60,11 @@ test('课表格子只放课名和教室（回归：教室被拆成「一教B-21�
   assert.match(wxss, /\.course-block\.is-short\s+\.course-name\s*\{[^}]*-webkit-line-clamp:\s*1/, '单节格子只放一行课名');
 });
 
-test('导入预览把「替换/追加」讲清楚，而不是只给两个按钮', () => {
+test('导入确认是「替换 / 追加 / 取消」三个按钮', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/pdfimport/index.wxml'), 'utf8');
-  assert.match(wxml, /清空现有/, '替换的后果要写明');
-  assert.match(wxml, /只补充这份里还没有的/, '追加的后果要写明');
-  assert.match(wxml, /preview\.existing/, '要告诉用户现有多少条');
+  assert.match(wxml, /class="primary-button"[^>]*bindtap="replaceAll"/);
+  assert.match(wxml, /class="secondary-button"[^>]*bindtap="appendToExisting"/);
+  assert.match(wxml, /class="ghost-button"[^>]*bindtap="cancelPreview"/);
 });
 test('课表行数按课程的结束节次撑开（回归：第 13 节的课块画到网格外被切掉）', () => {
   const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
@@ -73,8 +73,13 @@ test('课表行数按课程的结束节次撑开（回归：第 13 节的课块�
   assert.match(js, /Array\.from\(\{ length: rowCount \}/, '按撑开后的行数渲染');
 });
 
-test('导入确认的选项文字居中（用户要求）', () => {
-  const wxss = fs.readFileSync(path.join(root, 'pages/pdfimport/index.wxss'), 'utf8');
-  assert.match(wxss, /\.choice\s*\{[^}]*text-align:\s*center/, '选项文字要居中');
-  assert.match(wxss, /\.choice\s*\{[^}]*border-radius/, '选项要保留卡片圆角');
+test('切换周次有横向滑入动画', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  assert.match(js, /weekAnim/, '切换时要设置动画类');
+  assert.match(wxml, /week-card \{\{weekAnim\}\}/, '周次卡片要挂上动画类');
+  assert.match(wxml, /timetable-card \{\{weekAnim\}\}/, '课表卡片要挂上动画类');
+  assert.match(wxss, /@keyframes week-in-right/, '往后翻从右侧滑入');
+  assert.match(wxss, /@keyframes week-in-left/, '往前翻从左侧滑入');
 });

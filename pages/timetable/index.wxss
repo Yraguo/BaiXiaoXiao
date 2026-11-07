@@ -79,6 +79,28 @@
   box-shadow: 0 6rpx 26rpx rgba(38, 57, 88, .06);
 }
 
+/*
+ * 切换周次的入场动画。
+ * 原来点箭头是整块内容"啪"地换掉，很生硬；现在按方向横向滑入：
+ * 往后翻从右边进来，往前翻从左边进来，位移只有 56rpx，不会看到空白。
+ * 只动 transform 和 opacity，不触发重排。
+ */
+.week-card.week-in-right,
+.timetable-card.week-in-right { animation: week-in-right .24s cubic-bezier(.22, .61, .36, 1); }
+
+.week-card.week-in-left,
+.timetable-card.week-in-left { animation: week-in-left .24s cubic-bezier(.22, .61, .36, 1); }
+
+@keyframes week-in-right {
+  from { opacity: .3; transform: translateX(56rpx); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes week-in-left {
+  from { opacity: .3; transform: translateX(-56rpx); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .table-head,
 .table-body { display: flex; }
 .table-head { height: 78rpx; background: #f8f9fc; border-bottom: 1rpx solid var(--line); }
