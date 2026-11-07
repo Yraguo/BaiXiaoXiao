@@ -20,6 +20,64 @@ function weekdayOf(date) {
   return (date.getDay() + 6) % 7 + 1;
 }
 
+const CN_DIGITS = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+
+/** "十二""二十""二十三" → 12 / 20 / 23；纯数字原样返回，认不出给 NaN */
+function chineseToNumber(text) {
+  const value = String(text || '').trim();
+  if (/^\d+$/.test(value)) return Number(value);
+  let total = 0;
+  let section = 0;
+  let digit = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    if (CN_DIGITS[char] !== undefined) {
+      digit = CN_DIGITS[char];
+    } else if (char === '十') {
+      section += (digit || 1) * 10;
+      digit = 0;
+    } else if (char === '百') {
+      section += (digit || 1) * 100;
+      digit = 0;
+    } else {
+      return NaN;
+    }
+  }
+  return total + section + digit;
+}
+
+const PERIOD_PARTS = [
+  { key: 'morning', label: '上午', from: 0, to: 12 * 60, re: /(早上|上午|早晨)/ },
+  { key: 'noon', label: '中午', from: 11 * 60 + 30, to: 13 * 60 + 30, re: /中午/ },
+  { key: 'afternoon', label: '下午', from: 12 * 60, to: 18 * 60, re: /下午/ },
+  { key: 'evening', label: '晚上', from: 18 * 60, to: 24 * 60, re: /(晚上|夜里)/ }
+];
+
+/**
+ * 时段槽位：既认"上午/下午/晚上"这种粗粒度，也认"第 3-4 节"这种精确节次。
+ * 有了它，"周三下午有课吗"才不会把早八也一起倒出来。
+ */
+function extractPeriod(input) {
+  const range = /第\s*(\d+)\s*[-–~至到]\s*(\d+)\s*节/.exec(input);
+  if (range) {
+    const from = Number(range[1]);
+    const to = Number(range[2]);
+    return { kind: 'periods', label: `第 ${Math.min(from, to)}-${Math.max(from, to)} 节`, from: Math.min(from, to), to: Math.max(from, to) };
+  }
+  const single = /第\s*(\d+)\s*节/.exec(input);
+  if (single) {
+    const value = Number(single[1]);
+    return { kind: 'periods', label: `第 ${value} 节`, from: value, to: value };
+  }
+  for (let index = 0; index < PERIOD_PARTS.length; index += 1) {
+    const part = PERIOD_PARTS[index];
+    if (part.re.test(input)) {
+      return { kind: 'part', key: part.key, label: part.label, from: part.from, to: part.to };
+    }
+  }
+  return null;
+}
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -54,7 +112,8 @@ function extractDate(input, ctx) {
 
   const today = weekdayOf(now);
   let week = ctx.week;
-  if (/下周/.test(input)) week += 1;
+  if (/下下周/.test(input)) week += 2;
+  else if (/下周/.test(input)) week += 1;
   else if (/上周/.test(input)) week -= 1;
   else if (!/(这周|本周|这个星期|这星期)/.test(input) && day < today) week += 1;
   week = clamp(week, 1, ctx.totalWeeks);
@@ -67,11 +126,12 @@ function extractDate(input, ctx) {
 }
 
 function extractWeek(input, ctx) {
-  const numbered = /第\s*(\d+)\s*周/.exec(input);
+  const numbered = /第\s*([0-9一二三四五六七八九十两]+)\s*周/.exec(input);
   if (numbered) {
-    const value = Number(numbered[1]);
+    const value = chineseToNumber(numbered[1]);
     return value >= 1 && value <= ctx.totalWeeks ? value : null;
   }
+  if (/下下周/.test(input)) return clamp(ctx.week + 2, 1, ctx.totalWeeks);
   if (/下周/.test(input)) return clamp(ctx.week + 1, 1, ctx.totalWeeks);
   if (/上周/.test(input)) return clamp(ctx.week - 1, 1, ctx.totalWeeks);
   if (/(这周|本周|这个星期|这星期)/.test(input)) return ctx.week;
@@ -185,9 +245,11 @@ function matchCourses(input, courses) {
 }
 
 module.exports = {
+  chineseToNumber,
   editDistance,
   extractDate,
   extractNote,
+  extractPeriod,
   extractWeek,
   isSubsequence,
   matchCourses,

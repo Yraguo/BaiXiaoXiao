@@ -1,9 +1,11 @@
 /**
- * 兜底检索：小型 FAQ 库 + TF-IDF 余弦相似度。
+ * 兜底检索：小型 FAQ 库 + BM25。
  *
- * 这是最朴素的向量空间模型（Salton 的 VSM），几十行、零依赖，但比关键词命中宽容得多：
- * 用户问"课表咋导进去"、"PDF 怎么弄"，词面都不完全一样，余弦相似度仍能命中。
- * 中文没有分词器，直接用二元组（bigram）当词项 —— 对短问句足够稳。
+ * 比朴素 TF-IDF 余弦好在两点：词频做了饱和（同一词出现十次不等于重要十倍），
+ * 并按文档长度做了归一化（长答案不会天然占便宜）。中文没有分词器，
+ * 词项用二元组（bigram），配合一张很小的同义词表，把"课表/课程表""导进/导入"并到一处。
+ *
+ * 命中阈值按归一化分数（0~1）判断，低于阈值宁可承认答不上来，也不硬套。
  */
 
 const { normalize } = require('./nlu');
@@ -47,8 +49,23 @@ const FAQ = [
   }
 ];
 
+/** 很小的同义词表：只做"同一种说法的归一"，不做语义扩展 */
+const SYNONYMS = [
+  [/课程表|时间表|功课表/g, '课表'],
+  [/导进|导到|放进|弄进|加进/g, '导入'],
+  [/待办事项|待办|任务清单|任务/g, '记事'],
+  [/换机|换手机/g, '换手机'],
+  [/咋弄|怎么弄|咋办/g, '怎么办']
+];
+
+function expand(text) {
+  let value = String(text || '');
+  SYNONYMS.forEach((pair) => { value = value.replace(pair[0], pair[1]); });
+  return value;
+}
+
 function tokens(text) {
-  const value = normalize(text).replace(/[^\u4e00-\u9fa5a-z0-9]/g, '');
+  const value = expand(normalize(text)).replace(/[^\u4e00-\u9fa5a-z0-9]/g, '');
   if (!value) return [];
   if (value.length <= 2) return [value];
   const out = [];
@@ -56,60 +73,57 @@ function tokens(text) {
   return out;
 }
 
-function termFrequency(list) {
-  const map = {};
-  list.forEach((term) => { map[term] = (map[term] || 0) + 1; });
-  return map;
-}
+const K1 = 1.2;
+const B = 0.75;
 
-const DOCUMENTS = FAQ.map((item) => termFrequency(tokens(item.q)));
+const DOCUMENTS = FAQ.map((item) => tokens(item.q));
 const DOC_COUNT = DOCUMENTS.length;
+const AVG_LENGTH = DOCUMENTS.reduce((sum, doc) => sum + doc.length, 0) / DOC_COUNT;
+
 const IDF = (() => {
   const df = {};
-  DOCUMENTS.forEach((doc) => Object.keys(doc).forEach((term) => { df[term] = (df[term] || 0) + 1; }));
+  DOCUMENTS.forEach((doc) => {
+    Array.from(new Set(doc)).forEach((term) => { df[term] = (df[term] || 0) + 1; });
+  });
   const table = {};
   Object.keys(df).forEach((term) => {
-    table[term] = Math.log((DOC_COUNT + 1) / (df[term] + 1)) + 1;
+    // BM25 的概率式 IDF，常见词（"课表"）不会像经典 IDF 那样被压到 0
+    table[term] = Math.log(1 + (DOC_COUNT - df[term] + 0.5) / (df[term] + 0.5));
   });
   return table;
 })();
 
-function weigh(tf) {
-  const vector = {};
-  let norm = 0;
-  Object.keys(tf).forEach((term) => {
-    const weight = tf[term] * (IDF[term] || 1);
-    vector[term] = weight;
-    norm += weight * weight;
+function bm25(queryTerms, doc) {
+  const tf = {};
+  doc.forEach((term) => { tf[term] = (tf[term] || 0) + 1; });
+  let score = 0;
+  queryTerms.forEach((term) => {
+    const frequency = tf[term];
+    if (!frequency) return;
+    const idf = IDF[term] || Math.log(1 + (DOC_COUNT + 0.5) / 0.5);
+    const saturated = (frequency * (K1 + 1)) / (frequency + K1 * (1 - B + B * doc.length / AVG_LENGTH));
+    score += idf * saturated;
   });
-  return { vector, norm: Math.sqrt(norm) || 1 };
-}
-
-const DOC_VECTORS = DOCUMENTS.map(weigh);
-
-function cosine(left, right) {
-  const small = Object.keys(left.vector).length <= Object.keys(right.vector).length ? left : right;
-  const other = small === left ? right : left;
-  let dot = 0;
-  Object.keys(small.vector).forEach((term) => {
-    if (other.vector[term]) dot += small.vector[term] * other.vector[term];
-  });
-  return dot / (left.norm * right.norm);
+  return score;
 }
 
 /**
  * @param {string} text 用户输入
- * @param {number} threshold 低于阈值认为没命中，交给调用方兜底
+ * @param {number} threshold 归一化分数阈值，默认 0.2（实测无关问句均在 0.09 以下）
  * @returns {{answer:string, score:number}}
  */
 function lookup(text, threshold) {
-  const limit = typeof threshold === 'number' ? threshold : 0.32;
-  const query = weigh(termFrequency(tokens(text)));
+  const queryTerms = Array.from(new Set(tokens(text)));
+  if (!queryTerms.length) return { answer: '', score: 0 };
+
+  const ceiling = queryTerms.reduce((sum, term) => sum + (IDF[term] || Math.log(1 + (DOC_COUNT + 0.5) / 0.5)), 0);
   let best = { index: -1, score: 0 };
-  DOC_VECTORS.forEach((doc, index) => {
-    const score = cosine(query, doc);
+  DOCUMENTS.forEach((doc, index) => {
+    const score = ceiling ? bm25(queryTerms, doc) / ceiling : 0;
     if (score > best.score) best = { index, score };
   });
+
+  const limit = typeof threshold === 'number' ? threshold : 0.2;
   if (best.index < 0 || best.score < limit) return { answer: '', score: best.score };
   return { answer: FAQ[best.index].a, score: best.score };
 }

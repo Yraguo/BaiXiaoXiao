@@ -4,7 +4,7 @@
  * 结构参考了 GitHub 上的 miniAi（工具注册表 + 记忆）与 smart-school
  * （意图识别 → 简单问题走 workflow、复杂问题才上 agent）：
  *
- *   NLU 抽槽 → 选工具 → 缺槽就反问 → 执行 → 记忆
+ *   NLU 抽槽 → 意图打分 → 选工具 → 缺槽反问 → 执行 → 记忆
  *
  * 全部本地跑：不联网、不调模型。能用确定性代码算出来的，绝不编。
  */
@@ -56,8 +56,7 @@ function blockText(course, periodTimes) {
 }
 
 function dayLabel(date) {
-  const day = nlu.weekdayOf(date);
-  return `${date.getMonth() + 1}月${date.getDate()}日 ${DAY_NAMES[day - 1]}`;
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${DAY_NAMES[nlu.weekdayOf(date) - 1]}`;
 }
 
 function coursesOn(courses, week, day) {
@@ -66,6 +65,19 @@ function coursesOn(courses, week, day) {
       && Array.isArray(course.weeks)
       && course.weeks.indexOf(week) >= 0)
     .sort((left, right) => Number(left.startPeriod) - Number(right.startPeriod));
+}
+
+/** 时段过滤：粗粒度按开始时间落在哪个区间，精确模式按节次区间求交 */
+function withinPeriod(course, period, periodTimes) {
+  if (!period) return true;
+  if (period.kind === 'periods') {
+    return Number(course.startPeriod) <= period.to && Number(course.endPeriod) >= period.from;
+  }
+  const first = (periodTimes || []).find((entry) => Number(entry.period) === Number(course.startPeriod));
+  if (!first) return true;
+  const parts = String(first.start).split(':').map(Number);
+  const minutes = parts[0] * 60 + (parts[1] || 0);
+  return minutes >= period.from && minutes < period.to;
 }
 
 /* ============================ 各工具的产出 ============================ */
@@ -82,9 +94,9 @@ function helpText() {
   return [
     '我直接读你导入的课表来回答，不联网也不编造。可以这样问：',
     '· 我这周几节课',
-    '· 今天 / 明天 / 周三有什么课',
+    '· 今天 / 明天 / 周三下午有什么课',
     '· 下节课在哪上',
-    '· 高数在哪上（简称也能认）',
+    '· 高数在哪上（简称、错别字也能认）',
     '· 记一下 周五交实验报告',
     '· 今天有什么待办'
   ].join('\n');
@@ -112,15 +124,19 @@ function weekText(week, ctx) {
   return lines.join('\n');
 }
 
-function dayText(slot, ctx) {
+function dayText(slot, ctx, period) {
   const label = dayLabel(slot.date);
-  const list = coursesOn(ctx.courses, slot.week, slot.day);
+  const all = coursesOn(ctx.courses, slot.week, slot.day);
+  const list = period ? all.filter((course) => withinPeriod(course, period, ctx.periodTimes)) : all;
+  const scope = period ? ` ${period.label}` : '';
+
   if (!list.length) {
+    if (all.length && period) return `${label}${scope}没有课，其他时段还有 ${all.length} 节。`;
     // 问今天/明天却空着时，顺手把下一节课递上去，别让人再追问一次
     const diff = calendarDayDiff(ctx.now, slot.date);
     return diff >= 0 && diff <= 1 ? `${label} 没有课。${nextText(ctx)}` : `${label} 没有课。`;
   }
-  return `${label} 有 ${list.length} 节课：\n${list.map((course) => `${course.name}（${blockText(course, ctx.periodTimes)}）`).join('\n')}`;
+  return `${label}${scope}有 ${list.length} 节课：\n${list.map((course) => `${course.name}（${blockText(course, ctx.periodTimes)}）`).join('\n')}`;
 }
 
 function findNextCourse(ctx) {
@@ -200,73 +216,112 @@ function campusText() {
 
 /* ============================ 工具表 ============================ */
 
+/**
+ * 每个工具：cues（触发词 + 权重）、guard（前置条件）、run。
+ * 选工具不再靠"谁先写在前面"，而是累加命中权重取最高 —— 顺序无关，
+ * 权重可以按误判调，比一堆 if 好维护。
+ * priority 只用于同分时让更具体的工具胜出（记事 > 课表）。
+ */
 const TOOLS = [
   {
     name: 'greeting',
-    test: (input) => /^(你好|您好|hi|hello|在吗|嗨)/.test(input),
+    priority: 120,
+    cues: [[/^(你好|您好|hi|hello|在吗|嗨)/, 5]],
     run: (slots, ctx) => greetingText(ctx)
   },
   {
     name: 'help',
-    test: (input) => /(能做什么|会做什么|有什么功能|你是谁|帮助|使用说明|怎么用你)/.test(input),
+    priority: 110,
+    cues: [[/(能做什么|会做什么|有什么功能|你是谁|帮助|使用说明|怎么用你)/, 4]],
     run: () => helpText()
   },
   {
-    name: 'import_guide',
-    test: (input) => /(导入|导出|pdf|怎么加课表|课表来源|导不进)/.test(input) && !/(记事|待办)/.test(input),
-    run: () => importText()
-  },
-  {
     name: 'privacy',
-    test: (input) => /(隐私|上传|泄露|联网|数据.*(哪|安全))/.test(input),
+    priority: 105,
+    cues: [[/(隐私|上传|泄露|联网)/, 4], [/数据.{0,6}(安全|哪|服务器)/, 3]],
     run: () => privacyText()
   },
   {
+    name: 'import_guide',
+    priority: 100,
+    cues: [[/(导入|导出|pdf|导不进)/i, 4], [/(怎么加课表|课表来源)/, 3]],
+    run: () => importText()
+  },
+  {
     name: 'create_note',
-    test: (input, ctx, slots) => Boolean(slots.note),
+    priority: 95,
+    guard: (input, ctx, slots) => Boolean(slots.note),
+    cues: [[/./, 6]],
     run: (slots, ctx) => createNote(slots.note, ctx)
   },
   {
     name: 'notes_query',
-    test: (input) => /(记事|待办|任务|作业)/.test(input),
+    priority: 90,
+    cues: [[/(记事|待办|任务|作业)/, 5]],
     run: (slots, ctx, input) => (/(怎么|如何|在哪|哪里)/.test(input) ? notesHelpText() : notesText(ctx))
   },
   {
     name: 'next_class',
-    test: (input) => /(下一?节|下节|接下来.{0,4}课|还有多久.{0,4}课|快上课)/.test(input),
+    priority: 85,
+    cues: [[/(下一?节|下节)/, 5], [/(接下来|还有多久|快上课)/, 3]],
     run: (slots, ctx) => nextText(ctx)
   },
   {
     name: 'course_info',
+    priority: 80,
     // 弱匹配（两个字简称）必须带"在哪上/老师/几周"这类意图词，否则"数据还在吗"会被当成《数据结构》
-    test: (input, ctx, slots) => Boolean(slots.course.name)
+    guard: (input, ctx, slots) => Boolean(slots.course.name)
       && (slots.course.strict || /(在哪|哪里|教室|老师|谁教|几周|上到|哪天|什么时候|什么课|有课)/.test(input)),
+    cues: [[/./, 3], [/(在哪|哪里|教室|老师|谁教|几周|上到|哪天|什么时候)/, 2]],
     run: (slots, ctx) => courseText(slots.course.name, ctx)
   },
   {
     name: 'day_schedule',
-    test: (input, ctx, slots) => Boolean(slots.date) && /(课|安排|上什么)/.test(input),
-    run: (slots, ctx) => dayText(slots.date, ctx)
+    priority: 75,
+    guard: (input, ctx, slots) => Boolean(slots.date) && /(课|安排|上什么)/.test(input),
+    cues: [[/./, 3], [/(今天|明天|后天|大后天|周|星期|礼拜)/, 2], [/(课|安排|上什么)/, 2]],
+    run: (slots, ctx) => dayText(slots.date, ctx, slots.period)
   },
   {
     name: 'week_schedule',
-    test: (input, ctx, slots) => slots.week !== null && /(课|安排|上什么)/.test(input),
+    priority: 70,
+    guard: (input, ctx, slots) => slots.week !== null && /(课|安排|上什么)/.test(input),
+    cues: [[/./, 3], [/(第.{1,3}周|这周|本周|下周|上周)/, 2], [/(课|安排|上什么)/, 2]],
     run: (slots, ctx) => weekText(slots.week, ctx)
   },
   {
     name: 'term_info',
-    test: (input) => /(第几周|几周了|开学|学期|放假|还剩.{0,3}周)/.test(input),
+    priority: 65,
+    cues: [[/(第几周|几周了|开学|学期|放假)/, 4], [/还剩.{0,3}周/, 3]],
     run: (slots, ctx) => termText(ctx)
   },
   {
     name: 'campus',
-    test: (input) => /(校园服务|有哪些服务|服务入口|图书馆|信息门户|北化在线|健康云|校园网)/.test(input),
+    priority: 60,
+    cues: [[/(校园服务|有哪些服务|服务入口|图书馆|信息门户|北化在线|健康云|校园网)/, 4]],
     run: () => campusText()
   }
 ];
 
 function toolByName(name) {
   return TOOLS.find((tool) => tool.name === name) || null;
+}
+
+function scoreTool(tool, input, ctx, slots) {
+  if (tool.guard && !tool.guard(input, ctx, slots)) return 0;
+  return tool.cues.reduce((sum, cue) => sum + (cue[0].test(input) ? cue[1] : 0), 0);
+}
+
+function pickTool(input, ctx, slots) {
+  let best = null;
+  TOOLS.forEach((tool) => {
+    const score = scoreTool(tool, input, ctx, slots);
+    if (score <= 0) return;
+    if (!best || score > best.score || (score === best.score && tool.priority > best.tool.priority)) {
+      best = { tool, score };
+    }
+  });
+  return best && best.score >= 2 ? best.tool : null;
 }
 
 /* ============================ 动作（写数据由页面执行） ============================ */
@@ -305,7 +360,7 @@ function normalizeMemory(memory) {
 function clarify(question, pending, state) {
   return {
     text: question,
-    memory: { lastTool: '', lastSlots: null, pending },
+    memory: { lastTool: '', lastSlots: state.lastSlots || null, pending },
     suggestions: pending && pending.options ? pending.options : []
   };
 }
@@ -340,28 +395,27 @@ function resume(pending, input, ctx, state, slots) {
 function run(tool, slots, ctx, state) {
   const output = tool.run(slots, ctx, state.input || '');
   const payload = typeof output === 'string' ? { text: output } : output;
-  let action = null;
-  if (payload.action) action = payload.action;
 
   const memory = {
     lastTool: tool.name,
     lastSlots: {
       date: slots.date ? dateStamp(slots.date.date) : '',
       week: slots.week,
-      course: slots.course && slots.course.name ? slots.course.name : ''
+      course: slots.course && slots.course.name ? slots.course.name : '',
+      period: slots.period ? slots.period.label : ''
     },
     pending: null
   };
 
   const result = { text: payload.text, memory };
-  if (action) result.action = action;
+  if (payload.action) result.action = payload.action;
   return result;
 }
 
 /**
  * @param {string} text 用户这一句话
  * @param {object} context { now, settings, courses, notes }
- * @param {object} memory 上一轮返回的 memory，用于追问和多轮澄清
+ * @param {object} memory 上一轮返回的 memory，用于追问、指代和多轮澄清
  * @returns {{text:string, memory:object, action?:object, suggestions?:Array<string>}}
  */
 function ask(text, context, memory) {
@@ -375,7 +429,8 @@ function ask(text, context, memory) {
     date: nlu.extractDate(input, ctx),
     week: nlu.extractWeek(input, ctx),
     course: nlu.matchCourses(input, ctx.courses),
-    note: nlu.extractNote(input, ctx)
+    note: nlu.extractNote(input, ctx),
+    period: nlu.extractPeriod(input)
   };
 
   // 1. 先把上一轮的澄清接上
@@ -390,36 +445,69 @@ function ask(text, context, memory) {
     return run(toolByName('day_schedule'), slots, ctx, Object.assign({}, state, { input }));
   }
 
-  // 3. 正常选工具
-  for (let index = 0; index < TOOLS.length; index += 1) {
-    const tool = TOOLS[index];
-    if (!tool.test(input, ctx, slots)) continue;
-    // 没给课程名却在问"在哪上"，先反问而不是瞎猜
-    if (tool.name === 'course_info' && !slots.course.name) continue;
+  // 3. 指代："它/这门课/那门课"沿用上一轮问过的课程
+  if (/^(它|这门课|那门课|这个课|该课)/.test(input) && state.lastSlots && state.lastSlots.course) {
+    return run(
+      toolByName('course_info'),
+      Object.assign({}, slots, { course: { name: state.lastSlots.course, others: [], strict: true } }),
+      ctx,
+      state
+    );
+  }
+
+  // 4. 打分选工具
+  const tool = pickTool(input, ctx, slots);
+  if (tool) {
     if (tool.name === 'create_note' && !String(slots.note.title || '').trim()) {
       return clarify('要记什么？直接说内容就行，比如「周五交实验报告」。', { tool: 'create_note' }, state);
     }
-    return run(tool, slots, ctx, Object.assign({}, state, { input }));
+    return run(tool, slots, ctx, state);
   }
 
-  // 4. 问"在哪上/谁教"但没带课名 → 反问
+  // 5. 问"在哪上/谁教"但没带课名 → 反问
   if (/(在哪|哪里上|教室|老师|谁教|几周|上到)/.test(input)) {
     return clarify('你问的是哪门课？说个课程名就行，比如「高数在哪上」。', { tool: 'course_info' }, state);
   }
 
-  // 5. 只说了"课表"没带时间 → 默认给本周
+  // 6. "为什么课表是空的"这种疑问句先让 FAQ 试一次，命中就答，不命中再给本周课表
+  if (/(为什么|怎么回事|不对|失败|空了|少课|查不到|没有课)/.test(input)) {
+    const doubt = faq.lookup(input);
+    if (doubt.answer) return { text: doubt.answer, memory: { lastTool: '', lastSlots: null, pending: null } };
+  }
+
+  // 7. 只说了"课表"没带时间 → 默认给本周
   if (/课/.test(input)) {
     return run(toolByName('week_schedule'), Object.assign({}, slots, { week: ctx.week }), ctx, state);
   }
 
-  // 6. FAQ 向量检索兜底
+  // 8. FAQ 向量检索兜底
   const hit = faq.lookup(input);
   if (hit.answer) return { text: hit.answer, memory: { lastTool: '', lastSlots: null, pending: null } };
 
   return {
-    text: '这个问题我还答不上来。我只读本机的课表和记事，可以问我：本周几节课、今天有什么课、下一节课、某门课在哪上、记一下作业、今天有什么待办。',
+    text: '这个问题我还答不上来。我只读本机的课表和记事，可以问我：本周几节课、今天有什么课、周三下午有课吗、下一节课、某门课在哪上、记一下作业、今天有什么待办。',
     memory: { lastTool: '', lastSlots: null, pending: null }
   };
 }
 
-module.exports = { ask, buildContext, helpText, TOOLS };
+/**
+ * 调试用：把这句话在各个工具上的得分打出来，方便调权重。
+ * 用法：node -e "console.log(require('./utils/agent/index.js').explain('周三下午有课吗', {...}))"
+ */
+function explain(text, context) {
+  const ctx = buildContext(context);
+  const input = nlu.normalize(text);
+  const slots = {
+    date: nlu.extractDate(input, ctx),
+    week: nlu.extractWeek(input, ctx),
+    course: nlu.matchCourses(input, ctx.courses),
+    note: nlu.extractNote(input, ctx),
+    period: nlu.extractPeriod(input)
+  };
+  return TOOLS
+    .map((tool) => ({ name: tool.name, score: scoreTool(tool, input, ctx, slots) }))
+    .filter((item) => item.score > 0)
+    .sort((left, right) => right.score - left.score);
+}
+
+module.exports = { ask, buildContext, explain, helpText, TOOLS };

@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { editDistance, isSubsequence, matchCourses } = require('../utils/agent/nlu');
+const { chineseToNumber, editDistance, extractPeriod, isSubsequence, matchCourses } = require('../utils/agent/nlu');
 const { lookup } = require('../utils/agent/faq');
 
 const COURSES = [
@@ -41,8 +41,29 @@ test('没提课程名时不硬凑', () => {
   assert.equal(matchCourses('今天有什么课', COURSES).name, '');
 });
 
-test('FAQ 用 TF-IDF 余弦检索', () => {
+test('FAQ 用 BM25 检索', () => {
   assert.match(lookup('怎么把课表导进去').answer, /PDF|导入/);
   assert.match(lookup('数据和隐私安全吗').answer, /本地|上传|不会/);
   assert.equal(lookup('帮我订一张火车票').answer, '', '无关问题不该硬套 FAQ');
+});
+
+test('中文数字能转成阿拉伯数字', () => {
+  assert.equal(chineseToNumber('十'), 10);
+  assert.equal(chineseToNumber('十二'), 12);
+  assert.equal(chineseToNumber('二十'), 20);
+  assert.equal(chineseToNumber('二十三'), 23);
+  assert.equal(chineseToNumber('3'), 3);
+  assert.ok(Number.isNaN(chineseToNumber('几')));
+});
+
+test('时段槽位区分粗粒度与精确节次', () => {
+  assert.equal(extractPeriod('周三下午有课吗').label, '下午');
+  assert.equal(extractPeriod('第3-4节呢').kind, 'periods');
+  assert.equal(extractPeriod('第6节').from, 6);
+  assert.equal(extractPeriod('今天有什么课'), null);
+});
+
+test('同义词归一后，换个说法也能检索到', () => {
+  assert.match(lookup('课程表怎么导进去').answer, /PDF|导入/);
+  assert.match(lookup('待办会提醒吗').answer, /通知|提醒/);
 });

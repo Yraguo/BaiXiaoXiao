@@ -112,6 +112,42 @@ test('「哪天上实验」能认出是问《物理实验》', () => {
   assert.match(text, /周四/);
 });
 
+test('时段筛选：周三下午只给下午的课', () => {
+  const text = answer('周三下午有什么课', context());
+  assert.match(text, /大学物理/);
+  assert.doesNotMatch(text, /中国近现代史纲要/, '上午的课不该出现在下午的回答里');
+});
+
+test('时段没有课时，说明其他时段还有几节', () => {
+  const text = answer('周三晚上有课吗', context());
+  assert.match(text, /晚上没有课/);
+  assert.match(text, /还有 2 节/);
+});
+
+test('精确到节次：周三第 6 节有课吗', () => {
+  const text = answer('周三第6节有课吗', context());
+  assert.match(text, /大学物理/);
+  assert.match(text, /第 6 节/);
+});
+
+test('中文数字的周次也能解析', () => {
+  const text = answer('第十周几节课', context());
+  assert.match(text, /第 10 周/);
+  assert.match(text, /9 个时间段/);
+});
+
+test('「下下周」按两周后算', () => {
+  const text = answer('下下周三有什么课', context());
+  assert.match(text, /11月18日/);
+});
+
+test('指代「它呢」沿用上一轮问过的课程', () => {
+  const first = ask('高数在哪上', context());
+  const second = ask('它呢', context(), first.memory);
+  assert.match(second.text, /《高等数学》/);
+  assert.match(second.text, /教A-203/);
+});
+
 test('「记一下」生成记事动作，日期落到那一天', () => {
   const result = ask('记一下 周五交实验报告', context());
   assert.match(result.text, /记好了/);
@@ -132,6 +168,14 @@ test('「记一下」没说内容时先问一句', () => {
 test('开放问题走 FAQ 检索，不是一句"答不上来"', () => {
   const text = answer('换手机数据还在吗', context());
   assert.match(text, /云同步|重新导入/);
+});
+
+test('意图打分可解释：能看出为什么选了这个工具', () => {
+  const { explain } = require('../utils/agent/index.js');
+  const ranked = explain('周三下午有什么课', context());
+  assert.equal(ranked[0].name, 'day_schedule');
+  assert.ok(ranked[0].score >= 2);
+  assert.ok(ranked.every((item) => item.score > 0));
 });
 
 test('真答不上来时如实说明并给出可问的例子', () => {
