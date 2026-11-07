@@ -64,14 +64,13 @@
           wx:for="{{day.blocks}}"
           wx:key="id"
           wx:for-item="course"
-          class="course-block {{course.isNow ? 'is-now' : ''}}"
+          class="course-block {{course.isNow ? 'is-now' : ''}} {{course.short ? 'is-short' : ''}}"
           style="{{course.style}}"
           data-id="{{course.id}}"
           catchtap="showCourse"
         >
           <view class="course-name">{{course.name}}</view>
           <view class="course-room">{{course.room}}</view>
-          <view class="course-time">{{course.timeText}}</view>
         </view>
       </view>
     </view>

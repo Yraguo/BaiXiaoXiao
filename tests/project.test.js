@@ -50,3 +50,19 @@ test('所有页面的 bind 事件都能在对应 js 里找到方法', () => {
   });
 });
 
+test('课表格子只放课名和教室（回归：教室被拆成「一教B-21」+「0」）', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  assert.doesNotMatch(wxml, /course-time/, '格子只有一列宽，上课时间不该再塞进来（节次列已标时间）');
+  assert.match(wxss, /\.course-name\s*\{[^}]*-webkit-line-clamp:\s*2/, '课名最多两行');
+  assert.match(wxss, /\.course-room\s*\{[^}]*text-overflow:\s*ellipsis/, '教室必须单行省略，不能按字折断');
+  assert.doesNotMatch(wxss, /\.course-room\s*\{[^}]*word-break:\s*break-all/, '教室不允许逐字折行');
+  assert.match(wxss, /\.course-block\.is-short\s+\.course-name\s*\{[^}]*-webkit-line-clamp:\s*1/, '单节格子只放一行课名');
+});
+
+test('导入预览把「替换/追加」讲清楚，而不是只给两个按钮', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/pdfimport/index.wxml'), 'utf8');
+  assert.match(wxml, /清空现有/, '替换的后果要写明');
+  assert.match(wxml, /只补充这份里还没有的/, '追加的后果要写明');
+  assert.match(wxml, /preview\.existing/, '要告诉用户现有多少条');
+});

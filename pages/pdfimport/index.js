@@ -193,7 +193,9 @@ Page({
         term: result.term || '课表 PDF',
         distinct: result.distinct,
         blocks: rows.length,
-        totalWeeks
+        totalWeeks,
+        // 替换还是追加，用户得先知道现有多少条
+        existing: loadCourses().length
       },
       previewTotal: previewItems.length,
       previewMore: Math.max(0, previewItems.length - 60),
@@ -272,6 +274,7 @@ Page({
   },
 
   cancelPreview() {
+    if (this.data.saving) return;
     this.pendingRows = null;
     this.setData({ preview: null, previewWarning: '' });
   },

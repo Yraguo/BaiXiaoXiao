@@ -115,6 +115,8 @@ Page({
             ...course,
             color: COURSE_COLORS[colorIndex % COURSE_COLORS.length],
             isNow,
+            // 单节次的格子只有 88rpx 高，塞不下两行课名 + 教室
+            short: Number(course.endPeriod) - Number(course.startPeriod) < 1,
             style: `top:${top}rpx;height:${height}rpx;background:${COURSE_COLORS[colorIndex % COURSE_COLORS.length]};`,
             timeText: this.timeText(course)
           };

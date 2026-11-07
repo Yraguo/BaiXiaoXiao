@@ -123,9 +123,32 @@
   box-shadow: 0 3rpx 10rpx rgba(22, 32, 49, .12);
 }
 .course-block.is-now { border: 4rpx solid #18202d; padding: 3rpx 2rpx; }
-.course-name { font-size: 20rpx; font-weight: 700; word-break: break-all; }
-.course-room { margin-top: 5rpx; opacity: .9; word-break: break-all; }
-.course-time { margin-top: 3rpx; opacity: .8; font-size: 15rpx; }
+/*
+ * 格子里只有一列宽（约 90px），课名、教室、上课时间三行塞不下：
+ * 原来用 word-break: break-all，"一教B-210" 会被拆成 "一教B-21" + "0"，
+ * 第三行再溢出把第一行顶掉。现在课名最多两行省略，教室单行省略，
+ * 时间去掉了——节次列本来就标着每节的起止时间。
+ */
+.course-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 1.25;
+  word-break: break-all;
+}
+.course-block.is-short { padding: 6rpx; }
+.course-block.is-short .course-name { -webkit-line-clamp: 1; }
+.course-room {
+  margin-top: 4rpx;
+  overflow: hidden;
+  font-size: 17rpx;
+  opacity: .92;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
 /*
  * 悬浮操作按钮。
