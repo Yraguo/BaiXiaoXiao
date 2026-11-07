@@ -95,6 +95,9 @@ function helpText() {
     '我直接读你导入的课表来回答，不联网也不编造。可以这样问：',
     '· 我这周几节课',
     '· 今天 / 明天 / 周三下午有什么课',
+    '· 这周下午有几节课',
+    '· 这周哪天没课',
+    '· 今天还剩几节课',
     '· 下节课在哪上',
     '· 高数在哪上（简称、错别字也能认）',
     '· 记一下 周五交实验报告',
@@ -110,18 +113,51 @@ function privacyText() {
   return '课表、记事、头像昵称都只存在微信本地缓存；PDF 只在本机内存里解析；小鸮也只是读本地数据算答案。整个小程序没有后端请求，也不会把学号密码或课表发给任何第三方。';
 }
 
-function weekText(week, ctx) {
-  const blocks = ctx.courses.filter((course) => Array.isArray(course.weeks) && course.weeks.indexOf(week) >= 0);
+function weekText(week, ctx, period) {
+  const all = ctx.courses.filter((course) => Array.isArray(course.weeks) && course.weeks.indexOf(week) >= 0);
+  const blocks = period ? all.filter((course) => withinPeriod(course, period, ctx.periodTimes)) : all;
   const range = ctx.startMonday ? `（${weekRange(ctx.startMonday, week)}）` : '';
-  if (!blocks.length) return `第 ${week} 周${range}没有课。`;
+  const scope = period ? period.label : '';
+  if (!blocks.length) return `第 ${week} 周${range}${scope}没有课。`;
   const names = Array.from(new Set(blocks.map((course) => course.name)));
-  const lines = [`第 ${week} 周${range}共 ${blocks.length} 个时间段、${names.length} 门课：`];
+  const lines = [`第 ${week} 周${range}${scope}共 ${blocks.length} 个时间段、${names.length} 门课：`];
   for (let day = 1; day <= 7; day += 1) {
-    const list = coursesOn(ctx.courses, week, day);
+    const list = coursesOn(ctx.courses, week, day)
+      .filter((course) => withinPeriod(course, period, ctx.periodTimes));
     if (!list.length) continue;
     lines.push(`${DAY_NAMES[day - 1]}　${list.map((course) => `${course.name}（第${course.startPeriod}-${course.endPeriod}节）`).join('、')}`);
   }
   return lines.join('\n');
+}
+
+/** 这周哪几天没课 —— 找空档是最常见的真实需求 */
+function freeDaysText(ctx) {
+  if (!ctx.courses.length) return '还没有课表，导入之后我才能算哪天没课。';
+  const free = [];
+  for (let day = 1; day <= 7; day += 1) {
+    if (!coursesOn(ctx.courses, ctx.week, day).length) free.push(DAY_NAMES[day - 1]);
+  }
+  if (!free.length) return `第 ${ctx.week} 周每天都有课，没有空档。`;
+  if (free.length === 7) return `第 ${ctx.week} 周整周都没课。`;
+  return `第 ${ctx.week} 周没课的日子：${free.join('、')}。其余 ${7 - free.length} 天有课。`;
+}
+
+/** 今天还剩几节 —— 按当前时间过滤已经开始的课 */
+function remainingText(ctx) {
+  const day = nlu.weekdayOf(ctx.now);
+  const list = coursesOn(ctx.courses, ctx.week, day);
+  if (!list.length) return `今天（${DAY_NAMES[day - 1]}）没有课。`;
+
+  const minutes = ctx.now.getHours() * 60 + ctx.now.getMinutes();
+  const left = list.filter((course) => {
+    const period = (ctx.periodTimes || []).find((entry) => Number(entry.period) === Number(course.startPeriod));
+    if (!period) return false;
+    const parts = String(period.start).split(':').map(Number);
+    return parts[0] * 60 + (parts[1] || 0) > minutes;
+  });
+
+  if (!left.length) return `今天的课上完了，一共 ${list.length} 节。`;
+  return `今天还有 ${left.length} 节课：${left.map((course) => `${course.name}（${blockText(course, ctx.periodTimes)}）`).join('、')}。`;
 }
 
 function dayText(slot, ctx, period) {
@@ -287,7 +323,20 @@ const TOOLS = [
     priority: 70,
     guard: (input, ctx, slots) => slots.week !== null && /(课|安排|上什么)/.test(input),
     cues: [[/./, 3], [/(第.{1,3}周|这周|本周|下周|上周)/, 2], [/(课|安排|上什么)/, 2]],
-    run: (slots, ctx) => weekText(slots.week, ctx)
+    run: (slots, ctx) => weekText(slots.week, ctx, slots.period)
+  },
+  {
+    name: 'remaining_today',
+    priority: 88,
+    guard: (input, ctx, slots) => !slots.week && /(今天|现在|待会|一会)/.test(input),
+    cues: [[/(还有|还剩|剩下)/, 4], [/(几节|多少节课|几节课)/, 3]],
+    run: (slots, ctx) => remainingText(ctx)
+  },
+  {
+    name: 'free_days',
+    priority: 78,
+    cues: [[/(哪天|哪几天|哪些天)/, 3], [/(没课|空档|休息)/, 4]],
+    run: (slots, ctx) => freeDaysText(ctx)
   },
   {
     name: 'term_info',

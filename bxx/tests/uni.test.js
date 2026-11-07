@@ -148,6 +148,30 @@ test('指代「它呢」沿用上一轮问过的课程', () => {
   assert.match(second.text, /教A-203/);
 });
 
+test('周维度也能按时段统计', () => {
+  const text = answer('这周下午有几节课', context());
+  assert.match(text, /下午共 3 个时间段/);
+  assert.match(text, /大学物理/);
+  assert.doesNotMatch(text, /中国近现代史纲要/, '上午的课不该算进下午');
+});
+
+test('这周哪天没课', () => {
+  const text = answer('这周哪天没课', context());
+  assert.match(text, /周六、周日/);
+});
+
+test('今天还剩几节课按当前时间算', () => {
+  assert.match(answer('今天还剩几节课', context()), /今天（周六）没有课/);
+
+  const wednesdayMorning = new Date(2026, 10, 11, 8, 30);
+  const text = answer('今天还剩几节课', context({ now: wednesdayMorning }));
+  assert.match(text, /还有 2 节课/);
+  assert.match(text, /中国近现代史纲要/);
+
+  const wednesdayEvening = new Date(2026, 10, 11, 20, 0);
+  assert.match(answer('今天还剩几节课', context({ now: wednesdayEvening })), /上完了/);
+});
+
 test('「记一下」生成记事动作，日期落到那一天', () => {
   const result = ask('记一下 周五交实验报告', context());
   assert.match(result.text, /记好了/);
