@@ -164,7 +164,11 @@ async function main() {
     ? zf.encryptPasswordNoPlus(password, key.modulus, key.exponent)
     : zf.encryptPassword(password, key.modulus, key.exponent);
   log('cipher b64  : ' + mask(cipher));
-  log('diag cipher : ' + zf.diagnoseEncryption(key.modulus, key.exponent).slice(0, 32) + '  ← 与小程序诊断里的 diag 对照');
+  const diag = zf.diagnoseEncryption(key.modulus, key.exponent);
+  log('diag        : same=' + diag.same + ' bits=' + diag.bits
+    + ' len=' + diag.len + ' tail=' + diag.tail
+    + (diag.bigErr ? ' bigErr=' + diag.bigErr : '')
+    + '  ← 与小程序诊断里的 diag 对照');
 
   // 2a. 浏览器在提交登录前会先"退出当前会话里可能残留的账号"
   //     （login.js 的 yhdl() 第一步），我们之前漏了这一步
