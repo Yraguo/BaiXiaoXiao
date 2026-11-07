@@ -18,9 +18,9 @@ echo.
 set /p MODE=请选择后回车: 
 echo.
 if /i "%MODE%"=="q" (
-  node scripts\probe-jw.js %SID% --query
+  node probe-jw.js %SID% --query
 ) else (
-  node scripts\probe-jw.js %SID%
+  node probe-jw.js %SID%
 )
 echo.
 echo === 检测结束，把上面最后几行发给助手 ===

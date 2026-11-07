@@ -65,10 +65,6 @@
         "type": "file"
       },
       {
-        "value": "check-login.bat",
-        "type": "file"
-      },
-      {
         "value": "assets/app-icon.png",
         "type": "file"
       },

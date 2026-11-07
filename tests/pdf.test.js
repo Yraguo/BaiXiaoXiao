@@ -145,7 +145,7 @@ test('PDF 导入页为每类解析失败都准备了处理建议', () => {
 
 test('教务导入分支已完整恢复', () => {
   ['utils/jw/zfClient.js', 'utils/jw/session.js', 'utils/jw/mapper.js',
-    'scripts/probe-jw.js', 'check-login.bat', 'tests/jw.test.js'].forEach((entry) => {
+    'scripts/probe-jw.js', 'scripts/check-login.bat', 'tests/jw.test.js'].forEach((entry) => {
     assert.equal(fs.existsSync(path.join(root, entry)), true, `${entry} 未恢复`);
   });
   const js = read('pages/import/index.js');
