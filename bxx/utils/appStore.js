@@ -1,3 +1,5 @@
+const { dateStamp } = require('./date');
+
 const NOTES_KEY = 'baixiaoxiao.notes.v1';
 const HISTORY_KEY = 'baixiaoxiao.xiao.history.v1';
 
@@ -17,9 +19,22 @@ function write(key, value) {
   return value;
 }
 
+/**
+ * 老数据没有 date 字段（日历上线前只记了 createdAt），这里补齐。
+ * 不回填的话，日历上所有历史记事都会消失，用户会以为数据丢了。
+ */
+function normalizeNote(note) {
+  const copy = Object.assign({}, note);
+  if (!copy.date) {
+    const created = String(copy.createdAt || '');
+    copy.date = /^\d{4}-\d{2}-\d{2}/.test(created) ? created.slice(0, 10) : dateStamp(new Date());
+  }
+  return copy;
+}
+
 function loadNotes() {
   const value = read(NOTES_KEY, []);
-  return Array.isArray(value) ? value : [];
+  return Array.isArray(value) ? value.map(normalizeNote) : [];
 }
 
 function saveNotes(notes) { return write(NOTES_KEY, notes); }

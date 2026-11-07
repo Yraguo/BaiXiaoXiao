@@ -1,7 +1,7 @@
 <view class="import-page">
   <view class="mode-switch">
-    <view class="mode-item active">教务系统导入</view>
     <view class="mode-item" bindtap="openPdfImport">PDF 导入</view>
+    <view class="mode-item active">教务系统导入</view>
   </view>
 
   <view class="hero">

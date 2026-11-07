@@ -1,1 +1,8 @@
-.service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; }.service-card { min-height: 214rpx; padding: 28rpx 14rpx 22rpx; border-radius: 24rpx; background: #fff; text-align: center; }.service-card:active { transform: scale(.98); background: #f8f8fa; }.service-mark { width: 64rpx; height: 64rpx; margin: 0 auto 18rpx; border-radius: 18rpx; background: var(--brand-light); color: var(--brand); font-size: 30rpx; font-weight: 700; line-height: 64rpx; }.service-name { font-size: 28rpx; font-weight: 600; }.service-copy { margin-top: 9rpx; color: var(--muted); font-size: 21rpx; line-height: 1.35; }.campus-note { margin: 24rpx 10rpx; color: var(--muted); font-size: 22rpx; line-height: 1.55; }
+.service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; }
+.service-card { min-height: 214rpx; padding: 26rpx 14rpx 22rpx; border-radius: 24rpx; background: #fff; text-align: center; transition: transform .12s ease; }
+.service-card:active { transform: scale(.97); background: #f8f8fa; }
+.service-icon-wrap { display: flex; align-items: center; justify-content: center; width: 78rpx; height: 78rpx; margin: 0 auto 16rpx; border-radius: 24rpx; background: var(--brand-light); }
+.service-icon { display: block; width: 46rpx; height: 46rpx; }
+.service-name { font-size: 27rpx; font-weight: 600; }
+.service-copy { margin-top: 8rpx; color: var(--muted); font-size: 20rpx; line-height: 1.35; }
+.campus-note { margin: 24rpx 10rpx; color: var(--muted); font-size: 22rpx; line-height: 1.55; }

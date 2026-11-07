@@ -24,11 +24,36 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/timetable/index", "text": "课表" },
-      { "pagePath": "pages/notes/index", "text": "记事" },
-      { "pagePath": "pages/uni/index", "text": "小鸮" },
-      { "pagePath": "pages/campus/index", "text": "校园" },
-      { "pagePath": "pages/me/index", "text": "我的" }
+      {
+        "pagePath": "pages/timetable/index",
+        "text": "课表",
+        "iconPath": "assets/tabbar/timetable.png",
+        "selectedIconPath": "assets/tabbar/timetable-active.png"
+      },
+      {
+        "pagePath": "pages/notes/index",
+        "text": "记事",
+        "iconPath": "assets/tabbar/notes.png",
+        "selectedIconPath": "assets/tabbar/notes-active.png"
+      },
+      {
+        "pagePath": "pages/uni/index",
+        "text": "小鸮",
+        "iconPath": "assets/tabbar/uni.png",
+        "selectedIconPath": "assets/tabbar/uni-active.png"
+      },
+      {
+        "pagePath": "pages/campus/index",
+        "text": "校园",
+        "iconPath": "assets/tabbar/campus.png",
+        "selectedIconPath": "assets/tabbar/campus-active.png"
+      },
+      {
+        "pagePath": "pages/me/index",
+        "text": "我的",
+        "iconPath": "assets/tabbar/me.png",
+        "selectedIconPath": "assets/tabbar/me-active.png"
+      }
     ]
   },
   "style": "v2",

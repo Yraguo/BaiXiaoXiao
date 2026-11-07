@@ -63,12 +63,32 @@ function calendarDayDiff(from, to) {
   return Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / DAY_MS);
 }
 
+/**
+ * 月历网格：固定 42 格（6 行 × 7 列），周日在第一列。
+ * 前后补上相邻月份的日期，避免每月行数跳动导致页面高度抖。
+ */
+function monthCells(year, monthIndex) {
+  const first = new Date(year, monthIndex, 1);
+  const offset = first.getDay();
+  const cells = [];
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(year, monthIndex, 1 - offset + index);
+    cells.push({
+      date: dateStamp(date),
+      day: date.getDate(),
+      inMonth: date.getMonth() === first.getMonth()
+    });
+  }
+  return cells;
+}
+
 module.exports = {
   addDays,
   calendarDayDiff,
   currentWeek,
   dateForDay,
   dateStamp,
+  monthCells,
   monthDay,
   parseDate,
   todayDayIndex,

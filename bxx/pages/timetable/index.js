@@ -276,7 +276,8 @@ Page({
   },
 
   openImport() {
-    wx.navigateTo({ url: '/pages/import/index' });
+    // 默认落在 PDF 导入：教务直连在部分真机上过不了，PDF 是本机解析、验证过的稳定路径
+    wx.navigateTo({ url: '/pages/pdfimport/index' });
   },
 
   stopPropagation() {}

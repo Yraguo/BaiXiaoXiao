@@ -37,3 +37,16 @@ test('周次箭头不用 button，尺寸被锁定（回归：曾把周次挤成�
   assert.match(wxss, /\.week-heading\s*\{[^}]*white-space:\s*nowrap/, '标题不允许竖排折行');
 });
 
+test('所有页面的 bind 事件都能在对应 js 里找到方法', () => {
+  const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
+  app.pages.forEach((page) => {
+    const wxml = fs.readFileSync(path.join(root, `${page}.wxml`), 'utf8');
+    const js = fs.readFileSync(path.join(root, `${page}.js`), 'utf8');
+    const pattern = /\b(?:bind|catch)(?:tap|change|input|blur|focus|confirm|chooseavatar|error|submit|longpress|touchstart|touchend)="([A-Za-z_$][\w$]*)"/g;
+    const names = new Set(Array.from(wxml.matchAll(pattern), (match) => match[1]));
+    names.forEach((name) => {
+      assert.match(js, new RegExp(`\\b${name}\\s*\\(`), `${page} 的 ${name} 没有对应方法`);
+    });
+  });
+});
+

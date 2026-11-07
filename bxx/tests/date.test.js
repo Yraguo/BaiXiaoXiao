@@ -5,6 +5,7 @@ const {
   currentWeek,
   dateForDay,
   dateStamp,
+  monthCells,
   weekRange
 } = require('../utils/date');
 
@@ -28,5 +29,22 @@ test('倒计时的天数按自然日算，不按小时整除', () => {
   assert.equal(calendarDayDiff(saturday, new Date(2026, 10, 7, 23, 0)), 0);
   // 跨月、跨年同样成立
   assert.equal(calendarDayDiff(new Date(2026, 11, 31, 22, 0), new Date(2027, 0, 1, 8, 0)), 1);
+});
+
+test('月历网格固定 42 格，周日在第一列', () => {
+  // 2026-11-01 是周日，正好顶格
+  const november = monthCells(2026, 10);
+  assert.equal(november.length, 42);
+  assert.equal(november[0].date, '2026-11-01');
+  assert.equal(november[0].inMonth, true);
+  assert.equal(november[29].date, '2026-11-30');
+  assert.equal(november[30].date, '2026-12-01');
+  assert.equal(november[30].inMonth, false);
+
+  // 2026-08-01 是周六，前面要补 6 天七月
+  const august = monthCells(2026, 7);
+  assert.equal(august[0].date, '2026-07-26');
+  assert.equal(august[6].date, '2026-08-01');
+  assert.equal(august[6].inMonth, true);
 });
 

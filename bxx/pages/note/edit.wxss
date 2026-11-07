@@ -4,4 +4,6 @@
 .field > text { display: block; margin-bottom: 14rpx; color: var(--muted); font-size: 23rpx; }
 input, textarea { width: 100%; min-height: 72rpx; padding: 16rpx 18rpx; border-radius: 16rpx; background: #f7f7f9; font-size: 28rpx; }
 textarea { min-height: 180rpx; }
+.picker-value { display: flex; align-items: center; justify-content: space-between; height: 76rpx; padding: 0 18rpx; border-radius: 16rpx; background: #f7f7f9; font-size: 28rpx; }
+.picker-value .chevron { color: #c7c7cc; font-size: 30rpx; }
 .footnote { padding: 20rpx 12rpx; color: var(--muted); font-size: 22rpx; line-height: 1.5; }
