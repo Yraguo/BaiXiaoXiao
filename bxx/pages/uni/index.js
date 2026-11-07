@@ -1,10 +1,9 @@
-const { loadHistory, saveHistory } = require('../../utils/appStore');
+const { loadHistory, loadNotes, saveHistory } = require('../../utils/appStore');
 const { confirmDelete } = require('../../utils/confirm');
-const { currentWeek } = require('../../utils/date');
-const { loadSettings } = require('../../utils/storage');
+const { loadCourses, loadSettings } = require('../../utils/storage');
 const { answer } = require('../../utils/uni');
 
-const SUGGESTIONS = ['这周课表怎么看', '记事怎么用', '校园服务有哪些'];
+const SUGGESTIONS = ['我这周几节课', '下节课在哪上', '今天有什么待办'];
 
 Page({
   data: {
@@ -26,10 +25,14 @@ Page({
     return 100000 + count * 10;
   },
 
-  // 周次必须按学期设置实时算：写死一个数字会让"当前是第几周"永远答错
-  currentTermWeek() {
-    const settings = loadSettings();
-    return currentWeek(settings.semesterStartMonday, settings.totalWeeks);
+  // 每次提问都现读一遍：用户可能刚在课表页改过课程，不能缓存
+  buildContext() {
+    return {
+      now: new Date(),
+      settings: loadSettings(),
+      courses: loadCourses(),
+      notes: loadNotes()
+    };
   },
 
   updateText(event) {
@@ -48,10 +51,9 @@ Page({
     const text = String(raw || '').trim();
     if (!text) return;
     const now = Date.now();
-    const week = this.currentTermWeek();
     const messages = this.data.messages.concat(
       { id: `u-${now}`, role: 'user', text, at: now },
-      { id: `a-${now}`, role: 'assistant', text: answer(text, { week }), at: now + 1 }
+      { id: `a-${now}`, role: 'assistant', text: answer(text, this.buildContext()), at: now + 1 }
     );
     saveHistory(messages);
     this.setData({

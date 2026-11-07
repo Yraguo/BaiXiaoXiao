@@ -29,9 +29,11 @@ test('小鸮提供历史记录与系统键盘语音提示', () => {
 
 test('小鸮的周次取自课表设置，不再是写死的数字', () => {
   const page = read('pages/uni/index.js');
-  assert.match(page, /currentWeek\(/, '要按学期开始日期算周次');
-  assert.match(page, /loadSettings\(/, '要读学期设置');
-  assert.doesNotMatch(page, /week:\s*\d+/, '不允许再把周次写死');
+  const brain = read('utils/uni.js');
+  assert.match(page, /loadSettings\(/, '页面要把学期设置传给小鸮');
+  assert.match(page, /loadCourses\(/, '页面要把真实课程传给小鸮');
+  assert.match(brain, /currentWeek\(/, '周次要按学期开始日期算');
+  assert.doesNotMatch(page + brain, /week:\s*\d+/, '不允许再把周次写死');
 });
 
 test('两种导入方式共用同一套课程映射，不会各自漂移', () => {
