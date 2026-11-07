@@ -52,6 +52,22 @@ test('自研 DEFLATE 解压与 Node zlib 逐字节一致（含存储块与动态
   });
 });
 
+test('文件内容的各种形态都能识别（回归：工具里 Buffer 会变成 JSON）', () => {
+  const bytes = fakePdf(headerContent(), '/Encoding /UniGB-UCS2-H');
+  const expected = extractTextItems(bytes).length;
+  assert.ok(expected >= 2, '基准解析失败');
+
+  // 微信开发者工具：Node Buffer 跨桥后变成 { type: 'Buffer', data: [...] }
+  assert.equal(extractTextItems({ type: 'Buffer', data: Array.from(bytes) }).length, expected);
+  // 少数基础库：按 latin1 给字符串，一个字符一字节
+  const asText = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+  assert.equal(extractTextItems(asText).length, expected);
+  // 兜底：普通数字数组
+  assert.equal(extractTextItems(Array.from(bytes)).length, expected);
+  // 真正的非二进制仍然要拒绝
+  assert.throws(() => extractTextItems({ foo: 1 }), /不是二进制数据/);
+});
+
 sampleTest('真实课表 PDF 的三个内容流都能解压出文字与坐标', () => {
   const items = extractTextItems(asBytes(fixture));
   assert.equal(items.length, 243);

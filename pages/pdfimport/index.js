@@ -34,6 +34,19 @@ function sizeText(size) {
   return value < 1024 ? `${value} B` : `${(value / 1024).toFixed(1)} KB`;
 }
 
+/**
+ * 读文件原始字节。
+ * 真机和多数基础库直接给 ArrayBuffer；个别基础库会按文本解码返回字符串，
+ * 那样高位字节已经丢了。这种情况改用 base64 重读一次——base64 无损，
+ * 再用官方的 base64ToArrayBuffer 还原。
+ */
+function readFileBytes(path) {
+  const fs = wx.getFileSystemManager();
+  const first = fs.readFileSync(path);
+  if (typeof first !== 'string') return first;
+  return wx.base64ToArrayBuffer(fs.readFileSync(path, 'base64'));
+}
+
 Page({
   data: {
     fileName: '',
@@ -119,7 +132,7 @@ Page({
     setTimeout(() => {
       let buffer;
       try {
-        buffer = wx.getFileSystemManager().readFileSync(path);
+        buffer = readFileBytes(path);
       } catch (error) {
         wx.hideLoading();
         this.fail('READ_FAILED', '读取文件失败，请把 PDF 重新发送到微信后再选择。');

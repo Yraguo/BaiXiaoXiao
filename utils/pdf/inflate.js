@@ -173,10 +173,45 @@ function inflateZlib(input) {
   return output.subarray(0, length);
 }
 
+/**
+ * 把「文件内容」统一成 Uint8Array。
+ *
+ * 同一个 readFileSync，各端给的形态不一样：
+ *   真机            ArrayBuffer
+ *   开发者工具      Node Buffer 跨桥后的 JSON 形态 { type: 'Buffer', data: [...] }
+ *   少数基础库      按 latin1 解出的字符串（每个字符就是一个字节）
+ * 后两种都不是 ArrayBuffer/TypedArray，instanceof 全部为 false，
+ * 原先一律判成「不是二进制数据」，导致开发者工具里任何 PDF 都导不进来。
+ */
 function toBytes(input) {
   if (input instanceof Uint8Array) return input;
-  if (input instanceof ArrayBuffer) return new Uint8Array(input);
   if (ArrayBuffer.isView(input)) return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+  if (input instanceof ArrayBuffer) return new Uint8Array(input);
+  // 跨 context 的 ArrayBuffer 过不了 instanceof，用内部标签判断
+  if (Object.prototype.toString.call(input) === '[object ArrayBuffer]') return new Uint8Array(input);
+
+  if (Array.isArray(input)) return Uint8Array.from(input);
+
+  if (input && typeof input === 'object') {
+    if (input.type === 'Buffer' && Array.isArray(input.data)) return Uint8Array.from(input.data);
+    if (typeof input.byteLength === 'number') {
+      try {
+        return new Uint8Array(input);
+      } catch (_) { /* 落到下面统一报错 */ }
+    }
+  }
+
+  // latin1 文本：一个字符一字节，可无损还原
+  if (typeof input === 'string') {
+    const bytes = new Uint8Array(input.length);
+    for (let index = 0; index < input.length; index += 1) {
+      const code = input.charCodeAt(index);
+      if (code > 0xff) throw new Error('文件内容不是二进制数据（内容已被按文本解码，请重新选择 PDF）');
+      bytes[index] = code;
+    }
+    return bytes;
+  }
+
   throw new Error('文件内容不是二进制数据');
 }
 
