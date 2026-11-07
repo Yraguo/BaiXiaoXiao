@@ -66,3 +66,15 @@ test('导入预览把「替换/追加」讲清楚，而不是只给两个按钮'
   assert.match(wxml, /只补充这份里还没有的/, '追加的后果要写明');
   assert.match(wxml, /preview\.existing/, '要告诉用户现有多少条');
 });
+test('课表行数按课程的结束节次撑开（回归：第 13 节的课块画到网格外被切掉）', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+  assert.match(js, /usedPeriods/, '要统计本周课程用到的最大节次');
+  assert.match(js, /Math\.max\(periods\.length, usedPeriods/, '行数取作息节数与实际用到的较大者');
+  assert.match(js, /Array\.from\(\{ length: rowCount \}/, '按撑开后的行数渲染');
+});
+
+test('导入确认的选项文字居中（用户要求）', () => {
+  const wxss = fs.readFileSync(path.join(root, 'pages/pdfimport/index.wxss'), 'utf8');
+  assert.match(wxss, /\.choice\s*\{[^}]*text-align:\s*center/, '选项文字要居中');
+  assert.match(wxss, /\.choice\s*\{[^}]*border-radius/, '选项要保留卡片圆角');
+});

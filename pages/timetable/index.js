@@ -92,10 +92,16 @@ Page({
       }
     });
 
-    const periodRows = periods.map((period) => ({
-      ...period,
-      active: week === shownCurrentWeek && period.period === activePeriod
-    }));
+    // 表格行数要够用：导入的课表可能排到第 13 节，而作息只配了 12 节。
+    // 少一行的话，那门课的色块会画到网格外面，被卡片边缘硬切掉一截。
+    const weekCourses = courses.filter((course) => Array.isArray(course.weeks) && course.weeks.includes(week));
+    const usedPeriods = weekCourses.reduce((max, course) => Math.max(max, Number(course.endPeriod) || 0), 0);
+    const rowCount = Math.max(periods.length, usedPeriods, 1);
+
+    const periodRows = Array.from({ length: rowCount }, (_, index) => {
+      const period = periods[index] || { period: index + 1, start: '', end: '' };
+      return { ...period, active: week === shownCurrentWeek && period.period === activePeriod };
+    });
 
     const dayColumns = Array.from({ length: visibleDays }, (_, dayIndex) => {
       const date = dateForDay(settings.semesterStartMonday, week, dayIndex);
