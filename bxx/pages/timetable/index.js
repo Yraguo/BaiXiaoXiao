@@ -2,6 +2,7 @@ const { COURSE_COLORS, assignCourseColors, normalizeName } = require('../../util
 const { DAY_NAMES } = require('../../utils/constants');
 const {
   currentWeek,
+  calendarDayDiff,
   dateForDay,
   monthDay,
   todayDayIndex,
@@ -175,9 +176,16 @@ Page({
       : sameDay(best.start, new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1))
         ? '明天'
         : DAY_NAMES[Number(best.course.day) - 1];
-    let countdown = `${differenceMinutes} 分钟后`;
-    if (differenceMinutes >= 1440) countdown = `${Math.floor(differenceMinutes / 1440)} 天后`;
-    else if (differenceMinutes >= 60) countdown = `${Math.floor(differenceMinutes / 60)} 小时后`;
+    // 倒计时按「自然日差」算，不按小时数整除：
+    // 周六 20:16 看周一 08:00 的课只差 36 小时，除以 24 取整会得到"1 天后"，
+    // 跟旁边的"周一"对不上；按自然日算才是 2 天。
+    const dayDiff = calendarDayDiff(now, best.start);
+    let countdown = `${dayDiff} 天后`;
+    if (dayDiff <= 0) {
+      countdown = differenceMinutes >= 60
+        ? `${Math.floor(differenceMinutes / 60)} 小时后`
+        : `${differenceMinutes} 分钟后`;
+    }
 
     return {
       ...best.course,

@@ -28,3 +28,12 @@ test('所有 JSON 文件都能解析', () => {
   }
 });
 
+test('周次箭头不用 button，尺寸被锁定（回归：曾把周次挤成竖排单字）', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  assert.doesNotMatch(wxml, /<button[^>]*class="week-arrow"/, 'button 在 flex 里宽度会失效');
+  assert.match(wxml, /<view[^>]*class="week-arrow/, '应改用 view 并显式锁宽');
+  assert.match(wxss, /\.week-arrow\s*\{[^}]*flex:\s*0 0 68rpx/, '必须用 flex-basis 锁死宽度');
+  assert.match(wxss, /\.week-heading\s*\{[^}]*white-space:\s*nowrap/, '标题不允许竖排折行');
+});
+

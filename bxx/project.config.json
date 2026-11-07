@@ -1,5 +1,5 @@
 {
-  "appid": "wxYOUR_APPID_HERE",
+  "appid": "wxe10271110be84dcf",
   "projectname": "baixiaoxiao-campus-assistant",
   "description": "百小鸮 高校校园学习生活一站式智能助手微信小程序版",
   "compileType": "miniprogram",
@@ -32,14 +32,38 @@
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [
-      { "type": "folder", "value": "tests" },
-      { "type": "folder", "value": "scripts" },
-      { "type": "folder", "value": "debug" },
-      { "type": "file", "value": "README.md" },
-      { "type": "file", "value": "LICENSE" },
-      { "type": "file", "value": "package.json" },
-      { "type": "file", "value": ".gitignore" },
-      { "type": "file", "value": "check-login.bat" }
+      {
+        "value": "tests",
+        "type": "folder"
+      },
+      {
+        "value": "scripts",
+        "type": "folder"
+      },
+      {
+        "value": "debug",
+        "type": "folder"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "LICENSE",
+        "type": "file"
+      },
+      {
+        "value": "package.json",
+        "type": "file"
+      },
+      {
+        "value": ".gitignore",
+        "type": "file"
+      },
+      {
+        "value": "check-login.bat",
+        "type": "file"
+      }
     ],
     "include": []
   },

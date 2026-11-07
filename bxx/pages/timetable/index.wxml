@@ -1,11 +1,22 @@
 <view class="page" bindtouchstart="rememberTouch" bindtouchend="finishTouch">
   <view class="week-card">
-    <button class="week-arrow" bindtap="previousWeek" disabled="{{week <= 1}}">‹</button>
+    <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
+    <view
+      class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
+      bindtap="previousWeek"
+      aria-role="button"
+      aria-label="上一周"
+    >‹</view>
     <view class="week-center" bindtap="openWeekPicker">
-      <view class="week-heading">第 {{week}} 周 <text class="week-range">{{weekTitle}}</text></view>
+      <view class="week-heading">第 {{week}} 周<text class="week-range">{{weekTitle}}</text></view>
       <view class="semester">{{settings.timetableName}} · 共 {{settings.totalWeeks}} 周</view>
     </view>
-    <button class="week-arrow" bindtap="nextWeek" disabled="{{week >= settings.totalWeeks}}">›</button>
+    <view
+      class="week-arrow {{week >= settings.totalWeeks ? 'is-disabled' : ''}}"
+      bindtap="nextWeek"
+      aria-role="button"
+      aria-label="下一周"
+    >›</view>
   </view>
 
   <view class="week-tools">

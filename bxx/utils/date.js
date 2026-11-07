@@ -54,8 +54,18 @@ function todayDayIndex(now = new Date()) {
   return mondayIndex(now);
 }
 
+/**
+ * 相差几个「自然日」（忽略时分秒）。
+ * 用来写"明天 / 2 天后"这类文案：按毫秒数取整会把 36 小时算成 1 天，
+ * 于是"周六晚上看周一早八"会被写成"1 天后"，和"周一"自相矛盾。
+ */
+function calendarDayDiff(from, to) {
+  return Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / DAY_MS);
+}
+
 module.exports = {
   addDays,
+  calendarDayDiff,
   currentWeek,
   dateForDay,
   dateStamp,

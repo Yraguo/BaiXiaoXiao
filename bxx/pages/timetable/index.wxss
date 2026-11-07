@@ -10,21 +10,35 @@
   box-shadow: 0 6rpx 26rpx rgba(38, 57, 88, .06);
 }
 
+/*
+ * 周次箭头。
+ * 【坑】原来是 <button>，在 flex 容器里 width 约束会失效，两个按钮被拉成
+ * 各自 ~300rpx 的长条，把中间的"第 10 周 / 11月2日–11月8日"挤成竖排单字，
+ * 整个周次卡片被撑得又高又空。改成 view，并把宽高四重锁定（flex + width +
+ * min/max），与平台实现无关。
+ */
 .week-arrow {
+  display: flex;
+  flex: 0 0 68rpx;
+  align-items: center;
+  justify-content: center;
   width: 68rpx;
+  min-width: 68rpx;
+  max-width: 68rpx;
   height: 68rpx;
-  margin: 0;
-  padding: 0;
+  min-height: 68rpx;
+  max-height: 68rpx;
+  box-sizing: border-box;
   border-radius: 18rpx;
   background: #edf1f7;
   color: var(--brand);
   font-size: 42rpx;
-  line-height: 64rpx;
+  line-height: 1;
 }
 
-.week-arrow[disabled] { opacity: .35; }
+.week-arrow.is-disabled { opacity: .35; }
 .week-center { flex: 1; min-width: 0; text-align: center; }
-.week-heading { font-size: 30rpx; font-weight: 700; }
+.week-heading { overflow: hidden; font-size: 30rpx; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
 .week-range { margin-left: 8rpx; color: var(--muted); font-size: 21rpx; font-weight: 400; }
 .semester { margin-top: 4rpx; overflow: hidden; color: var(--muted); font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
 
