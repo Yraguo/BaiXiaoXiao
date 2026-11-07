@@ -41,7 +41,7 @@
   </view>
 
   <view wx:if="{{!dayNotes.length}}" class="card empty">
-    <view class="empty-mark">✓</view>
+    <image class="empty-owl" src="/assets/owl/owl-sleep.png" mode="aspectFit"></image>
     <view>这一天还没有记事</view>
     <view class="empty-copy">点下面的按钮，给这一天记点事</view>
   </view>

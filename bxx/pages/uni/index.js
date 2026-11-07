@@ -5,6 +5,9 @@ const { ask } = require('../../utils/uni');
 
 const SUGGESTIONS = ['我这周几节课', '高数在哪上', '记一下 周五交实验报告'];
 
+const OWL_DEFAULT = '/assets/owl/owl-think.png';
+const OWL_CONFUSED = '/assets/owl/owl-confused.png';
+
 Page({
   data: {
     text: '',
@@ -62,7 +65,13 @@ Page({
 
     const messages = this.data.messages.concat(
       { id: `u-${now}`, role: 'user', text, at: now },
-      { id: `a-${now}`, role: 'assistant', text: reply, at: now + 1 }
+      {
+        id: `a-${now}`,
+        role: 'assistant',
+        text: reply,
+        at: now + 1,
+        avatar: result.tone === 'confused' ? OWL_CONFUSED : OWL_DEFAULT
+      }
     );
     saveHistory(messages);
     this.setData({

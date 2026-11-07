@@ -40,7 +40,7 @@
   </view>
 
   <view wx:if="{{!hasCourses}}" class="empty-state">
-    <view class="empty-icon">课</view>
+    <image class="empty-owl" src="/assets/owl/owl-study.png" mode="aspectFit"></image>
     <view class="empty-title">还没有课程</view>
     <view class="empty-copy">添加第一门课，开始安排你的学期。</view>
     <button class="primary-button empty-button" bindtap="addCourse">添加课程</button>

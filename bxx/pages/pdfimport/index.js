@@ -47,7 +47,8 @@ Page({
     previewMore: 0,
     previewWarning: '',
     moduleStatus: '正在检查…',
-    saving: false
+    saving: false,
+    success: null
   },
 
   onLoad() {
@@ -229,14 +230,31 @@ Page({
     saveCourses(courses);
 
     this.pendingRows = null;
-    this.setData({ saving: false, preview: null, previewWarning: '' });
-    wx.showModal({
-      title: '导入完成',
-      content: append
-        ? `已把 ${imported.length} 个课程时间段加入课表，当前共 ${courses.length} 个。`
-        : `课表已更新为 ${courses.length} 个课程时间段。`,
-      showCancel: false,
-      success: () => wx.navigateBack()
+    this.setData({
+      saving: false,
+      preview: null,
+      previewWarning: '',
+      // 用页面内的成功卡片替代 showModal：能放吉祥物，也顺手给个"再导一份"
+      success: {
+        message: append
+          ? `已把 ${imported.length} 个课程时间段加入课表，当前共 ${courses.length} 个。`
+          : `课表已更新为 ${courses.length} 个课程时间段。`
+      }
+    });
+  },
+
+  backToTimetable() {
+    wx.navigateBack();
+  },
+
+  restartImport() {
+    this.setData({
+      success: null,
+      error: '',
+      errorHint: [],
+      preview: null,
+      fileName: '',
+      fileSizeText: ''
     });
   },
 

@@ -51,3 +51,9 @@
 .tips { margin-top: 26rpx; padding: 0 8rpx; }
 .tips-title { margin-bottom: 10rpx; color: var(--muted); font-size: 21rpx; }
 .tip { color: #8a939f; font-size: 21rpx; line-height: 1.9; }
+
+.success-card { margin-top: 50rpx; padding: 44rpx 30rpx 34rpx; border-radius: 28rpx; background: #fff; text-align: center; box-shadow: 0 6rpx 24rpx rgba(38, 57, 88, .05); }
+.success-owl { display: block; width: 240rpx; height: 240rpx; margin: 0 auto 10rpx; }
+.success-title { font-size: 36rpx; font-weight: 700; }
+.success-copy { margin-top: 12rpx; color: var(--muted); font-size: 24rpx; line-height: 1.6; }
+.success-actions { display: flex; flex-direction: column; gap: 14rpx; margin-top: 34rpx; }

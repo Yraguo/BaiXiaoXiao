@@ -67,6 +67,10 @@
       {
         "value": "assets/app-icon.png",
         "type": "file"
+      },
+      {
+        "value": "assets/mascot",
+        "type": "folder"
       }
     ],
     "include": []

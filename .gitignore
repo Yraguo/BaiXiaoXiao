@@ -3,3 +3,7 @@ node_modules/
 
 # 本地助手的工作区记忆：含本机路径与个人笔记，不随仓库分发
 .workbuddy/
+
+# AI 生成的百小鸮素材原始文件（1024 源图 + 512 成品，共约 11MB）
+# 实际进包的是压好的 bxx/assets/owl/（256px），原始文件只留在本地
+bxx/assets/mascot/

@@ -179,13 +179,14 @@ pages/settings/    学期、周末和节次设置
 assets/            应用图标与品牌 logo
 assets/icons/      校园服务线性图标（PNG）
 assets/tabbar/     底部导航图标（常态灰 / 选中蓝）
+assets/owl/        吉祥物百小鸮（256px，进包 6 张）
 data/defaults.js   脱敏示例课程与默认作息
 data/services.js   校园服务入口清单（校园页与小鸮共用）
 utils/jw/          正方教务协议层与网络会话层
 utils/pdf/         PDF 解压、文字坐标提取、课程解析与映射
 utils/courseMap.js 导入结果 → 课程对象的唯一映射实现（两条导入链路共用）
 utils/profile.js   本机头像与昵称（微信头像昵称填写能力）
-utils/agent/       小鸮的 NLU、工具表、TF-IDF 兜底与多轮记忆
+utils/agent/       小鸮的 NLU、工具表、BM25 兜底与多轮记忆
 utils/             日期、周次、配色、本地存储和二次确认
 scripts/           开发脚本（图标生成、教务链路探测），不参与打包
 tests/             Node.js 单元与结构测试
@@ -205,8 +206,26 @@ node scripts/build-icons.js
 
 | 文件 | 用途 |
 |---|---|
-| `assets/logo.png` | 页面内品牌标识（“我的”页头像、小鸮页头部与欢迎页） |
-| `assets/app-icon.png` | 小程序提交审核时使用的 1024×1024 应用图标 |
+| `assets/logo.png` | 品牌标识（小鸮页头部、分享卡片） |
+| `assets/app-icon.png` | 小程序提交审核时使用的 1024×1024 应用图标（不进包） |
+| `assets/owl/*.png` | 吉祥物百小鸮，6 种表情，详见下 |
+
+### 吉祥物
+
+`assets/owl/` 放的是进包版本，统一压到 **256px**（显示尺寸最大 220rpx，足够清晰）：
+
+| 文件 | 用在哪 |
+|---|---|
+| `owl-hello.png` | 小鸮页空状态 |
+| `owl-think.png` | 小鸮回答的默认头像 |
+| `owl-confused.png` | 小鸮答不上来时的头像 |
+| `owl-study.png` | 课表为空 |
+| `owl-sleep.png` | 当天没有记事、历史为空 |
+| `owl-celebrate.png` | 课表导入完成 |
+
+原始素材（1024 源图 + 512 成品，约 11MB）放在本地 `assets/mascot/`，已在 `.gitignore` 与 `packOptions.ignore` 里排除——**既不进仓库也不进包**。要换表情时从原图重新压一张 256px 放进 `assets/owl/` 即可。
+
+> 体积红线：小程序主包上限 2MB。当前包约 **937KB**；直接放 10 张 512px（2.3MB）会上传失败。
 
 ## 许可
 

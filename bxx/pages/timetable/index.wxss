@@ -181,8 +181,8 @@
 .settings-button { background: #fff; color: #42506a; font-size: 34rpx; }
 .add-button { background: var(--brand); color: #fff; font-size: 48rpx; }
 
-.empty-state { padding: 120rpx 50rpx; border-radius: 24rpx; background: #fff; text-align: center; }
-.empty-icon { width: 94rpx; height: 94rpx; margin: 0 auto 24rpx; border-radius: 28rpx; background: var(--brand-light); color: var(--brand); font-size: 42rpx; font-weight: 700; line-height: 94rpx; }
+.empty-state { padding: 90rpx 50rpx 110rpx; border-radius: 24rpx; background: #fff; text-align: center; }
+.empty-owl { display: block; width: 220rpx; height: 220rpx; margin: 0 auto 18rpx; }
 .empty-title { font-size: 32rpx; font-weight: 700; }
 .empty-copy { margin-top: 10rpx; color: var(--muted); font-size: 24rpx; }
 .empty-button { margin-top: 36rpx; }

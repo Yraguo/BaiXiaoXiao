@@ -1,4 +1,15 @@
 <view class="import-page">
+  <view wx:if="{{success}}" class="success-card">
+    <image class="success-owl" src="/assets/owl/owl-celebrate.png" mode="aspectFit"></image>
+    <view class="success-title">导入完成</view>
+    <view class="success-copy">{{success.message}}</view>
+    <view class="success-actions">
+      <button class="primary-button" bindtap="backToTimetable">回课表看看</button>
+      <button class="ghost-button" bindtap="restartImport">再导一份</button>
+    </view>
+  </view>
+
+  <block wx:if="{{!success}}">
   <view class="mode-switch">
     <view class="mode-item active">PDF 导入</view>
     <view class="mode-item" bindtap="openJwImport">教务系统导入</view>
@@ -76,4 +87,5 @@
     <view class="tip">· 全程在本机解析，不会修改学校系统里的任何数据</view>
     <view class="tip" bindtap="openManual">· 想手动添加单门课程，点这里</view>
   </view>
+  </block>
 </view>

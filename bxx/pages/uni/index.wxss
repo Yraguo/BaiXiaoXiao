@@ -11,8 +11,8 @@
 
 .messages { flex: 1; min-height: 0; box-sizing: border-box; padding: 8rpx 24rpx 20rpx; }
 
-.welcome { margin: 80rpx 20rpx 0; text-align: center; }
-.welcome-logo { width: 132rpx; height: 132rpx; margin: 0 auto 20rpx; display: block; border-radius: 36rpx; background: var(--brand-light); }
+.welcome { margin: 56rpx 20rpx 0; text-align: center; }
+.welcome-logo { display: block; width: 180rpx; height: 180rpx; margin: 0 auto 12rpx; }
 .welcome-title { font-size: 34rpx; font-weight: 700; }
 .welcome-copy { margin-top: 10rpx; color: var(--muted); font-size: 23rpx; }
 .suggestions { display: flex; flex-direction: column; gap: 14rpx; margin-top: 36rpx; }
@@ -21,7 +21,7 @@
 
 .message { display: flex; align-items: flex-start; gap: 14rpx; margin: 22rpx 0; }
 .message.user { justify-content: flex-end; }
-.msg-avatar { width: 60rpx; height: 60rpx; flex: none; display: block; border-radius: 18rpx; background: var(--brand-light); }
+.msg-avatar { display: block; flex: none; width: 64rpx; height: 64rpx; }
 .bubble { max-width: 76%; padding: 18rpx 22rpx; border-radius: 20rpx; background: #fff; color: var(--text); font-size: 27rpx; line-height: 1.55; word-break: break-word; }
 .user .bubble { border-radius: 20rpx 20rpx 6rpx 20rpx; background: var(--brand); color: #fff; }
 
@@ -46,5 +46,6 @@
 .history-row:last-child { border-bottom: 0; }
 .history-role { flex: none; width: 64rpx; color: var(--brand); font-size: 23rpx; }
 .history-text { flex: 1; min-width: 0; line-height: 1.45; word-break: break-all; }
-.history-empty { padding: 60rpx; color: var(--muted); font-size: 24rpx; text-align: center; }
+.history-empty { padding: 46rpx 40rpx 56rpx; color: var(--muted); font-size: 24rpx; text-align: center; }
+.history-owl { display: block; width: 150rpx; height: 150rpx; margin: 0 auto 8rpx; }
 .history-clear { margin-top: 20rpx; padding: 22rpx; border-radius: 20rpx; background: #fff; color: var(--danger); font-size: 26rpx; text-align: center; }

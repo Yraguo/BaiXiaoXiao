@@ -535,6 +535,8 @@ function ask(text, context, memory) {
 
   return {
     text: '这个问题我还答不上来。我只读本机的课表和记事，可以问我：本周几节课、今天有什么课、周三下午有课吗、下一节课、某门课在哪上、记一下作业、今天有什么待办。',
+    // 页面据此换成"疑惑"的吉祥物头像，比统一的默认脸更贴合语境
+    tone: 'confused',
     memory: { lastTool: '', lastSlots: null, pending: null }
   };
 }
