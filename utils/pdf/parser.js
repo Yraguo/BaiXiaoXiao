@@ -92,11 +92,92 @@ function isComplete(row) {
 }
 
 /**
- * @param {ArrayBuffer|Uint8Array} input PDF 文件二进制
- * @returns {{rows:Array,term:string,maxWeek:number,distinct:number,warnings:Array<string>}}
+ * 列表式课表（学校另一套导出模板）：
+ *
+ *   星期一 | 1-2  | 复变函数与积分变换（A）★ | 周数: 1-9周,11-15周/校区: 北区/地点: ...
+ *
+ * 星期、节次、课名、详情各占一列，节次不在正文里，而是单独一段 "1-2"。
+ * 一个节次下面可以并排多门课（同一时段不同周次/不同教室），所以节次要
+ * 记住、课名每出现一次就新起一行。详情会被排版拆成两三行，按出现顺序拼接。
  */
-function parsePdfTimetable(input) {
-  const items = extractTextItems(input);
+const LIST_DETAIL = /(周数|校区|地点|教师|教学班|考核方式|选课备注|学时|学分)\s*[:：]/;
+
+function parseListItems(items) {
+  const rows = [];
+  let day = 0;
+  let period = null;
+  let entry = null;
+  let markers = 0;
+
+  const flush = () => {
+    if (!entry) return;
+    rows.push(toListRow(entry));
+    entry = null;
+  };
+
+  items.forEach((item) => {
+    const text = String(item.text || '').trim();
+    if (!text) return;
+    // 页脚：其他课程、图例、打印时间
+    if (/^其他课程/.test(text) || /^打印时间/.test(text)) return;
+    if (new RegExp('^[' + COURSE_MARK + ']\\s*[:：]').test(text)) return;
+
+    const dayNo = headerDay(text);
+    if (dayNo) {
+      flush();
+      day = dayNo;
+      period = null;
+      return;
+    }
+
+    const span = /^(\d{1,2})\s*-\s*(\d{1,2})$/.exec(text);
+    if (span) {
+      flush();
+      period = { start: Number(span[1]), end: Number(span[2]) };
+      return;
+    }
+
+    if (!day || !period) return;
+
+    // 详情行：带「周数:」「地点:」这类字段，或是被拆断的续行（以 / 或 : 开头）
+    if (LIST_DETAIL.test(text) || /^[/:：]/.test(text)) {
+      if (entry) entry.detail += text;
+      return;
+    }
+
+    flush();
+    entry = {
+      name: text.replace(new RegExp('[' + COURSE_MARK + '].*$'), '').trim(),
+      day,
+      startPeriod: period.start,
+      endPeriod: period.end,
+      detail: ''
+    };
+    markers += 1;
+  });
+  flush();
+
+  return { rows, markers };
+}
+
+function toListRow(entry) {
+  const pick = (label) => {
+    const match = new RegExp(label + '\\s*[:：]\\s*([^/]*)').exec(entry.detail);
+    return match ? match[1].trim() : '';
+  };
+  return {
+    name: entry.name,
+    day: entry.day,
+    startPeriod: entry.startPeriod,
+    endPeriod: entry.endPeriod,
+    weeks: parseWeeks(pick('周数'), MAX_WEEKS),
+    room: pick('地点'),
+    teacher: pick('教师')
+  };
+}
+
+/** 表格式课表：星期在表头，课程块里带 "(1-2节)"。 */
+function parseGridItems(items) {
   const { edges, left } = columnAnchors(items);
   const groups = {};
   let markers = 0;
@@ -106,14 +187,16 @@ function parsePdfTimetable(input) {
     let day = 1;
     edges.forEach((edge) => { if (item.x > edge) day += 1; });
     if (item.x > edges[5] + (edges[1] - edges[0])) return;
-    const key = item.group + '#' + day;
-    (groups[key] = groups[key] || []).push(item);
+    // 按星期聚合，跨页连续：课表会在页边把一门课切成两半
+    // （第 1 页末尾"化工过程安全与具身智"，第 2 页开头"能前沿研讨 ★"），
+    // 一旦按页分组，后半截就会被当成一门独立的课。
+    (groups[day] = groups[day] || []).push(item);
   });
 
   const rows = [];
   Object.keys(groups).forEach((key) => {
-    const list = groups[key].sort((a, b) => b.y - a.y || a.x - b.x);
-    const day = Number(key.split('#')[1]);
+    const list = groups[key].sort((a, b) => (a.group - b.group) || (b.y - a.y) || (a.x - b.x));
+    const day = Number(key);
     list.forEach((item, index) => {
       if (!/\(\d+-\d+节\)/.test(item.text)) return;
       markers += 1;
@@ -134,8 +217,23 @@ function parsePdfTimetable(input) {
     });
   });
 
+  return { rows, markers };
+}
+
+/**
+ * @param {ArrayBuffer|Uint8Array} input PDF 文件二进制
+ * @returns {{rows:Array,term:string,maxWeek:number,distinct:number,warnings:Array<string>}}
+ */
+function parsePdfTimetable(input) {
+  const items = extractTextItems(input);
+  // 两种模板：表格式课程块里写 "(1-2节)"；列表式把节次单独放一列
+  const grid = items.some((item) => /\(\d+-\d+节\)/.test(item.text));
+  const { rows, markers } = grid ? parseGridItems(items) : parseListItems(items);
+
   if (!markers) {
-    throw new PdfImportError('NO_COURSES', '没有识别到「(X-Y节)」课程时间信息，请确认选择的是课表 PDF。');
+    throw new PdfImportError('NO_COURSES', grid
+      ? '没有识别到「(X-Y节)」课程时间信息，请确认选择的是课表 PDF。'
+      : '没有识别到「星期 + 节次」的课程行，请确认选的是「学生课表查询」导出的 PDF。');
   }
   if (!rows.length) {
     throw new PdfImportError('PARSE_INCOMPLETE', '找到了课程时间，但没能还原出任何一门课，模板可能已变化。');

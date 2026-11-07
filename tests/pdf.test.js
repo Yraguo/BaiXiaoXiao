@@ -68,6 +68,68 @@ test('文件内容的各种形态都能识别（回归：工具里 Buffer 会变
   assert.throws(() => extractTextItems({ foo: 1 }), /不是二进制数据/);
 });
 
+function ucs2Line(x, y, text) {
+  return `1 0 0 1 ${x} ${y} Tm\n<${ucs2hex(text)}> Tj\n`;
+}
+
+/** 把多段内容拼成「多页」PDF：extractTextItems 会按 stream 拆成不同 group */
+function multiStreamPdf(contents) {
+  return asBytes(Buffer.concat(contents.map((content) => fakePdf(content, '/Encoding /UniGB-UCS2-H'))));
+}
+
+test('列表式课表（星期/节次/课名/详情四列）也能导入', () => {
+  const content = 'BT\n'
+    + ucs2Line(21, 545, '2026-2027学年第1学期')
+    + ucs2Line(24, 466, '星期一')
+    + ucs2Line(92, 498, '1-2')
+    + ucs2Line(154, 500, '复变函数与积分变换（A）★')
+    + ucs2Line(356, 504, '周数: 1-9周,11-15周/校区: 北区/地点: 二教C阶-101/教师: 王凤超/教学班:复变函数与积分变换（A）-0001/考核方式:考试')
+    + ucs2Line(356, 496, '2502;自控2503/课程学时组成:讲课:56/学分:3.5')
+    + ucs2Line(92, 476, '3-5')
+    + ucs2Line(154, 478, '大学英语4★')
+    + ucs2Line(356, 482, '周数: 第7周/校区: 北区/地点: 二教D-109/教师: 孙绯/教学班:大学英语4-0012/考核方式:考试')
+    + ucs2Line(18, 521, '其他课程：图案审美与创作★清华大学(共11周)/5-15周/无;')
+    + ucs2Line(18, 505, '★: 讲课 ○: 实验 ●: 实践 ◇: 上机')
+    + ucs2Line(752, 505, '打印时间:2026-11-07')
+    + 'ET';
+
+  const result = parsePdfTimetable(fakePdf(content, '/Encoding /UniGB-UCS2-H'));
+  assert.equal(result.term, '2026-2027学年第1学期');
+  assert.equal(result.rows.length, 2, '页脚（其他课程/图例/打印时间）不能被当成课程');
+
+  const [first, second] = result.rows;
+  assert.equal(first.name, '复变函数与积分变换（A）', '课程名要剥掉 ★ 标记');
+  assert.equal(first.day, 1);
+  assert.equal(first.startPeriod, 1);
+  assert.equal(first.endPeriod, 2);
+  assert.equal(first.weeks.length, 14, '1-9 周 + 11-15 周 = 14 个教学周');
+  assert.equal(first.room, '二教C阶-101');
+  assert.equal(first.teacher, '王凤超', '详情拆成两行也要接回去');
+
+  assert.equal(second.name, '大学英语4');
+  assert.deepEqual(second.weeks, [7], '「第7周」也要认');
+  assert.equal(second.room, '二教D-109');
+});
+
+test('课程名在页边被切开时能接回去（回归：曾多出一门「能前沿研讨」）', () => {
+  const page1 = 'BT\n'
+    + ucs2Line(133, 521, '星期一')
+    + ucs2Line(236, 521, '星期二')
+    + ucs2Line(140, 60, '化工过程安全与具身智')
+    + 'ET';
+  const page2 = 'BT\n'
+    + ucs2Line(140, 560, '能前沿研讨 ★')
+    + ucs2Line(140, 540, '(10-12节)第9周/校区:北区/场地:一教B-210/教师:马鑫')
+    + 'ET';
+
+  const result = parsePdfTimetable(multiStreamPdf([page1, page2]));
+  assert.equal(result.rows.length, 1);
+  assert.equal(result.rows[0].name, '化工过程安全与具身智能前沿研讨');
+  assert.equal(result.rows[0].startPeriod, 10);
+  assert.equal(result.rows[0].endPeriod, 12);
+  assert.equal(result.rows[0].room, '一教B-210');
+});
+
 sampleTest('真实课表 PDF 的三个内容流都能解压出文字与坐标', () => {
   const items = extractTextItems(asBytes(fixture));
   assert.equal(items.length, 243);
