@@ -433,11 +433,11 @@
 .today-chip {
   flex: none;
   margin-left: 6rpx;
-  padding: 10rpx 16rpx;
+  padding: 9rpx 14rpx;
   border-radius: 999rpx;
   background: var(--brand-light);
   color: var(--brand);
-  font-size: 20rpx;
+  font-size: 19rpx;
   font-weight: 600;
   white-space: nowrap;
 }
