@@ -84,3 +84,22 @@ test('切换周次有横向滑入动画', () => {
   assert.match(wxss, /@keyframes week-in-right/, '往后翻从右侧滑入');
   assert.match(wxss, /@keyframes week-in-left/, '往前翻从左侧滑入');
 });
+
+test('切周次是跟手拖动，不是只播一段动画', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+  assert.match(wxml, /bindtouchmove="moveTouch"/, '要监听 touchmove 才能跟手');
+  assert.match(wxml, /translateX\(\{\{dragX\}\}rpx\)/, '内容和手指一起位移');
+  assert.match(js, /moveTouch\(/, '要按手指位移更新 dragX');
+  assert.match(js, /snapMonth\(/, '记事本里左右滑也要能切月份');
+});
+
+test('吉祥物图片是抠过图的（不是画上去的灰白格子）', () => {
+  const dir = path.join(root, 'assets/owl');
+  const files = fs.readdirSync(dir).filter((name) => name.endsWith('.png'));
+  assert.ok(files.length >= 6, '至少要有 6 张');
+  const total = files.reduce((sum, name) => sum + fs.statSync(path.join(dir, name)).size, 0);
+  // 带格子背景时这批图约 580KB，抠图后 240KB 上下
+  assert.ok(total < 320 * 1024, `抠图后总大小应明显下降，当前 ${(total / 1024).toFixed(0)} KB`);
+  assert.equal(fs.existsSync(path.join(root, 'scripts/matte-owl.js')), true, '抠图脚本要留在仓库里');
+});

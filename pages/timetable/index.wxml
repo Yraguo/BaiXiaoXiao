@@ -1,4 +1,4 @@
-<view class="page" bindtouchstart="rememberTouch" bindtouchend="finishTouch">
+<view class="page" bindtouchstart="rememberTouch" bindtouchmove="moveTouch" bindtouchend="finishTouch">
   <!-- 课表 / 记事本 两个视图并排，空出来的 tab 位置让给第二课堂 -->
   <view class="view-switch">
     <view
@@ -14,7 +14,7 @@
   </view>
 
   <block wx:if="{{view === 'timetable'}}">
-  <view class="week-card {{weekAnim}}">
+  <view class="week-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
     <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
     <view
       class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
@@ -44,7 +44,7 @@
     <button class="secondary-button empty-button" bindtap="openImport">导入课表</button>
   </view>
 
-  <view wx:else class="timetable-card {{weekAnim}}">
+  <view wx:else class="timetable-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
     <view class="table-head">
       <view class="period-head">节次</view>
       <view
@@ -113,6 +113,7 @@
   </block>
 
   <block wx:else>
+    <view class="notes-layer" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
     <view class="calendar">
       <view class="calendar-head">
         <view class="month-nav" bindtap="previousMonth" aria-role="button" aria-label="上个月">‹</view>
@@ -165,6 +166,7 @@
     </view>
 
     <view class="add-bar" bindtap="addNote">＋ 在 {{selectedLabel}} 添加记事</view>
+    </view>
   </block>
 
   <view wx:if="{{view === 'timetable'}}" class="floating-actions">

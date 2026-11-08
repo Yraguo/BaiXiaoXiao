@@ -1,4 +1,5 @@
-.page { padding: 20rpx 20rpx 160rpx; }
+/* 拖动换周/换月时内容会左右越界，裁剪掉横向滚动条 */
+.page { padding: 20rpx 20rpx 160rpx; overflow-x: hidden; }
 
 .week-card {
   display: flex;

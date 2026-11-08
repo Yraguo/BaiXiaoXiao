@@ -43,6 +43,9 @@ Page({
     weekTitle: '',
     // 切换周次时的入场动画类名，'week-in-right' / 'week-in-left'
     weekAnim: '',
+    // 跟手拖动：手指移动时这一层跟着位移，松手后回弹
+    dragX: 0,
+    dragTransition: 'transform .22s cubic-bezier(.22,.61,.36,1)',
     // 顶部两个视图：'timetable' 课表 / 'notes' 记事本
     view: 'timetable',
     year: 2026,
@@ -252,12 +255,14 @@ Page({
     this.changeWeek(this.data.currentWeek);
   },
 
-  changeWeek(value) {
+  changeWeek(value, animate) {
     const week = Math.min(Math.max(Number(value), 1), this.settings.totalWeeks);
-    if (week === this.data.week) return;
+    if (week === this.data.week) return false;
     const forward = week > this.data.week;
     this.setData({ week, showWeekPicker: false, weekAnim: '' });
     this.buildView();
+    // 拖动换周时由位移自己表现，不再叠 keyframes
+    if (animate === false) return true;
     const anim = forward ? 'week-in-right' : 'week-in-left';
     const play = () => {
       this.setData({ weekAnim: anim });
@@ -267,6 +272,7 @@ Page({
     };
     if (typeof wx !== 'undefined' && wx.nextTick) wx.nextTick(play);
     else setTimeout(play, 16);
+    return true;
   },
 
   openWeekPicker() {
@@ -282,16 +288,70 @@ Page({
   },
 
   rememberTouch(event) {
+    this.dragging = false;
     this.setData({ touchStartX: event.changedTouches[0].clientX });
   },
 
+  /**
+   * 跟手拖动：手指往左拉，内容跟着往左走。
+   * px → rpx 按 2 倍近似（750rpx ≈ 375px 的逻辑宽度），
+   * 误差在大屏上会有几 rpx，但拖动过程用户感知不到。
+   */
+  moveTouch(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) return;
+    const dx = touch.clientX - this.data.touchStartX;
+    if (!this.dragging) {
+      if (Math.abs(dx) < 10) return;
+      this.dragging = true;
+      this.setData({ dragTransition: 'none' });
+    }
+    this.setData({ dragX: Math.round(dx * 2) });
+  },
+
   finishTouch(event) {
-    // 记事本视图里左右滑不该偷偷换周次
-    if (this.data.view !== 'timetable') return;
-    const distance = event.changedTouches[0].clientX - this.data.touchStartX;
-    if (Math.abs(distance) < 55) return;
-    if (distance < 0) this.nextWeek();
-    else this.previousWeek();
+    const dx = event.changedTouches[0].clientX - this.data.touchStartX;
+    const dragged = this.dragging;
+    this.dragging = false;
+
+    // 没真的拖动（只是点了一下），交给各自的 click 处理
+    if (!dragged) return;
+
+    // 没超过阈值：回弹
+    if (Math.abs(dx) < 55) {
+      this.setData({ dragX: 0, dragTransition: 'transform .2s ease-out' });
+      return;
+    }
+
+    if (this.data.view === 'notes') this.snapMonth(dx);
+    else this.snapWeek(dx);
+  },
+
+  /** 松手换周：先把新一周摆到手指方向，再滑回原位 */
+  snapWeek(dx) {
+    const before = this.data.week;
+    const changed = this.changeWeek(dx < 0 ? before + 1 : before - 1, false);
+    if (!changed) {
+      this.setData({ dragX: 0, dragTransition: 'transform .2s ease-out' });
+      return;
+    }
+    this.settle(dx < 0 ? 150 : -150);
+  },
+
+  /** 记事本里左右滑切月份，手感和课表保持一致 */
+  snapMonth(dx) {
+    this.shiftMonth(dx < 0 ? 1 : -1);
+    this.settle(dx < 0 ? 150 : -150);
+  },
+
+  settle(offset) {
+    this.setData({ dragX: offset, dragTransition: 'none' });
+    const play = () => this.setData({
+      dragX: 0,
+      dragTransition: 'transform .22s cubic-bezier(.22,.61,.36,1)'
+    });
+    if (typeof wx !== 'undefined' && wx.nextTick) wx.nextTick(play);
+    else setTimeout(play, 16);
   },
 
   showCourse(event) {
