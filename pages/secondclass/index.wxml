@@ -62,7 +62,10 @@
   </block>
 
   <!-- 志愿 / 劳育时长 -->
-  <block wx:else>
+  <!-- 这里必须用 wx:if 显式判断，不能靠 wx:else：
+       wx:else 要求紧跟上一个兄弟节点，中间隔一行注释就可能失效，
+       表现就是切到这两个页签后整块内容不渲染 -->
+  <block wx:if="{{tab !== 'score'}}">
     <view class="sc-hours">
       <view class="sc-hours-top">
         <view>
@@ -77,7 +80,7 @@
       <view class="sc-hours-label">累计{{tab === 'volunteer' ? '志愿' : '劳育'}}时长（小时）</view>
     </view>
 
-    <button class="primary-button sc-add-hour" data-kind="{{tab}}" bindtap="openHour">＋ 记一条{{tab === 'volunteer' ? '志愿' : '劳育'}}时长</button>
+    <view class="sc-add-hour" data-kind="{{tab}}" bindtap="openHour">＋ 记一条{{tab === 'volunteer' ? '志愿' : '劳育'}}时长</view>
 
     <view wx:for="{{tab === 'volunteer' ? volunteer.groups : labor.groups}}" wx:key="term" class="sc-term">
       <view class="sc-term-head">
@@ -178,7 +181,7 @@
       <view class="hour-cancel" bindtap="closeHour">取消</view>
     </view>
 
-    <scroll-view class="hour-body" scroll-y>
+    <view class="hour-body">
       <view class="hour-label">学期</view>
       <view class="hour-terms">
         <view
@@ -212,8 +215,8 @@
 
       <view class="hour-label">备注（选填）</view>
       <input class="hour-input" value="{{hourDraft.note}}" placeholder="组织方、证明人等" data-field="note" bindinput="onHourInput" />
-    </scroll-view>
+    </view>
 
-    <button class="primary-button hour-save" bindtap="saveHour">保存</button>
+    <view class="hour-save" bindtap="saveHour">保存</view>
   </view>
 </view>

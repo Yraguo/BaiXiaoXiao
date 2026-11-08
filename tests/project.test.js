@@ -103,3 +103,14 @@ test('吉祥物图片是抠过图的（不是画上去的灰白格子）', () =>
   assert.ok(total < 320 * 1024, `抠图后总大小应明显下降，当前 ${(total / 1024).toFixed(0)} KB`);
   assert.equal(fs.existsSync(path.join(root, 'scripts/matte-owl.js')), true, '抠图脚本要留在仓库里');
 });
+
+test('时长页签不依赖 wx:else，表单保存按钮可点（回归：志愿/劳育无法记录）', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/index.wxml'), 'utf8');
+  // wx:else 必须紧跟上一个兄弟节点，中间隔一行注释就可能失效，
+  // 表现是切到这两个页签后整块内容不渲染
+  assert.match(wxml, /wx:if="\{\{tab !== 'score'\}\}"/, '时长页签要用显式 wx:if');
+  // scroll-view 在 flex 列里没有显式高度会塌成 0，表单就点不到
+  assert.match(wxml, /<view class="hour-body">/, '表单内容用普通 view 承载滚动');
+  assert.match(wxml, /class="hour-save" bindtap="saveHour"/, '保存绑在普通 view 上，避开 button 的默认行为');
+  assert.match(wxml, /class="sc-add-hour" data-kind="\{\{tab\}\}" bindtap="openHour"/, '记一条按钮也要是 view');
+});
