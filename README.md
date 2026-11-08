@@ -20,20 +20,6 @@
 | **第二课堂** | 五板块（德智体美劳，合计 600 分）自评账本：按板块封顶统计、志愿/劳育时长两条独立口径、内置手册分值表（板块上限/学科/体育/美育/计分条款），照片可打时间地点水印 |
 | **我的** | 头像昵称修改（微信头像昵称填写能力）、课表设置、数据统计与本机数据清理 |
 
-## 界面
-
-<p align="center">
-  <img src="docs/screenshots/timetable.png" width="240" alt="课表">
-  <img src="docs/screenshots/notes-empty.png" width="240" alt="记事本">
-  <img src="docs/screenshots/import.png" width="240" alt="PDF 导入">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/jw-error.png" width="360" alt="教务直连失败时的诊断提示">
-</p>
-
-> 上图为实机截图（界面仍在迭代中，以最新构建为准）。
-
 ## 快速开始
 
 ```bash
