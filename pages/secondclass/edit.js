@@ -1,5 +1,5 @@
 const { loadClasses, saveClasses } = require('../../utils/appStore');
-const { CATEGORIES, normalizeRecord } = require('../../utils/secondclass');
+const { PLATES, normalizeRecord } = require('../../utils/secondclass');
 const { confirmDelete } = require('../../utils/confirm');
 
 function today() {
@@ -12,52 +12,96 @@ function today() {
 Page({
   data: {
     isEditing: false,
-    categoryNames: CATEGORIES.map((category) => category.name),
-    categoryIndex: 0,
+    plates: PLATES,
+    plateIndex: 0,
+    scoreChips: ['2', '4', '5', '8', '10', '15', '20', '25', '30'],
     draft: {
       id: '',
+      plate: 'de',
       title: '',
-      category: 'volunteer',
       date: '',
-      credits: 1,
-      organizer: '',
-      note: ''
+      score: 0,
+      photos: [],
+      note: '',
+      watermark: false
     }
   },
 
   onLoad(options) {
     const list = loadClasses().map(normalizeRecord);
     const existing = options && options.id ? list.find((record) => record.id === options.id) : null;
+    const fallbackPlate = options && options.plate ? options.plate : 'de';
     const draft = existing || {
       id: `sc-${Date.now()}`,
+      plate: PLATES.some((plate) => plate.key === fallbackPlate) ? fallbackPlate : 'de',
       title: '',
-      category: 'volunteer',
       date: today(),
-      credits: 1,
-      organizer: '',
-      note: ''
+      score: 0,
+      photos: [],
+      note: '',
+      watermark: false
     };
-    const categoryIndex = Math.max(0, CATEGORIES.findIndex((category) => category.key === draft.category));
     this.setData({
       isEditing: Boolean(existing),
       draft: Object.assign({}, draft),
-      categoryIndex
+      plateIndex: Math.max(0, PLATES.findIndex((plate) => plate.key === draft.plate))
     });
-    wx.setNavigationBarTitle({ title: existing ? '编辑二课记录' : '记一条二课' });
+    wx.setNavigationBarTitle({ title: existing ? '编辑填报' : '填报活动' });
+  },
+
+  changePlate(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    this.setData({ plateIndex: index, 'draft.plate': PLATES[index].key });
   },
 
   updateField(event) {
-    const field = event.currentTarget.dataset.field;
-    this.setData({ [`draft.${field}`]: event.detail.value });
-  },
-
-  changeCategory(event) {
-    const index = Number(event.detail.value);
-    this.setData({ categoryIndex: index, 'draft.category': CATEGORIES[index].key });
+    this.setData({ [`draft.${event.currentTarget.dataset.field}`]: event.detail.value });
   },
 
   changeDate(event) {
     this.setData({ 'draft.date': event.detail.value });
+  },
+
+  setScore(event) {
+    this.setData({ 'draft.score': Number(event.currentTarget.dataset.score) });
+  },
+
+  toggleWatermark(event) {
+    this.setData({ 'draft.watermark': Boolean(event.detail.value) });
+  },
+
+  choosePhotos() {
+    const left = 6 - this.data.draft.photos.length;
+    if (left <= 0) {
+      wx.showToast({ title: '最多 6 张', icon: 'none' });
+      return;
+    }
+    wx.chooseMedia({
+      count: left,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const manager = wx.getFileSystemManager();
+        const saved = (res.tempFiles || []).map((file) => {
+          // temp 路径会过期，存到小程序用户目录里才留得住
+          try {
+            return manager.saveFileSync(file.tempFilePath);
+          } catch (_) {
+            return file.tempFilePath;
+          }
+        });
+        this.setData({
+          'draft.photos': this.data.draft.photos.concat(saved).slice(0, 6)
+        });
+      }
+    });
+  },
+
+  removePhoto(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    const photos = this.data.draft.photos.slice();
+    photos.splice(index, 1);
+    this.setData({ 'draft.photos': photos });
   },
 
   save() {
@@ -69,7 +113,7 @@ Page({
     }
     const record = normalizeRecord(Object.assign({}, draft, {
       title,
-      credits: Number(draft.credits) || 0
+      score: Number(draft.score) || 0
     }));
 
     const list = loadClasses().map(normalizeRecord);
@@ -84,7 +128,7 @@ Page({
 
   async remove() {
     const ok = await confirmDelete({
-      title: '删除这条二课记录？',
+      title: '删除这条填报？',
       name: this.data.draft.title || '未命名活动',
       count: 1
     });

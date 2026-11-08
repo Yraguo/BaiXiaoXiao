@@ -3,6 +3,7 @@ const { dateStamp } = require('./date');
 const NOTES_KEY = 'baixiaoxiao.notes.v1';
 const HISTORY_KEY = 'baixiaoxiao.xiao.history.v1';
 const CLASS_KEY = 'baixiaoxiao.secondclass.v1';
+const HOUR_KEY = 'baixiaoxiao.secondclass.hours.v1';
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
@@ -59,6 +60,17 @@ function saveClasses(records) {
   return write(CLASS_KEY, list);
 }
 
+/** 志愿/劳育时长，与二课自评是两套口径，分开存 */
+function loadHours() {
+  const value = read(HOUR_KEY, []);
+  return Array.isArray(value) ? value : [];
+}
+
+function saveHours(records) {
+  const list = (Array.isArray(records) ? records : []).filter((record) => record && record.title);
+  return write(HOUR_KEY, list);
+}
+
 function removeAllUserData() {
   wx.removeStorageSync(NOTES_KEY);
   wx.removeStorageSync(HISTORY_KEY);
@@ -67,12 +79,15 @@ function removeAllUserData() {
 module.exports = {
   CLASS_KEY,
   HISTORY_KEY,
+  HOUR_KEY,
   NOTES_KEY,
   loadClasses,
   loadHistory,
+  loadHours,
   loadNotes,
   removeAllUserData,
   saveClasses,
   saveHistory,
+  saveHours,
   saveNotes
 };

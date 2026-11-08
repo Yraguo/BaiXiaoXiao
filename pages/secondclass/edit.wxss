@@ -15,3 +15,19 @@
 .form-save { margin-top: 28rpx; }
 .form-delete { margin-top: 16rpx; }
 .form-tip { margin: 24rpx 12rpx 0; color: #9aa2af; font-size: 20rpx; line-height: 1.7; }
+
+.field-block { align-items: flex-start; flex-direction: column; gap: 14rpx; }
+.field-block .field-label { width: auto; }
+.field-hint { color: #b3bac5; font-size: 20rpx; }
+.plate-chips { display: flex; flex-wrap: wrap; gap: 10rpx; }
+.plate-chip { padding: 12rpx 20rpx; border-radius: 14rpx; background: #f4f6fa; color: var(--muted); font-size: 21rpx; }
+.plate-chip.active { background: var(--brand); color: #fff; font-weight: 600; }
+.score-chips { display: flex; flex-wrap: wrap; gap: 10rpx; }
+.score-chip { padding: 12rpx 22rpx; border-radius: 14rpx; background: #f4f6fa; color: var(--muted); font-size: 22rpx; }
+.score-chip.active { background: var(--brand-light); color: var(--brand); font-weight: 600; }
+.score-input { width: 100%; }
+.photo-grid { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.photo-item { position: relative; width: 150rpx; height: 150rpx; }
+.photo-img { width: 150rpx; height: 150rpx; border-radius: 14rpx; }
+.photo-remove { position: absolute; top: -8rpx; right: -8rpx; width: 36rpx; height: 36rpx; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 24rpx; line-height: 34rpx; text-align: center; }
+.photo-add { display: flex; width: 150rpx; height: 150rpx; align-items: center; justify-content: center; border: 1rpx dashed rgba(0,122,255,.4); border-radius: 14rpx; background: rgba(0,122,255,.04); color: var(--brand); font-size: 44rpx; }

@@ -1,5 +1,18 @@
 <view class="page-shell">
   <view class="card form-card">
+    <view class="field field-block">
+      <text class="field-label">选择板块</text>
+      <view class="plate-chips">
+        <view
+          wx:for="{{plates}}"
+          wx:key="key"
+          class="plate-chip {{plateIndex === index ? 'active' : ''}}"
+          data-index="{{index}}"
+          bindtap="changePlate"
+        >{{item.short}}·{{item.name}}</view>
+      </view>
+    </view>
+
     <view class="field">
       <text class="field-label">活动名称</text>
       <input
@@ -13,56 +26,59 @@
     </view>
 
     <view class="field">
-      <text class="field-label">类别</text>
-      <picker mode="selector" range="{{categoryNames}}" value="{{categoryIndex}}" bindchange="changeCategory">
-        <view class="field-picker">
-          <text>{{categoryNames[categoryIndex]}}</text>
-          <text class="chevron">›</text>
-        </view>
-      </picker>
-    </view>
-
-    <view class="field">
       <text class="field-label">日期</text>
       <picker mode="date" value="{{draft.date}}" bindchange="changeDate">
-        <view class="field-picker">
-          <text>{{draft.date || '选择日期'}}</text>
-          <text class="chevron">›</text>
-        </view>
+        <view class="field-picker"><text>{{draft.date || '选择日期'}}</text><text class="chevron">›</text></view>
       </picker>
     </view>
 
-    <view class="field">
-      <text class="field-label">学分</text>
+    <view class="field field-block">
+      <text class="field-label">自评分数</text>
+      <view class="score-chips">
+        <view
+          wx:for="{{scoreChips}}"
+          wx:key="*this"
+          class="score-chip {{draft.score == item ? 'active' : ''}}"
+          data-score="{{item}}"
+          bindtap="setScore"
+        >{{item}} 分</view>
+      </view>
       <input
-        class="field-input"
+        class="field-input score-input"
         type="digit"
-        value="{{draft.credits}}"
-        placeholder="0.5"
-        data-field="credits"
+        value="{{draft.score}}"
+        placeholder="0 ~ 板块满分，可填 0.5 步进"
+        data-field="score"
         bindinput="updateField"
       />
     </view>
 
+    <view class="field field-block">
+      <text class="field-label">照片（最多 6 张）</text>
+      <view class="photo-grid">
+        <view wx:for="{{draft.photos}}" wx:key="*this" class="photo-item">
+          <image class="photo-img" src="{{item}}" mode="aspectFill"></image>
+          <view class="photo-remove" data-index="{{index}}" catchtap="removePhoto">×</view>
+        </view>
+        <view wx:if="{{draft.photos.length < 6}}" class="photo-add" bindtap="choosePhotos">＋</view>
+      </view>
+    </view>
+
     <view class="field">
-      <text class="field-label">组织方</text>
-      <input
-        class="field-input"
-        value="{{draft.organizer}}"
-        placeholder="选填，如：校团委"
-        maxlength="30"
-        data-field="organizer"
-        bindinput="updateField"
-      />
+      <text class="field-label">添加水印</text>
+      <view class="field-picker">
+        <text class="field-hint">默认关闭，开启后照片带时间地点</text>
+        <switch checked="{{draft.watermark}}" color="#007aff" bindchange="toggleWatermark" />
+      </view>
     </view>
 
     <view class="field field-last">
       <text class="field-label">备注</text>
-      <textarea
-        class="field-textarea"
+      <input
+        class="field-input"
         value="{{draft.note}}"
-        placeholder="选填，如：服务时长 4 小时"
-        maxlength="120"
+        placeholder="选填，如：校团委组织"
+        maxlength="60"
         data-field="note"
         bindinput="updateField"
       />
@@ -70,7 +86,7 @@
   </view>
 
   <button class="primary-button form-save" bindtap="save">保存</button>
-  <button wx:if="{{isEditing}}" class="danger-button form-delete" bindtap="remove">删除这条记录</button>
+  <button wx:if="{{isEditing}}" class="danger-button form-delete" bindtap="remove">删除这条填报</button>
 
-  <view class="form-tip">只记在本机，用来自己核对学分。学校系统里的成绩以教务公布为准。</view>
+  <view class="form-tip">分数为自己填报与自评，最终认定以学校审核为准。记录只保存在本机。</view>
 </view>
