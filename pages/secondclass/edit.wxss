@@ -45,9 +45,6 @@
 .photo-remove { position: absolute; top: -8rpx; right: -8rpx; width: 36rpx; height: 36rpx; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 24rpx; line-height: 34rpx; text-align: center; }
 .photo-add { display: flex; width: 150rpx; height: 150rpx; align-items: center; justify-content: center; border: 1rpx dashed rgba(0,122,255,.4); border-radius: 14rpx; background: rgba(0,122,255,.04); color: var(--brand); font-size: 44rpx; }
 
-.loc-row { display: flex; flex-direction: column; gap: 8rpx; margin-top: 12rpx; }
-.loc-btn { align-self: flex-start; padding: 12rpx 24rpx; border-radius: 999rpx; background: var(--brand-light); color: var(--brand); font-size: 22rpx; font-weight: 600; }
-.loc-text { color: #b3bac5; font-size: 20rpx; }
 .wm-canvas { position: fixed; left: -9999rpx; top: 0; width: 300rpx; height: 300rpx; }
 
 .hour-chips { display: flex; flex-wrap: wrap; gap: 10rpx; }
@@ -66,23 +63,38 @@
 .photo-btn:active { background: rgba(0, 122, 255, .18); }
 .photo-count { margin-left: auto; color: #b3bac5; font-size: 20rpx; }
 
-.coord-row { display: flex; gap: 12rpx; width: 100%; }
-.coord-item {
+
+/* 数字输入：和快捷值并排，不再是一个光秃秃的 0 */
+.num-row {
   display: flex;
-  flex: 1;
-  min-width: 0;
   align-items: center;
-  gap: 10rpx;
-  padding: 14rpx 16rpx;
-  border-radius: 14rpx;
-  background: #f7f9fc;
+  gap: 8rpx;
+  align-self: flex-start;
+  margin-top: 2rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: #f4f6fa;
 }
-.coord-label { flex: none; color: var(--muted); font-size: 21rpx; }
-.coord-input { flex: 1; min-width: 0; font-size: 24rpx; }
-.address-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 14rpx 16rpx;
-  border-radius: 14rpx;
-  background: #f7f9fc;
+.num-label { color: var(--muted); font-size: 21rpx; }
+.num-input { width: 90rpx; color: var(--text); font-size: 24rpx; font-weight: 600; text-align: right; }
+.num-unit { color: var(--muted); font-size: 21rpx; }
+
+/* 位置：一行就够，点开是微信地图选点 */
+.place-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 22rpx;
 }
+.place-main { flex: 1; min-width: 0; }
+.place-name {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 27rpx;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.place-name.is-empty { color: #b3bac5; font-weight: 400; }
+.place-sub { margin-top: 6rpx; color: #b3bac5; font-size: 20rpx; }
+.place-clear { flex: none; padding: 8rpx 6rpx; color: var(--muted); font-size: 22rpx; }

@@ -139,16 +139,19 @@ test('导入课表移进百宝箱，课表页不再有独立入口', () => {
   assert.match(toolbox, /课表设置/, '百宝箱里要有课表设置');
 });
 
-test('二课填报表单对齐安卓版：9 张照片、基础/拓展、手写地址', () => {
+test('二课填报表单对齐安卓版：9 张照片、基础/拓展、微信地图选点', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/edit.wxml'), 'utf8');
   const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
   assert.match(js, /MAX_PHOTOS = 9/, '照片上限 9 张');
   assert.match(wxml, /takePhoto/, '要有拍照按钮');
   assert.match(wxml, /choosePhotos/, '要有相册按钮');
   assert.match(js, /基础评定/, '要有基础档');
   assert.match(js, /拓展评定/, '要有拓展档');
-  assert.match(wxml, /data-field="address"/, '地址要能手工填（不做逆地理编码）');
-  assert.match(wxml, /data-field="latitude"/, '纬度可手改');
+  // 位置只用微信地图选点：不再让用户手填经纬度
+  assert.match(js, /wx\.chooseLocation/, '位置用 wx.chooseLocation 取地点名');
+  assert.doesNotMatch(wxml, /data-field="latitude"/, '表单里不再出现纬度输入框');
+  assert.ok(app.requiredPrivateInfos.includes('chooseLocation'), 'app.json 要声明 chooseLocation');
   // 离屏 canvas 必须在页面最外层，不能夹在板块 chips 中间
   assert.match(wxml.trim(), /<\/canvas>$/, 'canvas 放在页面末尾');
 });

@@ -119,18 +119,40 @@ Page({
     this.setData({ 'draft.watermark': Boolean(event.detail.value) });
   },
 
-  getLocation() {
-    wx.getLocation({
-      type: 'gcj02',
+  /**
+   * 用微信地图选点，直接拿到地点名和地址（比自己取经纬度再逆地理编码省事，
+   * 也不需要地图 Key）。选完顺手把水印开关打开——用户选位置就是为了打水印。
+   */
+  choosePlace() {
+    wx.chooseLocation({
       success: (res) => {
+        const name = String(res.name || '').trim();
+        const address = String(res.address || '').trim();
+        const display = name && address && address !== name
+          ? `${name} · ${address}`
+          : (name || address || '已选择位置');
         this.setData({
-          'draft.latitude': res.latitude.toFixed(5),
-          'draft.longitude': res.longitude.toFixed(5),
-          'draft.pinAt': stampNow()
+          'draft.address': display,
+          'draft.latitude': Number(res.latitude).toFixed(5),
+          'draft.longitude': Number(res.longitude).toFixed(5),
+          'draft.pinAt': stampNow(),
+          'draft.watermark': true
         });
-        wx.showToast({ title: '已获取坐标', icon: 'success' });
       },
-      fail: () => wx.showToast({ title: '定位失败，请在设置里允许位置权限', icon: 'none' })
+      fail: (error) => {
+        const message = String((error && error.errMsg) || '');
+        if (message.indexOf('cancel') >= 0) return;
+        wx.showToast({ title: '需要位置权限才能选点', icon: 'none' });
+      }
+    });
+  },
+
+  clearPlace() {
+    this.setData({
+      'draft.address': '',
+      'draft.latitude': '',
+      'draft.longitude': '',
+      'draft.pinAt': ''
     });
   },
 

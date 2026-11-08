@@ -69,14 +69,11 @@
           bindtap="setHours"
         >{{item}} 小时</view>
       </view>
-      <input
-        class="field-input"
-        type="digit"
-        value="{{draft.hours}}"
-        placeholder="也可以直接填，如 3.5"
-        data-field="hours"
-        bindinput="updateField"
-      />
+      <view class="num-row">
+        <text class="num-label">自定义</text>
+        <input class="num-input" type="digit" value="{{draft.hours}}" placeholder="0" data-field="hours" bindinput="updateField" />
+        <text class="num-unit">小时</text>
+      </view>
     </view>
 
     <view class="field-block field-last">
@@ -90,14 +87,11 @@
           bindtap="setScore"
         >{{item}} 分</view>
       </view>
-      <input
-        class="field-input"
-        type="digit"
-        value="{{draft.score}}"
-        placeholder="0 ~ {{levels[levelIndex].cap}} 分，0.5 步进"
-        data-field="score"
-        bindinput="updateField"
-      />
+      <view class="num-row">
+        <text class="num-label">自定义</text>
+        <input class="num-input" type="digit" value="{{draft.score}}" placeholder="0" data-field="score" bindinput="updateField" />
+        <text class="num-unit">分</text>
+      </view>
       <view class="field-hint">{{plate.name}} · {{levels[levelIndex].name}}上限 {{levels[levelIndex].cap}} 分，超出按满分计。</view>
     </view>
   </view>
@@ -128,30 +122,14 @@
   </view>
 
   <view class="card form-card">
-    <view class="field-block field-last">
-      <text class="field-label">位置（用于水印）</text>
-      <view class="loc-row">
-        <view class="loc-btn" bindtap="getLocation">{{draft.latitude ? '重新定位' : '获取定位'}}</view>
-        <text class="field-hint">只取经纬度，不做逆地理编码</text>
+    <view class="place-row" bindtap="choosePlace">
+      <text class="field-label">位置</text>
+      <view class="place-main">
+        <view class="place-name {{draft.address ? '' : 'is-empty'}}">{{draft.address || '点击选择位置'}}</view>
+        <view class="place-sub">{{draft.address ? '微信地图选点 · 只用于照片水印' : '会打开微信地图，选一个地点'}}</view>
       </view>
-      <view class="coord-row">
-        <view class="coord-item">
-          <text class="coord-label">纬度</text>
-          <input class="coord-input" type="digit" value="{{draft.latitude}}" placeholder="39.94128" data-field="latitude" bindinput="updateField" />
-        </view>
-        <view class="coord-item">
-          <text class="coord-label">经度</text>
-          <input class="coord-input" type="digit" value="{{draft.longitude}}" placeholder="116.30123" data-field="longitude" bindinput="updateField" />
-        </view>
-      </view>
-      <input
-        class="field-input address-input"
-        value="{{draft.address}}"
-        placeholder="地址（选填，本机手写，不上传）"
-        maxlength="40"
-        data-field="address"
-        bindinput="updateField"
-      />
+      <text wx:if="{{draft.address}}" class="place-clear" catchtap="clearPlace">清除</text>
+      <text class="chevron">›</text>
     </view>
   </view>
 
