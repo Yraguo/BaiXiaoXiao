@@ -1,3 +1,4 @@
+<scroll-view class="tab-scroll" scroll-y>
 <view class="page-shell"><view class="page-title">校园服务</view><view class="page-subtitle">北京化工大学 · 常用入口</view>
   <view class="service-grid">
     <view wx:for="{{services}}" wx:key="key" class="service-card" data-key="{{item.key}}" bindtap="open">
@@ -8,3 +9,4 @@
   </view>
   <view class="campus-note">受微信小程序业务域名限制，已配置的网页入口会复制网址，粘贴到浏览器打开；其余入口会在完成小程序适配后开放。</view>
 </view>
+</scroll-view>

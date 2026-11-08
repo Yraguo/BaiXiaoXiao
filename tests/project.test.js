@@ -102,7 +102,9 @@ test('切周次走两段式过渡（对齐 UniMate：只判起止，不跟手）
   const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
   const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
   assert.doesNotMatch(wxml, /bindtouchmove/, '不再监听 touchmove，内容不跟手');
-  assert.match(wxml, /bindtouchend="finishTouch"/, '只靠起止判断方向');
+  // 换周手势收在课表方框内，并且要用 catch：冒泡出去会被容器页当成切主界面
+  assert.match(wxml, /class="timetable-card[^"]*"[\s\S]{0,80}catchtouchend="finishTouch"/, '课表方框内才算换周');
+  assert.match(wxml, /class="calendar"[\s\S]{0,60}catchtouchend="finishTouch"/, '日历方框内换月');
   assert.match(js, /wk-leave-left/, '旧内容先滑出');
   assert.match(wxss, /@keyframes wk-enter-right/, '新内容从反方向进入');
   assert.doesNotMatch(js, /dragX/, '拖动位移已移除');
@@ -118,15 +120,18 @@ test('吉祥物图片是抠过图的（不是画上去的灰白格子）', () =>
   assert.equal(fs.existsSync(path.join(root, 'scripts/matte-owl.js')), true, '抠图脚本要留在仓库里');
 });
 
-test('时长页签不依赖 wx:else，表单保存按钮可点（回归：志愿/劳育无法记录）', () => {
+test('时长页签三页常驻轨道，表单保存按钮可点（回归：志愿/劳育无法记录）', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/index.wxml'), 'utf8');
-  // wx:else 必须紧跟上一个兄弟节点，中间隔一行注释就可能失效，
-  // 表现是切到这两个页签后整块内容不渲染
-  assert.match(wxml, /wx:if="\{\{tab !== 'score'\}\}"/, '时长页签要用显式 wx:if');
+  // 三个视图改成同一条轨道上的常驻页，缺一块就会滑到空白
+  assert.equal((wxml.match(/class="sc-pane"/g) || []).length, 3, '三个视图都要常驻在轨道上');
+  assert.match(wxml, /class="sc-track"[^>]*translateX/, '轨道位移由 tabIndex 驱动');
+  // 历史上用 wx:else 判断页签导致整块不渲染，别再退回条件渲染
+  assert.doesNotMatch(wxml, /wx:if="\{\{tab !== 'score'\}\}"/, '不要退回条件渲染');
   // scroll-view 在 flex 列里没有显式高度会塌成 0，表单就点不到
   assert.match(wxml, /<view class="hour-body">/, '表单内容用普通 view 承载滚动');
   assert.match(wxml, /class="hour-save" bindtap="saveHour"/, '保存绑在普通 view 上，避开 button 的默认行为');
-  assert.match(wxml, /class="sc-add-hour" data-kind="\{\{tab\}\}" bindtap="openHour"/, '记一条按钮也要是 view');
+  assert.match(wxml, /class="sc-add-hour" data-kind="volunteer"/, '志愿页要有记一条按钮');
+  assert.match(wxml, /class="sc-add-hour" data-kind="labor"/, '劳育页要有记一条按钮');
 });
 
 test('百宝箱浮球：只在可视区内拖动，且不会顺手把课表滑走', () => {

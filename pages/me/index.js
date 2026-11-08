@@ -1,3 +1,4 @@
+const pageAdapter = require('../../utils/pageAdapter');
 const {
   loadClasses,
   loadHistory,
@@ -25,7 +26,7 @@ const {
 const { buildFullBackup, photoNameFor } = require('../../utils/backup');
 const { buildZip, readText, readZip } = require('../../utils/zip');
 
-Page({
+const pageLogic = {
   data: {
     courseCount: 0,
     noteCount: 0,
@@ -57,8 +58,8 @@ Page({
 
   openSettings() { wx.navigateTo({ url: '/pages/settings/index' }); },
 
-  // 第二课堂是 tabBar 页面，只能用 switchTab
-  openSecondClass() { wx.switchTab({ url: '/pages/secondclass/index' }); },
+  // 五个 tab 同一个页面，跳转改成请容器页切 swiper
+  openSecondClass() { this.triggerEvent('tabrequest', { index: 1 }); },
 
   /* ---------------- 备份 / 恢复 ---------------- */
 
@@ -310,4 +311,6 @@ Page({
     this.refresh();
     wx.showToast({ title: '已删除', icon: 'success' });
   }
-});
+};
+
+Component(pageAdapter.adapt(pageLogic));

@@ -39,7 +39,7 @@
           aria-label="{{item.short}} {{item.name}}"
         >
           <text class="seg-key">{{item.short}}</text>
-          <text class="seg-cap">基 {{item.base}}</text>
+          <text class="seg-cap">{{item.base}}</text>
         </view>
       </view>
       <view class="plate-note">

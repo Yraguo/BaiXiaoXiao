@@ -1,0 +1,30 @@
+<view class="main-page" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+  <!-- 不用 swiper：它的 disable-touch 在手势竞争下并不总能拦住原生滑动，
+       会和页面自己的手势一起切屏。改成纯 transform 轨道，位移完全由 current 决定 -->
+  <view class="tab-viewport">
+    <view class="tab-track" style="transform: translateX({{-current * 20}}%)">
+      <view class="tab-pane">
+        <tab-timetable id="tab-timetable" active="{{current === 0}}" page-query="{{pageQuery}}" />
+      </view>
+      <view class="tab-pane">
+        <tab-secondclass id="tab-secondclass" active="{{current === 1}}" page-query="{{pageQuery}}" />
+      </view>
+      <view class="tab-pane">
+        <tab-uni id="tab-uni" active="{{current === 2}}" page-query="{{pageQuery}}" />
+      </view>
+      <view class="tab-pane">
+        <tab-campus id="tab-campus" active="{{current === 3}}" page-query="{{pageQuery}}" />
+      </view>
+      <view class="tab-pane">
+        <tab-me
+          id="tab-me"
+          active="{{current === 4}}"
+          page-query="{{pageQuery}}"
+          bind:tabrequest="onTabRequest"
+        />
+      </view>
+    </view>
+  </view>
+
+  <tabbar current="{{current}}" bind:switch="onTabSwitch" />
+</view>

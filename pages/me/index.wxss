@@ -1,3 +1,6 @@
+.tab-scroll { width: 100%; height: 100%; }
+.tab-scroll .page-shell { min-height: 0; }
+
 .profile-card { display: flex; align-items: center; gap: 22rpx; padding: 28rpx; border-radius: 26rpx; background: #fff; }
 .profile-card:active { background: #fafafc; }
 .profile-main { flex: 1; min-width: 0; }
@@ -15,7 +18,7 @@
 .danger-row .row-title { color: var(--danger); }
 .privacy { padding: 24rpx 12rpx; color: var(--muted); font-size: 22rpx; line-height: 1.55; }
 
-.mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 80; display: flex; align-items: flex-end; background: rgba(13, 19, 29, .48); }
+.mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; display: flex; align-items: flex-end; background: rgba(13, 19, 29, .48); }
 .sheet { width: 100%; box-sizing: border-box; padding: 32rpx 28rpx calc(34rpx + env(safe-area-inset-bottom)); border-radius: 34rpx 34rpx 0 0; background: #f7f7fa; }
 .sheet-title { margin-bottom: 20rpx; font-size: 34rpx; font-weight: 700; }
 

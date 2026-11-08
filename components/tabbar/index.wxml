@@ -1,0 +1,25 @@
+<view class="tabbar">
+  <view class="tabbar-inner">
+    <!-- 选中高亮块：整块随选中项平移，不是每个图标各自淡入 -->
+    <view class="tab-pill" style="transform: translateX({{current * 100}}%);">
+      <view class="tab-pill-body"></view>
+    </view>
+
+    <view
+      wx:for="{{tabs}}"
+      wx:key="text"
+      class="tab-item {{current === index ? 'is-active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onTap"
+      aria-role="tab"
+      aria-selected="{{current === index}}"
+      aria-label="{{item.text}}"
+    >
+      <view class="tab-icon-wrap">
+        <image class="tab-icon" src="{{item.icon}}" mode="aspectFit"></image>
+        <image class="tab-icon tab-icon-active" src="{{item.active}}" mode="aspectFit"></image>
+      </view>
+      <text class="tab-text">{{item.text}}</text>
+    </view>
+  </view>
+</view>

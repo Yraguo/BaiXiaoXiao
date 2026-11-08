@@ -1,1 +1,3 @@
-{ "navigationBarTitleText": "校园服务" }
+{
+  "component": true
+}

@@ -1,10 +1,6 @@
 {
   "pages": [
-    "pages/timetable/index",
-    "pages/secondclass/index",
-    "pages/uni/index",
-    "pages/campus/index",
-    "pages/me/index",
+    "pages/main/index",
     "pages/course/edit",
     "pages/note/edit",
     "pages/settings/index",
@@ -18,44 +14,6 @@
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f2f2f7",
     "backgroundTextStyle": "light"
-  },
-  "tabBar": {
-    "color": "#8e8e93",
-    "selectedColor": "#007aff",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "white",
-    "list": [
-      {
-        "pagePath": "pages/timetable/index",
-        "text": "课表",
-        "iconPath": "assets/tabbar/timetable.png",
-        "selectedIconPath": "assets/tabbar/timetable-active.png"
-      },
-      {
-        "pagePath": "pages/secondclass/index",
-        "text": "第二课堂",
-        "iconPath": "assets/tabbar/secondclass.png",
-        "selectedIconPath": "assets/tabbar/secondclass-active.png"
-      },
-      {
-        "pagePath": "pages/uni/index",
-        "text": "小鸮",
-        "iconPath": "assets/tabbar/uni.png",
-        "selectedIconPath": "assets/tabbar/uni-active.png"
-      },
-      {
-        "pagePath": "pages/campus/index",
-        "text": "校园",
-        "iconPath": "assets/tabbar/campus.png",
-        "selectedIconPath": "assets/tabbar/campus-active.png"
-      },
-      {
-        "pagePath": "pages/me/index",
-        "text": "我的",
-        "iconPath": "assets/tabbar/me.png",
-        "selectedIconPath": "assets/tabbar/me-active.png"
-      }
-    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

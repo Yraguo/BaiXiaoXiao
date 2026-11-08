@@ -1,0 +1,31 @@
+.main-page {
+  height: 100vh;
+  background: #f2f2f7;
+}
+
+/* 底部导航是浮层，视口要把它的高度让出来，否则内容会被压在导航栏下面 */
+.tab-viewport {
+  height: calc(100vh - 104rpx - env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+/* 五屏并排在一条 500% 宽的轨道上，位移只由 current 决定 */
+.tab-track {
+  display: flex;
+  width: 500%;
+  height: 100%;
+  transition: transform .32s cubic-bezier(.22, .61, .36, 1);
+}
+
+/*
+ * 每屏自己形成包含块：组件里的悬浮球和弹层都是 fixed，
+ * 若跟着整条轨道定位会跑到第一屏去，锚在各自的 pane 上才正确。
+ */
+.tab-pane {
+  position: relative;
+  width: 20%;
+  height: 100%;
+  flex: none;
+  min-width: 0;
+  transform: translateZ(0);
+}

@@ -1,13 +1,23 @@
-.page-shell { padding-bottom: 200rpx; }
+.tab-scroll { width: 100%; height: 100%; }
+.tab-scroll .page-shell { min-height: 0; }
+
+.page-shell { padding-bottom: 180rpx; }
 
 .sc-head { margin-top: 12rpx; }
 .sc-title { font-size: 42rpx; font-weight: 700; }
 .sc-sub { margin-top: 6rpx; color: var(--muted); font-size: 22rpx; }
 
 /* 三个页签 */
-.sc-seg { display: flex; gap: 6rpx; margin-top: 20rpx; padding: 6rpx; border-radius: 18rpx; background: #e9ebf0; }
-.sc-seg-item { flex: 1; padding: 16rpx 0; border-radius: 14rpx; color: var(--muted); font-size: 24rpx; text-align: center; }
-.sc-seg-item.active { background: #fff; color: var(--text); font-weight: 600; box-shadow: 0 2rpx 8rpx rgba(22, 32, 49, .08); }
+/* 三个页签：白色高亮块在选中项之间平移，做法与课表页的「课表 / 记事本」一致 */
+.sc-seg { position: relative; display: flex; margin-top: 20rpx; padding: 6rpx; border-radius: 18rpx; background: #e9ebf0; }
+.sc-seg-indicator { position: absolute; top: 6rpx; bottom: 6rpx; left: 6rpx; width: calc((100% - 12rpx) / 3); border-radius: 14rpx; background: #fff; box-shadow: 0 2rpx 8rpx rgba(22, 32, 49, .08); transition: transform .28s cubic-bezier(.22, .61, .36, 1); }
+.sc-seg-item { position: relative; flex: 1; padding: 16rpx 0; border-radius: 14rpx; color: var(--muted); font-size: 24rpx; text-align: center; transition: color .2s ease; }
+.sc-seg-item.active { color: var(--text); font-weight: 600; }
+
+/* 三个视图常驻在一条 300% 宽的轨道上，切换时整条轨道平移 */
+.sc-viewport { overflow: hidden; }
+.sc-track { display: flex; width: 300%; transition: transform .3s cubic-bezier(.22, .61, .36, 1); }
+.sc-pane { width: 33.3333%; flex: none; min-width: 0; }
 
 /* 合计自评 */
 .sc-summary { position: relative; margin-top: 18rpx; padding: 26rpx 24rpx 20rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 6rpx 24rpx rgba(38, 57, 88, .05); }
@@ -80,7 +90,7 @@
 .sc-fab {
   position: fixed;
   right: 32rpx;
-  bottom: calc(40rpx + env(safe-area-inset-bottom));
+  bottom: 40rpx;
   padding: 26rpx 38rpx;
   border-radius: 999rpx;
   background: var(--brand);
@@ -91,7 +101,7 @@
 }
 
 /* 弹层 */
-.mask { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; background: rgba(12, 18, 28, .42); }
+.mask { position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-end; background: rgba(12, 18, 28, .42); }
 .sc-sheet { width: 100%; border-radius: 26rpx 26rpx 0 0; background: #fff; }
 
 .manual { display: flex; flex-direction: column; max-height: 84vh; }

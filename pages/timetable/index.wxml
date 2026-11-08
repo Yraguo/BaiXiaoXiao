@@ -1,4 +1,11 @@
-<view class="page" bindtouchstart="rememberTouch" bindtouchend="finishTouch">
+<scroll-view
+  class="tab-scroll"
+  scroll-y
+  refresher-enabled="{{true}}"
+  refresher-triggered="{{refresherOn}}"
+  bindrefresherrefresh="onPullRefresh"
+>
+<view class="page">
   <!-- 课表 / 记事本：两个视图常驻在一条水平轨道上，切换时整条轨道平移。
        做法对齐开源的 SwiperTab / wx-scrollable-tab-view：
        与"删旧视图再渲染新的"相比，滑动过程中两页内容都真实可见 -->
@@ -36,7 +43,10 @@
       aria-label="上一周"
     >‹</view>
     <view class="week-center" bindtap="openWeekPicker">
-      <view class="week-heading">第 {{week}} 周<text class="week-range">{{weekTitle}}</text></view>
+      <view class="week-heading">
+        <text class="week-num">第 {{week}} 周</text>
+        <text class="week-range">{{weekTitle}}</text>
+      </view>
       <view class="semester">{{settings.timetableName}} · 共 {{settings.totalWeeks}} 周</view>
     </view>
     <view
@@ -56,7 +66,8 @@
     <button class="secondary-button empty-button" bindtap="openImport">导入课表</button>
   </view>
 
-  <view wx:else class="timetable-card {{weekAnim}}">
+  <!-- 左右滑动换周只在课表方框内生效；catch 阻止冒泡，容器页因此收不到这次手势 -->
+  <view wx:else class="timetable-card {{weekAnim}}" catchtouchstart="rememberTouch" catchtouchend="finishTouch">
     <view class="table-head">
       <view class="period-head">
         <text class="period-month">{{headMonth}}</text>
@@ -120,7 +131,8 @@
 
     <view class="view-page">
     <view class="notes-layer">
-    <view class="calendar">
+    <!-- 日历方框内左右滑动换月，同样 catch 住 -->
+    <view class="calendar" catchtouchstart="rememberTouch" catchtouchend="finishTouch">
       <view class="calendar-head">
         <view class="month-nav" bindtap="previousMonth" aria-role="button" aria-label="上个月">‹</view>
         <view class="month-title" bindtap="goToday">
@@ -178,6 +190,7 @@
   </view>
 
 </view>
+</scroll-view>
 
 <!-- 百宝箱：可自由拖动的小球，位置限制在页面可视区内并持久化 -->
 <view

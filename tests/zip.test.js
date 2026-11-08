@@ -7,7 +7,7 @@ const { summarize } = require('../utils/secondclass');
 
 const SAMPLE = summarize([
   { plate: 'de', title: '主题团日', date: '2026-10-04', score: 10 },
-  { plate: 'lao', title: '社区志愿服务', date: '2026-10-15', score: 20, level: 'extra', hours: 6, address: '北区' }
+  { plate: 'lao', title: '社区志愿服务', date: '2026-10-15', score: 20, level: 'extra', hours: 6, address: '东校区' }
 ]);
 
 function u16(bytes, offset) {
@@ -82,7 +82,7 @@ test('备份包结构：课表 + 二课 + 时长 + 说明，zip 能原样读回'
     { plate: 'de', title: '主题团日', date: '2026-10-04', score: 10 }
   ]);
   const courses = [
-    { name: '复变函数与积分变换（A）', day: 1, startPeriod: 1, endPeriod: 2, weeks: [1, 2, 3], campus: '北区', room: '二教C阶-101', teacher: '王凤超' }
+    { name: '高等数学（A）', day: 1, startPeriod: 1, endPeriod: 2, weeks: [1, 2, 3], campus: '东校区', room: '教A-101', teacher: '李强' }
   ];
   const entries = buildFullBackup({
     courses,
@@ -109,7 +109,7 @@ test('备份包结构：课表 + 二课 + 时长 + 说明，zip 能原样读回'
   const courseData = JSON.parse(readText(back, '课表.json'));
   assert.equal(courseData.schema, 'timetable/v1');
   assert.equal(courseData.courses.length, 1);
-  assert.equal(courseData.courses[0].name, '复变函数与积分变换（A）');
+  assert.equal(courseData.courses[0].name, '高等数学（A）');
   assert.equal(courseData.settings.totalWeeks, 18);
 
   const hoursData = JSON.parse(readText(back, '二课时长.json'));

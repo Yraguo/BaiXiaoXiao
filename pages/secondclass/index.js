@@ -1,3 +1,4 @@
+const pageAdapter = require('../../utils/pageAdapter');
 const { loadClasses, loadHours, saveHours } = require('../../utils/appStore');
 const { loadSettings } = require('../../utils/storage');
 const { currentWeek, dateStamp, todayDayIndex } = require('../../utils/date');
@@ -32,10 +33,12 @@ function headLine() {
   return week > 0 ? `${date} · 第 ${week} 周` : date;
 }
 
-Page({
+const pageLogic = {
   data: {
     headLine: '',
     tab: 'score',
+    // 三个视图在同一条水平轨道上，用索引驱动位移
+    tabIndex: 0,
 
     total: 0,
     totalText: '0',
@@ -151,7 +154,8 @@ Page({
   switchTab(event) {
     const tab = event.currentTarget.dataset.tab;
     if (tab === this.data.tab) return;
-    this.setData({ tab });
+    const tabIndex = tab === 'score' ? 0 : (tab === 'volunteer' ? 1 : 2);
+    this.setData({ tab, tabIndex });
   },
 
   changeFilter(event) {
@@ -475,4 +479,6 @@ Page({
     this.setData({ hourOpen: false });
     this.reload();
   }
-});
+};
+
+Component(pageAdapter.adapt(pageLogic));

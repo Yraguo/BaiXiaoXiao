@@ -85,7 +85,7 @@ Page({
     if (!confirmed) return;
     saveCourses([]);
     wx.showToast({ title: '课程已清空', icon: 'success' });
-    setTimeout(() => wx.reLaunch({ url: '/pages/timetable/index' }), 400);
+    setTimeout(() => wx.reLaunch({ url: '/pages/main/index' }), 400);
   }
 });
 

@@ -1,3 +1,4 @@
+const pageAdapter = require('../../utils/pageAdapter');
 const { COURSE_COLORS, assignCourseColors, courseTint, normalizeName } = require('../../utils/colors');
 const { DAY_NAMES } = require('../../utils/constants');
 const {
@@ -42,8 +43,9 @@ function sameDay(left, right) {
     && left.getDate() === right.getDate();
 }
 
-Page({
+const pageLogic = {
   data: {
+    refresherOn: false,
     settings: {},
     week: 1,
     currentWeek: 1,
@@ -110,7 +112,14 @@ Page({
 
   onPullDownRefresh() {
     this.reload(false);
-    wx.stopPullDownRefresh();
+  },
+
+  // scroll-view 的下拉刷新：组件里拿不到页面级的 onPullDownRefresh，改为自己收尾
+  onPullRefresh() {
+    this.setData({ refresherOn: true });
+    if (typeof this.pullDownRefresh === 'function') this.pullDownRefresh();
+    // 数据都在本地，读得很快；留一点时间让指示器收回去，不至于一闪
+    setTimeout(() => this.setData({ refresherOn: false }), 400);
   },
 
   onShareAppMessage() {
@@ -118,7 +127,7 @@ Page({
     const id = this.shareIdCache;
     return {
       title: `${this.data.settings.timetableName || '我的课表'} · 第${this.data.week}周`,
-      path: id ? `/pages/timetable/index?share=${id}` : '/pages/timetable/index'
+      path: id ? `/pages/main/index?share=${id}` : '/pages/main/index'
     };
   },
 
@@ -395,20 +404,35 @@ Page({
     try {
       if (wx.getWindowInfo) {
         const info = wx.getWindowInfo();
-        if (info && info.windowWidth) return { width: info.windowWidth, height: info.windowHeight };
+        if (info && info.windowWidth) return this.resolveSize(info);
       }
-      const info = wx.getSystemInfoSync();
-      return { width: info.windowWidth, height: info.windowHeight };
+      return this.resolveSize(wx.getSystemInfoSync());
     } catch (error) {
-      return { width: 375, height: 667 };
+      return { width: 375, height: 667, tabBar: 52, safeBottom: 0 };
     }
+  },
+
+  /**
+   * 换成悬浮球可用的区域。
+   * 自定义 tabBar 浮在页面上、不占布局高度，windowHeight 因此包含了它，
+   * 球的上下界要把 tabBar 高度和安全区一起扣掉，否则会停在导航栏上。
+   */
+  resolveSize(info) {
+    const width = info.windowWidth || 375;
+    const height = info.windowHeight || 667;
+    const tabBar = (104 * width) / 750;
+    const screenHeight = info.screenHeight || height;
+    const safeBottom = info.safeArea && info.safeArea.bottom
+      ? Math.max(0, screenHeight - info.safeArea.bottom)
+      : 0;
+    return { width, height, tabBar, safeBottom };
   },
 
   /** 把球限制在可视区内：拖动、旋转屏、改字号之后都能兜住 */
   clampBall(x, y) {
-    const { width, height } = this.windowSize();
+    const { width, height, tabBar, safeBottom } = this.windowSize();
     const maxX = Math.max(BALL_MARGIN, width - BALL_SIZE - BALL_MARGIN);
-    const maxY = Math.max(BALL_MARGIN, height - BALL_SIZE - BALL_MARGIN);
+    const maxY = Math.max(BALL_MARGIN, height - tabBar - safeBottom - BALL_SIZE - BALL_MARGIN);
     return {
       x: Math.min(Math.max(Number(x) || 0, BALL_MARGIN), maxX),
       y: Math.min(Math.max(Number(y) || 0, BALL_MARGIN), maxY)
@@ -416,10 +440,10 @@ Page({
   },
 
   initBall() {
-    const { width, height } = this.windowSize();
-    // 默认停在右下角、主按钮上方一点，不挡课表也不挡 tabBar
+    const { width, height, tabBar, safeBottom } = this.windowSize();
+    // 默认停在右下角、主按钮上方一点，不挡课表也不挡底部导航
     let x = width - BALL_SIZE - 12;
-    let y = height - BALL_SIZE - 96;
+    let y = height - tabBar - safeBottom - BALL_SIZE - 44;
     try {
       const saved = wx.getStorageSync(BALL_KEY);
       if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) {
@@ -878,5 +902,6 @@ Page({
   },
 
   stopPropagation() {}
-});
+};
 
+Component(pageAdapter.adapt(pageLogic));

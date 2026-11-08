@@ -1,3 +1,4 @@
+const pageAdapter = require('../../utils/pageAdapter');
 const { loadHistory, loadNotes, saveHistory, saveNotes } = require('../../utils/appStore');
 const { confirmDelete } = require('../../utils/confirm');
 const { loadCourses, loadSettings } = require('../../utils/storage');
@@ -8,7 +9,7 @@ const SUGGESTIONS = ['我这周几节课', '高数在哪上', '记一下 周五�
 const OWL_DEFAULT = '/assets/owl/owl-think.png';
 const OWL_CONFUSED = '/assets/owl/owl-confused.png';
 
-Page({
+const pageLogic = {
   data: {
     text: '',
     messages: [],
@@ -113,4 +114,6 @@ Page({
     saveHistory([]);
     this.setData({ messages: [], historyOpen: false });
   }
-});
+};
+
+Component(pageAdapter.adapt(pageLogic));

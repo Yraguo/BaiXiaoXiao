@@ -1,3 +1,6 @@
+.tab-scroll { width: 100%; height: 100%; }
+.tab-scroll .page-shell { min-height: 0; }
+
 .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; }
 .service-card { min-height: 214rpx; padding: 26rpx 14rpx 22rpx; border-radius: 24rpx; background: #fff; text-align: center; transition: transform .12s ease; }
 .service-card:active { transform: scale(.97); background: #f8f8fa; }

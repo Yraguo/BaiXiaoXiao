@@ -1,4 +1,5 @@
-.uni-page { display: flex; flex-direction: column; height: calc(100vh - env(safe-area-inset-bottom)); background: #f2f2f7; }
+/* 减掉自定义 tabBar 的高度，否则输入区会被底部导航压住 */
+.uni-page { display: flex; flex-direction: column; height: 100%; background: #f2f2f7; }
 
 .uni-head { display: flex; align-items: center; justify-content: space-between; padding: 20rpx 28rpx 12rpx; }
 .uni-brand { display: flex; align-items: center; gap: 14rpx; min-width: 0; }
@@ -37,7 +38,7 @@
 .send.ready { background: var(--brand); }
 .send.ready:active { opacity: .85; }
 
-.mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 90; display: flex; align-items: flex-end; background: rgba(13, 19, 29, .48); }
+.mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; display: flex; align-items: flex-end; background: rgba(13, 19, 29, .48); }
 .history-sheet { width: 100%; box-sizing: border-box; max-height: 78vh; padding: 28rpx 24rpx calc(28rpx + env(safe-area-inset-bottom)); border-radius: 32rpx 32rpx 0 0; background: #f7f7fa; }
 .sheet-head { display: flex; justify-content: space-between; padding: 4rpx 6rpx 22rpx; font-size: 32rpx; font-weight: 700; }
 .close { color: var(--brand); font-size: 25rpx; font-weight: 400; }

@@ -1,3 +1,4 @@
+<scroll-view class="tab-scroll" scroll-y>
 <view class="page-shell">
   <view class="profile-card" bindtap="openEditor">
     <image class="avatar" src="{{profile.avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
@@ -60,6 +61,7 @@
 
   <view class="privacy">课表、记事、头像昵称和小鸮历史都保存在微信本地存储。当前小程序版没有接入账号云同步，也不会读取或保存教务系统密码。</view>
 </view>
+</scroll-view>
 
 <view wx:if="{{editing}}" class="mask" bindtap="closeEditor">
   <view class="sheet" catchtap="noop">

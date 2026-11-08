@@ -1,3 +1,4 @@
+<scroll-view class="tab-scroll" scroll-y>
 <view class="page-shell">
   <view class="sc-head">
     <view class="sc-title">第二课堂</view>
@@ -5,13 +6,15 @@
   </view>
 
   <view class="sc-seg">
+    <view class="sc-seg-indicator" style="transform: translateX({{tabIndex * 100}}%)"></view>
     <view class="sc-seg-item {{tab === 'score' ? 'active' : ''}}" data-tab="score" bindtap="switchTab">二课填报</view>
     <view class="sc-seg-item {{tab === 'volunteer' ? 'active' : ''}}" data-tab="volunteer" bindtap="switchTab">志愿时长</view>
     <view class="sc-seg-item {{tab === 'labor' ? 'active' : ''}}" data-tab="labor" bindtap="switchTab">劳育时长</view>
   </view>
 
-  <!-- 二课填报 -->
-  <block wx:if="{{tab === 'score'}}">
+  <view class="sc-viewport">
+    <view class="sc-track" style="transform: translateX({{-tabIndex * 33.3333}}%)">
+      <view class="sc-pane">
     <view class="sc-summary">
       <view class="sc-total">
         <text class="sc-total-num">{{totalText}}</text>
@@ -40,7 +43,7 @@
       <text class="chevron">›</text>
     </view>
 
-    <scroll-view class="sc-filters" scroll-x>
+    <scroll-view class="sc-filters" scroll-x catchtouchstart="noop" catchtouchend="noop">
       <view
         wx:for="{{filters}}"
         wx:key="key"
@@ -68,30 +71,26 @@
     </view>
 
     <view class="sc-tip">分数为自行填报与自评，上限依据《北京化工大学本科生学生手册·学生事务管理制度》。最终认定以学校审核为准。</view>
-  </block>
+      </view>
 
-  <!-- 志愿 / 劳育时长 -->
-  <!-- 这里必须用 wx:if 显式判断，不能靠 wx:else：
-       wx:else 要求紧跟上一个兄弟节点，中间隔一行注释就可能失效，
-       表现就是切到这两个页签后整块内容不渲染 -->
-  <block wx:if="{{tab !== 'score'}}">
+      <view class="sc-pane">
     <view class="sc-hours">
       <view class="sc-hours-top">
         <view>
-          <text class="sc-hours-num">{{tab === 'volunteer' ? volunteer.totalText : labor.totalText}}</text>
+          <text class="sc-hours-num">{{volunteer.totalText}}</text>
           <text class="sc-hours-unit">小时</text>
         </view>
         <view class="sc-hours-side">
-          <view>今年 {{tab === 'volunteer' ? volunteer.yearText : labor.yearText}} 小时 · 共 {{tab === 'volunteer' ? volunteer.yearCount : labor.yearCount}} 条</view>
+          <view>今年 {{volunteer.yearText}} 小时 · 共 {{volunteer.yearCount}} 条</view>
           <view class="sc-hours-note">与第二课堂自评分是两套独立口径</view>
         </view>
       </view>
-      <view class="sc-hours-label">累计{{tab === 'volunteer' ? '志愿' : '劳育'}}时长（小时）</view>
+      <view class="sc-hours-label">累计{{'志愿'}}时长（小时）</view>
     </view>
 
-    <view class="sc-add-hour" data-kind="{{tab}}" bindtap="openHour">＋ 记一条{{tab === 'volunteer' ? '志愿' : '劳育'}}时长</view>
+    <view class="sc-add-hour" data-kind="volunteer" bindtap="openHour">＋ 记一条志愿时长</view>
 
-    <view wx:for="{{tab === 'volunteer' ? volunteer.groups : labor.groups}}" wx:key="term" class="sc-term">
+    <view wx:for="{{volunteer.groups}}" wx:key="term" class="sc-term">
       <view class="sc-term-head">
         <text class="sc-term-name">{{item.term}}</text>
         <text class="sc-term-hours">{{item.hoursText}} 小时</text>
@@ -107,10 +106,51 @@
         </view>
       </view>
     </view>
-  </block>
+      </view>
 
-  <view wx:if="{{tab === 'score'}}" class="sc-fab" bindtap="addRecord">填报活动</view>
+      <view class="sc-pane">
+    <view class="sc-hours">
+      <view class="sc-hours-top">
+        <view>
+          <text class="sc-hours-num">{{labor.totalText}}</text>
+          <text class="sc-hours-unit">小时</text>
+        </view>
+        <view class="sc-hours-side">
+          <view>今年 {{labor.yearText}} 小时 · 共 {{labor.yearCount}} 条</view>
+          <view class="sc-hours-note">与第二课堂自评分是两套独立口径</view>
+        </view>
+      </view>
+      <view class="sc-hours-label">累计{{'劳育'}}时长（小时）</view>
+    </view>
+
+    <view class="sc-add-hour" data-kind="labor" bindtap="openHour">＋ 记一条劳育时长</view>
+
+    <view wx:for="{{labor.groups}}" wx:key="term" class="sc-term">
+      <view class="sc-term-head">
+        <text class="sc-term-name">{{item.term}}</text>
+        <text class="sc-term-hours">{{item.hoursText}} 小时</text>
+      </view>
+      <view wx:if="{{item.empty}}" class="sc-term-empty">还没有记录</view>
+      <view wx:else>
+        <view wx:for="{{item.records}}" wx:for-item="record" wx:key="id" class="sc-term-row">
+          <view class="sc-term-row-main">
+            <view>{{record.title}}</view>
+            <view class="sc-term-row-meta">{{record.date}}{{record.note ? ' · ' + record.note : ''}}</view>
+          </view>
+          <text class="sc-term-row-hours">{{record.hours}} h</text>
+        </view>
+      </view>
+    </view>
+      </view>
+    </view>
+  </view>
+
 </view>
+</scroll-view>
+
+<!-- 悬浮填报按钮放在内容根节点之外：切页动画给根节点加了 transform，
+     留在里面会让 fixed 定位改成相对根节点，按钮整体上移错位 -->
+<view wx:if="{{tab === 'score'}}" class="sc-fab" bindtap="addRecord">填报活动</view>
 
 <!-- 手册分值表 -->
 <view wx:if="{{manualOpen}}" class="mask" bindtap="closeManual">
@@ -123,7 +163,7 @@
       <view class="manual-close" bindtap="closeManual">关闭</view>
     </view>
 
-    <scroll-view class="manual-tabs" scroll-x>
+    <scroll-view class="manual-tabs" scroll-x catchtouchstart="noop" catchtouchend="noop">
       <view
         wx:for="{{manualTabs}}"
         wx:key="key"
@@ -160,7 +200,7 @@
 
       <block wx:else>
         <view class="mt-table-title">{{manualTab === 'contest' ? contest.title : manualTab === 'sport' ? sport.title : art.title}}</view>
-        <scroll-view class="mt-scroll" scroll-x>
+        <scroll-view class="mt-scroll" scroll-x catchtouchstart="noop" catchtouchend="noop">
           <view>
             <view class="mt-row mt-head">
               <text class="mt-c0">获奖情况</text>

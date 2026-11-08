@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "我的课表",
+  "usingComponents": {
+    "tab-timetable": "/pages/timetable/index",
+    "tab-secondclass": "/pages/secondclass/index",
+    "tab-uni": "/pages/uni/index",
+    "tab-campus": "/pages/campus/index",
+    "tab-me": "/pages/me/index",
+    "tabbar": "/components/tabbar/index"
+  }
+}
