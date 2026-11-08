@@ -118,7 +118,7 @@
     </view>
 
     <view class="view-page">
-    <view class="notes-layer">
+    <view class="notes-layer {{weekAnim}}">
     <view class="calendar">
       <view class="calendar-head">
         <view class="month-nav" bindtap="previousMonth" aria-role="button" aria-label="上个月">‹</view>

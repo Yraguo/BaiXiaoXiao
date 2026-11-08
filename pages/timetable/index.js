@@ -418,7 +418,8 @@ Page({
     this.shiftMonth(1);
   },
 
-  shiftMonth(delta) {
+  shiftMonth(delta, animate) {
+    if (this.switching) return;
     const { year, monthIndex } = this.data;
     const target = new Date(year, monthIndex + delta, 1);
     const now = new Date();
@@ -427,7 +428,24 @@ Page({
     const selected = inCurrentMonth
       ? dateStamp(now)
       : dateStamp(new Date(target.getFullYear(), target.getMonth(), 1));
-    this.openMonth(target.getFullYear(), target.getMonth(), selected);
+    const apply = () => this.openMonth(target.getFullYear(), target.getMonth(), selected);
+
+    if (animate === false) {
+      apply();
+      return;
+    }
+    // 与切周同一套两段式：日历先按方向滑出，换月份后再从反方向进入
+    this.switching = true;
+    this.setData({ weekAnim: delta > 0 ? 'wk-leave-left' : 'wk-leave-right' });
+    clearTimeout(this.weekAnimTimer);
+    this.weekAnimTimer = setTimeout(() => {
+      apply();
+      this.setData({ weekAnim: delta > 0 ? 'wk-enter-right' : 'wk-enter-left' });
+      this.weekAnimTimer = setTimeout(() => {
+        this.setData({ weekAnim: '' });
+        this.switching = false;
+      }, 200);
+    }, 120);
   },
 
   goToday() {
