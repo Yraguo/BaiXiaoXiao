@@ -59,11 +59,25 @@ test('课表格子把课名、教室、老师写全，不再截断', () => {
   assert.match(wxml, /course-teacher/, '教师必须显示');
 });
 
-test('导入确认是「替换 / 追加 / 取消」三个按钮', () => {
+test('导入确认是弹窗里的「替换 / 追加」两个按钮，另有取消', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/pdfimport/index.wxml'), 'utf8');
+  // 预览必须是弹窗（遮罩 + 底部面板），放页面底部不往下滑根本看不见
+  assert.match(wxml, /class="mask"/, '预览要是带遮罩的弹窗');
+  assert.doesNotMatch(wxml, /class="mask"[^>]*bindtap="cancelPreview"/, '点遮罩不能关弹窗，避免误触丢掉预览');
+  assert.match(wxml, /class="sheet preview-sheet"/, '弹窗用底部面板');
   assert.match(wxml, /class="primary-button"[^>]*bindtap="replaceAll"/);
   assert.match(wxml, /class="secondary-button"[^>]*bindtap="appendToExisting"/);
-  assert.match(wxml, /class="ghost-button"[^>]*bindtap="cancelPreview"/);
+  assert.match(wxml, /class="sheet-cancel"[^>]*bindtap="cancelPreview"/, '取消放在弹窗标题栏');
+});
+
+test('云端导入页的预览同样是弹窗', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/import/index.wxml'), 'utf8');
+  assert.match(wxml, /class="mask"/);
+  assert.match(wxml, /class="sheet preview-sheet"/);
+  assert.match(wxml, /bindtap="replaceAll"/);
+  assert.match(wxml, /bindtap="appendToExisting"/);
+  // 页面里不能再有内联的预览卡片，否则又会「看不见确认按钮」
+  assert.doesNotMatch(wxml, /class="preview-card"/);
 });
 test('课表行数按课程的结束节次撑开（回归：第 13 节的课块画到网格外被切掉）', () => {
   const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
@@ -135,7 +149,9 @@ test('导入课表移进百宝箱，课表页不再有独立入口', () => {
   assert.match(wxml, /class="tool-fab/, '只保留百宝箱一个浮球');
   const toolbox = wxml.slice(wxml.indexOf('tool-grid'));
   assert.match(toolbox, /导入课表/, '百宝箱里要有导入课表');
-  assert.match(toolbox, /教务直连/, '百宝箱里要有教务直连');
+  // 「导入课表」必须指向云端导入（data-key="jw"），PDF 单独一项，别再把主入口让给 PDF
+  assert.match(toolbox, /data-key="jw"[\s\S]{0,200}?tool-name">导入课表/, '「导入课表」要指向云端导入');
+  assert.match(toolbox, /data-key="pdf"[\s\S]{0,200}?tool-name">PDF 导入/, 'PDF 导入要单独成项');
   assert.match(toolbox, /课表设置/, '百宝箱里要有课表设置');
 });
 

@@ -41,7 +41,13 @@ function toCourses(rows, totalWeeks, idPrefix) {
     day: row.day,
     startPeriod: row.startPeriod,
     endPeriod: row.endPeriod,
-    weeks: (row.weeks || []).filter((week) => week >= 1 && week <= limit),
+    // 教务偶尔给不出周次（字段缺失或格式不认识）。这种情况如果按空数组处理，
+    // 整门课会在下面的 filter 里被静默丢掉——课表上凭空空一门，比周次不准更难发现。
+    // 所以退化成「全学期」，同时在导入预览里标明「周次未提供」。
+    weeks: (row.weeks && row.weeks.length
+      ? row.weeks
+      : Array.from({ length: limit }, (_, index) => index + 1)
+    ).filter((week) => week >= 1 && week <= limit),
     colorIndex: courseColorIndex(row.name),
     note: ''
   })).filter((course) => course.weeks.length > 0);

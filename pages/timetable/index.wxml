@@ -196,15 +196,15 @@
       <view class="toolbox-close" bindtap="closeToolbox">关闭</view>
     </view>
     <view class="tool-grid">
-      <view class="tool-item" data-key="pdf" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-blue">PDF</view>
-        <view class="tool-name">导入课表</view>
-        <view class="tool-desc">解析教务导出的 PDF</view>
-      </view>
       <view class="tool-item" data-key="jw" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-green">教</view>
-        <view class="tool-name">教务直连</view>
-        <view class="tool-desc">登录教务抓取课表</view>
+        <view class="tool-ico tone-blue">云</view>
+        <view class="tool-name">导入课表</view>
+        <view class="tool-desc">学号密码一键读课表</view>
+      </view>
+      <view class="tool-item" data-key="pdf" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-green">PDF</view>
+        <view class="tool-name">PDF 导入</view>
+        <view class="tool-desc">解析教务导出的 PDF</view>
       </view>
       <view class="tool-item" data-key="course" bindtap="toolboxAction" aria-role="button">
         <view class="tool-ico tone-indigo">＋</view>

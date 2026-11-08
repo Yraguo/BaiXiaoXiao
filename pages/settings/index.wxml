@@ -40,7 +40,7 @@
 
   <view class="section data-section">
     <view class="section-title">本机数据</view>
-    <view class="data-row" bindtap="resetDemo"><text>恢复示例课表</text><text>›</text></view>
+    <view class="data-row" bindtap="resetSettings"><text>恢复默认设置</text><text>›</text></view>
     <view class="data-row danger" bindtap="clearCourses"><text>清空全部课程</text><text>›</text></view>
     <view class="privacy-copy">课程与设置只保存在微信本地缓存，不会上传到服务器。</view>
   </view>

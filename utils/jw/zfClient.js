@@ -393,6 +393,21 @@ function parsePeriods(jcs) {
  * 支持 "1-16"、"1-16周(单)"、"1-8,10-16"、"3"。
  * 刻意不用正则后行断言（(?<!\d)），老版本 iOS 的 JS 引擎不支持，会整页报错。
  */
+/**
+ * 正方不同版本的周次字段名不一样：多数是 zcd，少数学校用 zcmc / kczc。
+ * 只认 zcd 会导致这类课「周次为空」，进而被课表页当成无效数据丢掉。
+ */
+const WEEK_FIELDS = ['zcd', 'zcmc', 'kczc', 'zcstr'];
+
+function pickWeeksText(row) {
+  if (!row) return '';
+  for (let index = 0; index < WEEK_FIELDS.length; index += 1) {
+    const value = String(row[WEEK_FIELDS[index]] || '').trim();
+    if (value) return value;
+  }
+  return '';
+}
+
 function parseWeeks(zcd) {
   const text = String(zcd || '');
   const onlyOdd = text.indexOf('单') >= 0;
@@ -448,7 +463,7 @@ function parseKbList(body) {
       .filter((value, index, list) => list.indexOf(value) === index)
       .join(' ');
     const teacher = String((row && row.xm) || '').trim();
-    const weeksText = String((row && row.zcd) || '').trim();
+    const weeksText = pickWeeksText(row);
     const weeks = parseWeeks(weeksText);
     parsePeriods(String((row && row.jcs) || '')).forEach(([startPeriod, endPeriod]) => {
       courses.push({

@@ -1,16 +1,22 @@
 <view class="import-page">
   <view class="mode-switch">
+    <view class="mode-item active">云端导入</view>
     <view class="mode-item" bindtap="openPdfImport">PDF 导入</view>
-    <view class="mode-item active">教务系统导入</view>
   </view>
 
   <view class="hero">
     <view class="hero-title">从教务系统导入课表</view>
-    <view class="hero-copy">登录一次正方教务系统，自动读取本学期课表，不用一门一门手动添加。</view>
+    <view class="hero-copy">填一次学号密码，云端替你登录正方教务系统，直接读回本学期课表，不用自己导出 PDF。</view>
     <view class="privacy-note">
       <text class="privacy-mark">隐私</text>
-      <text class="privacy-text">学号与密码只在本机内存中使用，直接提交给学校教务系统完成登录。不上传、不保存、不写入任何日志，导入结束后立即清除。</text>
+      <text class="privacy-text">学号与密码经微信云开发加密传输，只用于本次登录学校教务系统读取课表。不写入数据库、不记录日志，导入结束后立即从内存清除。</text>
     </view>
+  </view>
+
+  <view wx:if="{{!cloudReady}}" class="error-card soft">
+    <view class="error-title">云导入当前不可用</view>
+    <view class="error-copy">当前微信版本不支持云开发，换 PDF 导入效果一样。</view>
+    <button class="secondary-button" bindtap="openPdfImport">改用 PDF 导入</button>
   </view>
 
   <view class="form-card">
@@ -64,37 +70,25 @@
   <view wx:if="{{error}}" class="error-card">
     <view class="error-title">导入没有完成</view>
     <view class="error-copy">{{error}}</view>
-    <view wx:if="{{errorKind === 'DOMAIN_BLOCKED'}}" class="error-steps">
-      <text class="error-step">1. 打开微信公众平台 → 开发 → 开发管理 → 开发设置</text>
-      <text class="error-step">2. 找到「服务器域名」→ 修改 → request 合法域名</text>
-      <text class="error-step">3. 添加 https://jwglxt.buct.edu.cn 并保存</text>
-      <text class="error-step">4. 回到微信开发者工具点一次「编译」再试</text>
-    </view>
-    <view wx:if="{{errorKind === 'NO_SESSION_COOKIE' || errorKind === 'COOKIE_BLOCKED' || errorKind === 'METHOD_LOST'}}" class="error-steps">
-      <text class="error-step">1. 点开发者工具上方「预览」，用手机微信扫码</text>
-      <text class="error-step">2. 手机上打开小程序，重新走一次导入</text>
-      <text class="error-step">3. 手机浏览器里的教务系统请先退出，避免会话互斥</text>
-    </view>
-    <view wx:if="{{errorKind === 'LOGIN_BOUNCED'}}" class="error-steps">
-      <text class="error-step">1. 先别再点导入了，每次都会加重锁定</text>
-      <text class="error-step">2. 用电脑浏览器「无痕窗口」登录一次教务，确认密码能不能过</text>
-      <text class="error-step">3. 能登上就说明密码没问题，等 30 分钟后再回来导入</text>
-    </view>
-    <view wx:if="{{errorKind === 'SESSION_LOST_ON_POST'}}" class="error-steps">
-      <text class="error-step">1. 退出本页，重新进「从教务系统导入」，再试一次</text>
-      <text class="error-step">2. 手机浏览器里的教务系统请先退出，避免会话互斥</text>
-      <text class="error-step">3. 如果每次都这样，试一下切换网络：4G 与 Wi-Fi 互换</text>
-    </view>
-    <view wx:if="{{errorKind === 'PARAMS_LOST'}}" class="error-steps">
-      <text class="error-step">1. 这不是密码问题：教务系统这次一个表单字段都没收到</text>
-      <text class="error-step">2. 退出本页，重新进「从教务系统导入」，再试一次</text>
-      <text class="error-step">3. 仍然这样就把诊断信息发给开发者</text>
-    </view>
-    <view wx:if="{{errorKind === 'INVALID_CREDENTIALS'}}" class="error-steps">
+    <view wx:if="{{errorKind === 'INVALID_CREDENTIALS' || errorKind === 'LOGIN_BOUNCED' || errorKind === 'ACCOUNT_LOCKED'}}" class="error-steps">
       <text class="error-step">1. 先在电脑浏览器「无痕窗口」登录一次教务，确认现在能不能登上</text>
       <text class="error-step">2. 一天内失败 5 次会锁定 30 分钟，锁定期间密码正确也报这句</text>
-      <text class="error-step">3. 确认能登上之后，回来再导入一次</text>
+      <text class="error-step">3. 确认能登上之后，等 30 分钟再回来导入一次</text>
     </view>
+    <view wx:if="{{errorKind === 'QUERY_DENIED'}}" class="error-steps">
+      <text class="error-step">1. 检查上面选的学年和学期，是不是你要导的那一学期</text>
+      <text class="error-step">2. 教务处还没排完课的时候，接口会返回空数据</text>
+      <text class="error-step">3. 换成本学期再试一次</text>
+    </view>
+    <view wx:if="{{errorKind === 'TIMEOUT'}}" class="error-steps">
+      <text class="error-step">1. 教务系统高峰期响应很慢，隔几分钟再试</text>
+      <text class="error-step">2. 别连着点，每次都会重新登录一次</text>
+    </view>
+    <view wx:if="{{errorKind === 'CLOUD_UNAVAILABLE' || errorKind === 'CLOUD_FAILED'}}" class="error-steps">
+      <text class="error-step">1. 这是云导入服务的问题，不是你的账号密码错了</text>
+      <text class="error-step">2. 先用下面的「改用 PDF 导入」，功能完全一样</text>
+    </view>
+    <button class="secondary-button fallback-button" bindtap="openPdfImport">改用 PDF 导入</button>
     <view wx:if="{{diagnostics.length}}" class="diag-toggle" bindtap="toggleDiagnostics">
       {{showDiagnostics ? '收起诊断信息' : '查看诊断信息（排查用）'}}
     </view>
@@ -103,38 +97,48 @@
     </view>
   </view>
 
-  <view wx:if="{{preview}}" class="preview-card">
-    <view class="preview-head">
-      <view>
-        <view class="preview-title">识别到 {{preview.blocks}} 个课程时间段</view>
-        <view class="preview-sub">{{preview.term}} · 共 {{preview.distinct}} 门课 · {{preview.totalWeeks}} 周</view>
-      </view>
-    </view>
-
-    <scroll-view class="preview-list" scroll-y>
-      <view wx:for="{{preview.items}}" wx:key="key" class="preview-item">
-        <view class="preview-dot" style="background:{{item.color}}"></view>
-        <view class="preview-main">
-          <view class="preview-name">{{item.name}}</view>
-          <view class="preview-meta">{{item.meta}}</view>
-          <view wx:if="{{item.room || item.teacher}}" class="preview-meta light">{{item.room}}{{item.room && item.teacher ? ' · ' : ''}}{{item.teacher}}</view>
-        </view>
-      </view>
-      <view wx:if="{{previewMore > 0}}" class="preview-more">还有 {{previewMore}} 个时间段未展示</view>
-    </scroll-view>
-
-    <view class="preview-actions">
-      <button class="primary-button" bindtap="replaceAll" disabled="{{saving}}">替换现有课表</button>
-      <button class="secondary-button" bindtap="appendToExisting" disabled="{{saving}}">追加到现有课表</button>
-      <button class="ghost-button" bindtap="cancelPreview" disabled="{{saving}}">取消</button>
-    </view>
-  </view>
-
   <view wx:if="{{!preview}}" class="tips">
     <view class="tips-title">导入前请确认</view>
-    <view class="tip">· 教务系统地址：jwglxt.buct.edu.cn（学校内网、外网都可访问）</view>
-    <view class="tip">· 请先在浏览器里确认能正常登录，再回到小程序导入</view>
-    <view class="tip">· 导入只读取课表，不会修改教务系统里的任何数据</view>
+    <view class="tip">· 一次导入大约 5–15 秒，教务系统高峰期会更慢，中途别退出</view>
+    <view class="tip">· 密码连续错 5 次会锁定 30 分钟，不确定就先用电脑浏览器试一次</view>
+    <view class="tip">· 只读取课表，不会修改教务系统里的任何数据</view>
+    <view class="tip">· 如果一直失败，点上面的「PDF 导入」，效果一样</view>
     <view class="tip" bindtap="openManual">· 想手动添加单门课程，点这里</view>
+  </view>
+
+  <!-- 预览改成弹窗：之前是页面底部的一张卡片，用户不往下滑就看不见，
+       会以为「已经导入成功」，实际一次都没确认过 -->
+  <view wx:if="{{preview}}" class="mask" catchtouchmove="noop" catchtap="noop">
+    <view class="sheet preview-sheet" catchtap="noop">
+      <view class="sheet-head">
+        <view class="sheet-head-main">
+          <view class="sheet-title">识别到 {{preview.blocks}} 个课程时间段</view>
+          <view class="preview-sub">{{preview.term}} · 共 {{preview.distinct}} 门课 · {{preview.totalWeeks}} 周</view>
+        </view>
+        <view class="sheet-cancel" bindtap="cancelPreview">取消</view>
+      </view>
+
+      <view wx:if="{{weeksUnknown > 0}}" class="weeks-note">
+        有 {{weeksUnknown}} 个时间段教务没给周次，已按全学期显示，导入后可在课程详情里手动调整。
+      </view>
+
+      <scroll-view class="preview-list" scroll-y>
+        <view wx:for="{{preview.items}}" wx:key="key" class="preview-item">
+          <view class="preview-dot" style="background:{{item.color}}"></view>
+          <view class="preview-main">
+            <view class="preview-name">{{item.name}}</view>
+            <view class="preview-meta">{{item.meta}}</view>
+            <view wx:if="{{item.room || item.teacher}}" class="preview-meta light">{{item.room}}{{item.room && item.teacher ? ' · ' : ''}}{{item.teacher}}</view>
+          </view>
+        </view>
+        <view wx:if="{{previewMore > 0}}" class="preview-more">还有 {{previewMore}} 个时间段未展示</view>
+      </scroll-view>
+
+      <view class="preview-actions">
+        <button class="primary-button" bindtap="replaceAll" disabled="{{saving}}">替换现有课表</button>
+        <button class="secondary-button" bindtap="appendToExisting" disabled="{{saving}}">追加到现有课表</button>
+      </view>
+      <view class="sheet-hint">替换会清空现有课表；追加保留已有课程，只补新的。</view>
+    </view>
   </view>
 </view>

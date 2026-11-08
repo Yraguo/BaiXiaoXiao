@@ -2,6 +2,8 @@ const { courseColorIndex } = require('../../utils/colors');
 const { DAY_NAMES } = require('../../utils/constants');
 const { confirmReplace } = require('../../utils/confirm');
 const { loadCourses, loadSettings, saveCourses, saveSettings } = require('../../utils/storage');
+const { refreshTimetable } = require('../../utils/nav');
+const { currentWeek } = require('../../utils/date');
 const { formatWeeks } = require('../../utils/weeks');
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -26,6 +28,7 @@ const ERROR_HINTS = {
     'PDF 解析模块没有加载成功，请在微信开发者工具点「编译」重新构建',
     '若仍失败，检查 utils/pdf/ 目录是否完整（应有 6 个 js 文件）'
   ],
+  STORE_FAILED: ['手机存储空间可能已满，清理一下微信缓存再试', '仍失败就重启小程序，或先导出到文件再导入'],
   DEFAULT: ['请确认选择的是学校课表页导出的 PDF', '仍有问题可以点下方「手动添加单门课程」逐门添加']
 };
 
@@ -242,6 +245,28 @@ Page({
     }
     saveCourses(courses);
 
+    // 回读确认真的写进去了，再让课表页重排；写失败要当场说，不能只报成功
+    const stored = loadCourses();
+    const storedCount = Array.isArray(stored) ? stored.length : 0;
+    if (storedCount !== courses.length) {
+      this.setData({ saving: false });
+      this.fail(
+        'STORE_FAILED',
+        `课表写入失败（应写入 ${courses.length} 个，实际读到 ${storedCount} 个），请重试。`
+      );
+      return;
+    }
+    refreshTimetable(true);
+
+    // 落在停课周（期中/节假日）时课表看着是空的，提前说明一句，别让人以为没导进去
+    const thisWeek = currentWeek(settings.semesterStartMonday, settings.totalWeeks);
+    const hitThisWeek = courses.some((course) => (
+      Array.isArray(course.weeks) && course.weeks.indexOf(thisWeek) >= 0
+    ));
+    const weekHint = hitThisWeek
+      ? ''
+      : ` 第 ${thisWeek} 周教务没排课（多半是停课周），回课表切一下周次就能看到。`;
+
     this.pendingRows = null;
     this.setData({
       saving: false,
@@ -249,9 +274,9 @@ Page({
       previewWarning: '',
       // 用页面内的成功卡片替代 showModal：能放吉祥物，也顺手给个"再导一份"
       success: {
-        message: append
-          ? `已把 ${imported.length} 个课程时间段加入课表，当前共 ${courses.length} 个。`
-          : `课表已更新为 ${courses.length} 个课程时间段。`
+        message: (append
+          ? `已把 ${imported.length} 个课程时间段加入课表，当前共 ${storedCount} 个。`
+          : `课表已更新为 ${storedCount} 个课程时间段。`) + weekHint
       }
     });
   },
@@ -276,6 +301,9 @@ Page({
     this.pendingRows = null;
     this.setData({ preview: null, previewWarning: '' });
   },
+
+  /** 弹窗内部点击不穿透到遮罩，也不关闭弹窗 */
+  noop() {},
 
   openManual() {
     wx.navigateTo({ url: '/pages/course/edit' });

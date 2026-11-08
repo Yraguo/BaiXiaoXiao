@@ -148,7 +148,7 @@ function parseForm(body) {
 }
 
 test('登录表单保留页面全部隐藏字段，不再只提交四个参数', () => {
-  const fields = parseForm(zf.buildLoginForm(ZF_LOGIN_PAGE, '2025040064', 'CIPHER=='));
+  const fields = parseForm(zf.buildLoginForm(ZF_LOGIN_PAGE, '2025000000', 'CIPHER=='));
   const byName = (name) => fields.filter((f) => f.name === name);
 
   assert.equal(byName('yzcskz')[0].value, '5');
@@ -161,7 +161,7 @@ test('登录表单保留页面全部隐藏字段，不再只提交四个参数',
 });
 
 test('URL 传参版整串不含 %（避免被网络层二次转义）', () => {
-  const query = zf.buildLoginQueryRaw(ZF_LOGIN_PAGE, '2025040064', 'AbC/dEf=');
+  const query = zf.buildLoginQueryRaw(ZF_LOGIN_PAGE, '2025000000', 'AbC/dEf=');
   assert.equal(query.indexOf('%'), -1, '整串不能出现 %，否则真机上会被再转义一次');
   assert.equal(query.indexOf('+'), -1, '+ 在 query 里会被解码成空格');
 
@@ -195,19 +195,19 @@ test('无 + 密文：长度不变、仍能被标准私钥解开', () => {
 });
 
 test('学号提交一次、密码提交两次（对应页面上两个 name=mm 的输入框）', () => {
-  const fields = parseForm(zf.buildLoginForm(ZF_LOGIN_PAGE, '2025040064', 'CIPHER=='));
+  const fields = parseForm(zf.buildLoginForm(ZF_LOGIN_PAGE, '2025000000', 'CIPHER=='));
   const yhm = fields.filter((f) => f.name === 'yhm');
   const mm = fields.filter((f) => f.name === 'mm');
 
   assert.equal(yhm.length, 1);
-  assert.equal(yhm[0].value, '2025040064');
+  assert.equal(yhm[0].value, '2025000000');
   assert.equal(mm.length, 2, '两个 mm 都要提交密文');
   assert.equal(mm[0].value, 'CIPHER==');
   assert.equal(mm[1].value, 'CIPHER==');
 });
 
 test('兼容模式把 mmsfjm 置 0 并提交明文密码', () => {
-  const fields = parseForm(zf.buildLoginForm(ZF_LOGIN_PAGE, '2025040064', 'my pwd', { plain: true }));
+  const fields = parseForm(zf.buildLoginForm(ZF_LOGIN_PAGE, '2025000000', 'my pwd', { plain: true }));
   const byName = (name) => fields.filter((f) => f.name === name);
 
   assert.equal(byName('mmsfjm')[0].value, '0', '兼容模式必须声明"密码未加密"');
@@ -217,18 +217,18 @@ test('兼容模式把 mmsfjm 置 0 并提交明文密码', () => {
 });
 
 test('页面没有验证码时不提交 yzm；有验证码字段时才带上', () => {
-  const withoutCaptcha = zf.buildLoginForm(ZF_LOGIN_PAGE, '2025040064', 'CIPHER==');
+  const withoutCaptcha = zf.buildLoginForm(ZF_LOGIN_PAGE, '2025000000', 'CIPHER==');
   assert.equal(withoutCaptcha.indexOf('yzm='), -1, '不能凭空拼一个空 yzm');
   assert.equal(zf.hasCaptchaField(ZF_LOGIN_PAGE), false);
 
   const withCaptcha = ZF_LOGIN_PAGE + '<input type="text" name="yzm" id="yzm" value="">';
-  const form = zf.buildLoginForm(withCaptcha, '2025040064', 'CIPHER==');
+  const form = zf.buildLoginForm(withCaptcha, '2025000000', 'CIPHER==');
   assert.notEqual(form.indexOf('yzm='), -1, '页面有验证码字段时应原样提交');
   assert.equal(zf.hasCaptchaField(withCaptcha), true);
 });
 
 test('csrftoken 里的逗号按表单规则编码为 %2C', () => {
-  const form = zf.buildLoginForm(ZF_LOGIN_PAGE, '2025040064', 'CIPHER==');
+  const form = zf.buildLoginForm(ZF_LOGIN_PAGE, '2025000000', 'CIPHER==');
   assert.ok(
     form.indexOf('csrftoken=cb6bf526-7394%2Ccb6bf5267394') !== -1,
     '实际表单：' + form
@@ -302,6 +302,25 @@ test('kbList 解析：按节次分段展开，缺课名或星期越界的行跳�
   assert.equal(courses[1].startPeriod, 3);
   assert.equal(courses[2].startPeriod, 5);
   assert.deepEqual(courses[1].weeks, [1, 3, 5, 7, 9, 11, 13, 15]);
+});
+
+test('周次字段没有 zcd 时回退到 zcmc（回归：读不到周次会被当成空课）', () => {
+  const body = JSON.stringify({
+    kbList: [
+      { kcmc: '大学英语3', xqj: '3', jcs: '6-7', zcmc: '1-16周', xm: '张明', cdmc: '教A-203' }
+    ]
+  });
+  const courses = zf.parseKbList(body);
+  assert.equal(courses.length, 1);
+  assert.deepEqual(courses[0].weeks, Array.from({ length: 16 }, (_, index) => index + 1));
+});
+
+test('教务完全没给周次时按全学期显示，而不是把整门课丢掉', () => {
+  const courses = mapper.toCourses([
+    { name: '大学英语3', teacher: '张明', room: '教A-203', day: 3, startPeriod: 6, endPeriod: 7, weeks: [] }
+  ], 18);
+  assert.equal(courses.length, 1);
+  assert.equal(courses[0].weeks.length, 18);
 });
 
 test('单双周两行合并成一门课，周次取并集', () => {

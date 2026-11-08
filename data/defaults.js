@@ -25,6 +25,8 @@ const SETTINGS = {
   periodTimes: PERIOD_TIMES
 };
 
+// 示例课表：只用于测试夹具与演示，不参与首次启动初始化。
+// 真实用户的课表一律通过「云端导入」或「PDF 导入」写入，未导入时课表为空。
 const COURSES = [
   { id: 'demo-1', name: '高等数学', teacher: '教师A', room: '教A-203', day: 1, startPeriod: 1, endPeriod: 2, weeks: ALL_WEEKS, colorIndex: 0 },
   { id: 'demo-2', name: '大学英语', teacher: '教师B', room: '教B-105', day: 1, startPeriod: 3, endPeriod: 4, weeks: ALL_WEEKS, colorIndex: 1 },

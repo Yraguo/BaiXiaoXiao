@@ -11,8 +11,8 @@
 
   <block wx:if="{{!success}}">
   <view class="mode-switch">
+    <view class="mode-item" bindtap="openJwImport">云端导入</view>
     <view class="mode-item active">PDF 导入</view>
-    <view class="mode-item" bindtap="openJwImport">教务系统导入</view>
   </view>
 
   <view class="hero">
@@ -50,32 +50,37 @@
     <view class="error-retry" bindtap="choosePdf">重新选择文件</view>
   </view>
 
-  <view wx:if="{{preview}}" class="preview-card">
-    <view class="preview-head">
-      <view>
-        <view class="preview-title">识别到 {{preview.blocks}} 个课程时间段</view>
-        <view class="preview-sub">{{preview.term}} · 共 {{preview.distinct}} 门课 · {{preview.totalWeeks}} 周</view>
-      </view>
-    </view>
-
-    <view wx:if="{{previewWarning}}" class="preview-warn">{{previewWarning}}</view>
-
-    <scroll-view class="preview-list" scroll-y>
-      <view wx:for="{{preview.items}}" wx:key="key" class="preview-item">
-        <view class="preview-dot" style="background:{{item.color}}"></view>
-        <view class="preview-main">
-          <view class="preview-name">{{item.name}}</view>
-          <view class="preview-meta">{{item.meta}}</view>
-          <view wx:if="{{item.room || item.teacher}}" class="preview-meta light">{{item.room}}{{item.room && item.teacher ? ' · ' : ''}}{{item.teacher}}</view>
+  <!-- 预览改成弹窗，和云端导入一致：卡片放页面底部时用户不往下滑就看不见，
+       会以为已经导入完成，其实一次都没点过确认 -->
+  <view wx:if="{{preview}}" class="mask" catchtouchmove="noop" catchtap="noop">
+    <view class="sheet preview-sheet" catchtap="noop">
+      <view class="sheet-head">
+        <view class="sheet-head-main">
+          <view class="sheet-title">识别到 {{preview.blocks}} 个课程时间段</view>
+          <view class="preview-sub">{{preview.term}} · 共 {{preview.distinct}} 门课 · {{preview.totalWeeks}} 周</view>
         </view>
+        <view class="sheet-cancel" bindtap="cancelPreview">取消</view>
       </view>
-      <view wx:if="{{previewMore > 0}}" class="preview-more">还有 {{previewMore}} 个时间段未展示</view>
-    </scroll-view>
 
-    <view class="preview-actions">
-      <button class="primary-button" bindtap="replaceAll" disabled="{{saving}}">替换现有课表</button>
-      <button class="secondary-button" bindtap="appendToExisting" disabled="{{saving}}">追加到现有课表</button>
-      <button class="ghost-button" bindtap="cancelPreview" disabled="{{saving}}">取消</button>
+      <view wx:if="{{previewWarning}}" class="preview-warn">{{previewWarning}}</view>
+
+      <scroll-view class="preview-list" scroll-y>
+        <view wx:for="{{preview.items}}" wx:key="key" class="preview-item">
+          <view class="preview-dot" style="background:{{item.color}}"></view>
+          <view class="preview-main">
+            <view class="preview-name">{{item.name}}</view>
+            <view class="preview-meta">{{item.meta}}</view>
+            <view wx:if="{{item.room || item.teacher}}" class="preview-meta light">{{item.room}}{{item.room && item.teacher ? ' · ' : ''}}{{item.teacher}}</view>
+          </view>
+        </view>
+        <view wx:if="{{previewMore > 0}}" class="preview-more">还有 {{previewMore}} 个时间段未展示</view>
+      </scroll-view>
+
+      <view class="preview-actions">
+        <button class="primary-button" bindtap="replaceAll" disabled="{{saving}}">替换现有课表</button>
+        <button class="secondary-button" bindtap="appendToExisting" disabled="{{saving}}">追加到现有课表</button>
+      </view>
+      <view class="sheet-hint">替换会清空现有课表；追加保留已有课程，只补新的。</view>
     </view>
   </view>
 

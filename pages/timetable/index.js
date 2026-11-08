@@ -482,8 +482,8 @@ Page({
   },
 
   openImport() {
-    // 默认落在 PDF 导入：教务直连在部分真机上过不了，PDF 是本机解析、验证过的稳定路径
-    wx.navigateTo({ url: '/pages/pdfimport/index' });
+    // 默认落在云端导入（填学号密码就能读课表），PDF 是它的备选，两个入口在页内并列
+    wx.navigateTo({ url: '/pages/import/index' });
   },
 
   /* ---------------- 记事本（原「记事」tab，现在并到课表页） ---------------- */

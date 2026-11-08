@@ -1,8 +1,9 @@
 {
-  "appid": "wxe10271110be84dcf",
+  "appid": "wxYOUR_APPID_HERE",
   "projectname": "baixiaoxiao-campus-assistant",
   "description": "百小鸮 高校校园学习生活一站式智能助手微信小程序版",
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.9.2",
   "setting": {
     "es6": true,

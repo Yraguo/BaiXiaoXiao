@@ -40,7 +40,7 @@ test('自研 DEFLATE 解压与 Node zlib 逐字节一致（含存储块与动态
   const samples = [
     Buffer.from(''),
     Buffer.from('hello world'),
-    Buffer.from('中文课表 大学英语3 复变函数与积分变换（A）'.repeat(500), 'utf8'),
+    Buffer.from('中文课表 大学英语3 高等数学（A）'.repeat(500), 'utf8'),
     Buffer.from(Array.from({ length: 120000 }, (_, index) => (index * 37 + 11) % 256))
   ];
   samples.forEach((raw, index) => {
@@ -82,12 +82,12 @@ test('列表式课表（星期/节次/课名/详情四列）也能导入', () =>
     + ucs2Line(21, 545, '2026-2027学年第1学期')
     + ucs2Line(24, 466, '星期一')
     + ucs2Line(92, 498, '1-2')
-    + ucs2Line(154, 500, '复变函数与积分变换（A）★')
-    + ucs2Line(356, 504, '周数: 1-9周,11-15周/校区: 北区/地点: 二教C阶-101/教师: 王凤超/教学班:复变函数与积分变换（A）-0001/考核方式:考试')
+    + ucs2Line(154, 500, '高等数学（A）★')
+    + ucs2Line(356, 504, '周数: 1-9周,11-15周/校区: 主校区/地点: 教A-101/教师: 李强/教学班:高等数学（A）-0001/考核方式:考试')
     + ucs2Line(356, 496, '2502;自控2503/课程学时组成:讲课:56/学分:3.5')
     + ucs2Line(92, 476, '3-5')
     + ucs2Line(154, 478, '大学英语4★')
-    + ucs2Line(356, 482, '周数: 第7周/校区: 北区/地点: 二教D-109/教师: 孙绯/教学班:大学英语4-0012/考核方式:考试')
+    + ucs2Line(356, 482, '周数: 第7周/校区: 主校区/地点: 教B-109/教师: 王芳/教学班:大学英语4-0012/考核方式:考试')
     + ucs2Line(18, 521, '其他课程：图案审美与创作★清华大学(共11周)/5-15周/无;')
     + ucs2Line(18, 505, '★: 讲课 ○: 实验 ●: 实践 ◇: 上机')
     + ucs2Line(752, 505, '打印时间:2026-11-07')
@@ -98,17 +98,17 @@ test('列表式课表（星期/节次/课名/详情四列）也能导入', () =>
   assert.equal(result.rows.length, 2, '页脚（其他课程/图例/打印时间）不能被当成课程');
 
   const [first, second] = result.rows;
-  assert.equal(first.name, '复变函数与积分变换（A）', '课程名要剥掉 ★ 标记');
+  assert.equal(first.name, '高等数学（A）', '课程名要剥掉 ★ 标记');
   assert.equal(first.day, 1);
   assert.equal(first.startPeriod, 1);
   assert.equal(first.endPeriod, 2);
   assert.equal(first.weeks.length, 14, '1-9 周 + 11-15 周 = 14 个教学周');
-  assert.equal(first.room, '二教C阶-101');
-  assert.equal(first.teacher, '王凤超', '详情拆成两行也要接回去');
+  assert.equal(first.room, '教A-101');
+  assert.equal(first.teacher, '李强', '详情拆成两行也要接回去');
 
   assert.equal(second.name, '大学英语4');
   assert.deepEqual(second.weeks, [7], '「第7周」也要认');
-  assert.equal(second.room, '二教D-109');
+  assert.equal(second.room, '教B-109');
 });
 
 test('课程名在页边被切开时能接回去（回归：曾多出一门「能前沿研讨」）', () => {
@@ -119,7 +119,7 @@ test('课程名在页边被切开时能接回去（回归：曾多出一门「�
     + 'ET';
   const page2 = 'BT\n'
     + ucs2Line(140, 560, '能前沿研讨 ★')
-    + ucs2Line(140, 540, '(10-12节)第9周/校区:北区/场地:一教B-210/教师:马鑫')
+    + ucs2Line(140, 540, '(10-12节)第9周/校区:主校区/场地:教B-210/教师:赵磊')
     + 'ET';
 
   const result = parsePdfTimetable(multiStreamPdf([page1, page2]));
@@ -127,7 +127,7 @@ test('课程名在页边被切开时能接回去（回归：曾多出一门「�
   assert.equal(result.rows[0].name, '化工过程安全与具身智能前沿研讨');
   assert.equal(result.rows[0].startPeriod, 10);
   assert.equal(result.rows[0].endPeriod, 12);
-  assert.equal(result.rows[0].room, '一教B-210');
+  assert.equal(result.rows[0].room, '教B-210');
 });
 
 sampleTest('真实课表 PDF 的三个内容流都能解压出文字与坐标', () => {
@@ -161,7 +161,7 @@ sampleTest('真实课表 PDF 还原出 21 个课程块，六个字段零缺失',
   });
 
   const names = result.rows.map((row) => row.name);
-  assert.equal(names.includes('复变函数与积分变换（A）'), true, '跨行课程名要拼完整');
+  assert.equal(names.includes('高等数学（A）'), true, '跨行课程名要拼完整');
   assert.equal(names.includes('嵌入式系统创新应用与实践'), true, '跨行课程名要拼完整');
   assert.equal(names.some((name) => name === '（A）' || name === '实践'), false, '课程名被截断');
   assert.equal(names.every((name) => name.length >= 2), true);
@@ -169,7 +169,7 @@ sampleTest('真实课表 PDF 还原出 21 个课程块，六个字段零缺失',
 
 sampleTest('单双周与离散周都能正确展开', () => {
   const rows = parsePdfTimetable(asBytes(fixture)).rows;
-  const oddEven = rows.find((row) => row.name === '大学英语3' && row.room === '二教C-403');
+  const oddEven = rows.find((row) => row.name === '大学英语3' && row.room === '教A-203');
   assert.deepEqual(oddEven.weeks, [1, 3, 4, 6, 7, 9, 12, 13, 15, 16, 17]);
   const scattered = rows.find((row) => row.name === '大学英语3' && row.room === '实验楼F-304');
   assert.deepEqual(scattered.weeks, [2, 5, 8, 11, 14]);
@@ -206,7 +206,7 @@ test('非 PDF、加密文件、无文字层与非中文文件都有明确失败�
 
 test('有表头但无课程、或课程信息不完整时停止导入', () => {
   expectKind(fakePdf(headerContent(), '/Encoding /UniGB-UCS2-H'), 'NO_COURSES');
-  const broken = headerContent('1 0 0 1 104 480 Tm\n<' + ucs2hex('(1-2节)/校区:北区') + '> Tj\n');
+  const broken = headerContent('1 0 0 1 104 480 Tm\n<' + ucs2hex('(1-2节)/校区:主校区') + '> Tj\n');
   expectKind(fakePdf(broken, '/Encoding /UniGB-UCS2-H'), 'PARSE_INCOMPLETE');
 });
 
@@ -221,15 +221,19 @@ test('PDF 导入页为每类解析失败都准备了处理建议', () => {
     .forEach((kind) => assert.match(page, new RegExp(`\\b${kind}\\b`), `缺少 ${kind} 的提示`));
 });
 
-test('教务导入分支已完整恢复', () => {
-  ['utils/jw/zfClient.js', 'utils/jw/session.js', 'utils/jw/mapper.js',
-    'scripts/probe-jw.js', 'tests/jw.test.js'].forEach((entry) => {
-    assert.equal(fs.existsSync(path.join(root, entry)), true, `${entry} 未恢复`);
-  });
+test('教务导入分支改为走云函数，协议层与云函数入口都在', () => {
+  ['utils/jw/zfClient.js', 'utils/jw/mapper.js', 'utils/jw/cloudClient.js',
+    'cloudfunctions/jwimport/index.js', 'cloudfunctions/jwimport/lib/importer.js',
+    'cloudfunctions/jwimport/lib/net.js', 'scripts/probe-jw.js', 'tests/jw.test.js']
+    .forEach((entry) => {
+      assert.equal(fs.existsSync(path.join(root, entry)), true, `${entry} 缺失`);
+    });
   const js = read('pages/import/index.js');
   const wxml = read('pages/import/index.wxml');
-  ['importTimetable', 'currentTerm', 'getStepLog', 'startImport', 'changeSemester']
+  ['cloudImport', 'currentTerm', 'stepLines', 'startImport', 'changeSemester']
     .forEach((name) => assert.match(js, new RegExp(`\\b${name}\\b`), `教务页缺少 ${name}`));
+  // 真机直连的老入口必须已经从页面上摘掉，否则网络层那三个坑会重新出现在用户面前
+  assert.doesNotMatch(js, /jw\/session/, '页面不应再直接调用本机直连');
   ['updateUsername', 'updatePassword', 'toggleDiagnostics']
     .forEach((name) => assert.match(wxml, new RegExp(`\\b${name}\\b`), `教务页缺少 ${name}`));
   assert.match(wxml, /从教务系统导入课表/);
@@ -247,9 +251,11 @@ test('两种导入方式并列：双标签、互相切换、页面都已注册',
 
   [jwWxml, pdfWxml].forEach((wxml) => {
     assert.match(wxml, /class="mode-switch"/);
-    assert.match(wxml, /教务系统导入/);
+    assert.match(wxml, /云端导入/);
     assert.match(wxml, /PDF 导入/);
     assert.match(wxml, /class="mode-item active"/);
+    // 云端是主推入口，两个页面都排在 PDF 前面
+    assert.ok(wxml.indexOf('云端导入') < wxml.indexOf('PDF 导入'), '云端导入应排在 PDF 导入之前');
   });
   assert.match(jwWxml, /bindtap="openPdfImport"/);
   assert.match(jwJs, /openPdfImport\s*\(/);
@@ -258,6 +264,23 @@ test('两种导入方式并列：双标签、互相切换、页面都已注册',
   assert.match(pdfJs, /openJwImport\s*\(/);
   assert.match(pdfJs, /\/pages\/import\/index/);
   assert.match(pdfWxml, /从 PDF 导入课表/);
+});
+
+test('导入课表入口落在云端导入页，PDF 只作备选', () => {
+  const src = read('pages/timetable/index.js');
+  const start = src.indexOf('openImport()');
+  assert.ok(start > 0, '课表页缺少 openImport');
+  const body = src.slice(start, start + 260);
+  assert.match(body, /\/pages\/import\/index/, '默认应进入云端导入页');
+  assert.doesNotMatch(body, /pdfimport/, 'PDF 不应再抢默认入口');
+});
+
+test('两个导入页写完都回读确认并主动刷新课表页', () => {
+  ['pages/import/index.js', 'pages/pdfimport/index.js'].forEach((file) => {
+    const src = read(file);
+    assert.match(src, /refreshTimetable\(/, `${file} 没有主动刷新课表页`);
+    assert.match(src, /storedCount/, `${file} 没有回读确认写入`);
+  });
 });
 
 test('两个导入页结构完整：标签配对、事件都有对应方法', () => {
@@ -274,7 +297,7 @@ test('两个导入页结构完整：标签配对、事件都有对应方法', ()
 
 test('周次超过 20 周的课程不会被静默截断（回归：曾写死上限 20）', () => {
   const { parseBlock } = require('../utils/pdf/parser');
-  const row = parseBlock('高等数学(1-2节)1-22/校区:北区/场地:教A-203/教师:张三/教学班:01', 1);
+  const row = parseBlock('高等数学(1-2节)1-22/校区:主校区/场地:教A-203/教师:张三/教学班:01', 1);
   assert.equal(row.weeks.length, 22, '第 21、22 周被丢掉了');
   assert.equal(row.weeks[row.weeks.length - 1], 22);
   assert.equal(row.room, '教A-203');

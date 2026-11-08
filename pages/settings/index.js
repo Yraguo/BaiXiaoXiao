@@ -1,12 +1,11 @@
-const { PERIOD_TIMES } = require('../../data/defaults');
+const { PERIOD_TIMES, defaultSettings } = require('../../data/defaults');
 const {
   loadSettings,
   loadCourses,
-  resetAll,
   saveCourses,
   saveSettings
 } = require('../../utils/storage');
-const { confirmDelete, confirmReplace } = require('../../utils/confirm');
+const { confirmDelete } = require('../../utils/confirm');
 
 Page({
   data: {
@@ -62,18 +61,22 @@ Page({
     setTimeout(() => wx.navigateBack(), 400);
   },
 
-  async resetDemo() {
-    // 恢复示例课表会连学期设置一起重置，文案要与实际行为一致
-    const confirmed = await confirmReplace({
-      title: '恢复示例课表？',
-      name: '脱敏示例课表',
-      count: loadCourses().length,
-      keepSettings: false
+  resetSettings() {
+    wx.showModal({
+      title: '恢复默认设置？',
+      content: '学期名称、开学日期、总周数和作息时间会恢复默认，课程不受影响。',
+      confirmText: '恢复',
+      success: (res) => {
+        if (!res.confirm) return;
+        const settings = defaultSettings();
+        saveSettings(settings);
+        this.setData({
+          settings,
+          totalWeekIndex: Math.max(0, Number(settings.totalWeeks) - 1)
+        });
+        wx.showToast({ title: '已恢复默认设置', icon: 'success' });
+      }
     });
-    if (!confirmed) return;
-    resetAll();
-    wx.showToast({ title: '已恢复示例课表', icon: 'success' });
-    setTimeout(() => wx.reLaunch({ url: '/pages/timetable/index' }), 400);
   },
 
   async clearCourses() {

@@ -1,0 +1,8 @@
+{
+  "name": "jwimport",
+  "version": "1.0.0",
+  "description": "教务课表导入云函数：代用户登录正方教务并读取课表",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {}
+}
