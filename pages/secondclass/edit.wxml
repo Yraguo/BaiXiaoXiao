@@ -10,6 +10,7 @@
           data-index="{{index}}"
           bindtap="changePlate"
         >{{item.short}}·{{item.name}}</view>
+<canvas type="2d" id="wm" class="wm-canvas"></canvas>
       </view>
     </view>
 
@@ -69,6 +70,11 @@
       <view class="field-picker">
         <text class="field-hint">默认关闭，开启后照片带时间地点</text>
         <switch checked="{{draft.watermark}}" color="#007aff" bindchange="toggleWatermark" />
+      </view>
+      <view class="loc-row">
+        <view class="loc-btn" bindtap="getLocation">{{draft.location ? '重新定位' : '获取定位'}}</view>
+        <text wx:if="{{draft.location}}" class="loc-text">{{draft.location.longitude}}, {{draft.location.latitude}} · {{draft.location.at}}</text>
+        <text wx:else class="loc-text">开启水印后可读取当前位置</text>
       </view>
     </view>
 

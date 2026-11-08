@@ -23,7 +23,8 @@ Page({
       score: 0,
       photos: [],
       note: '',
-      watermark: false
+      watermark: false,
+      location: null
     }
   },
 
@@ -39,7 +40,8 @@ Page({
       score: 0,
       photos: [],
       note: '',
-      watermark: false
+      watermark: false,
+      location: null
     };
     this.setData({
       isEditing: Boolean(existing),
@@ -68,6 +70,68 @@ Page({
 
   toggleWatermark(event) {
     this.setData({ 'draft.watermark': Boolean(event.detail.value) });
+  },
+
+  getLocation() {
+    wx.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        const now = new Date();
+        const pad = (v) => String(v).padStart(2, '0');
+        this.setData({
+          'draft.location': {
+            longitude: res.longitude.toFixed(5),
+            latitude: res.latitude.toFixed(5),
+            at: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
+          }
+        });
+        wx.showToast({ title: '已获取位置', icon: 'success' });
+      },
+      fail: () => wx.showToast({ title: '定位失败，请在设置里允许位置权限', icon: 'none' })
+    });
+  },
+
+  /** 把文字水印画到照片右下角，返回新图片路径 */
+  stamp(photos, text) {
+    if (!photos.length) return Promise.resolve(photos);
+    return new Promise((resolve) => {
+      wx.createSelectorQuery().select('#wm').fields({ node: true }).exec((res) => {
+        const canvas = res && res[0] && res[0].node;
+        if (!canvas) { resolve(photos); return; }
+        const ctx = canvas.getContext('2d');
+        const out = [];
+        const step = (index) => {
+          if (index >= photos.length) { resolve(out); return; }
+          wx.getImageInfo({
+            src: photos[index],
+            success: (info) => {
+              canvas.width = info.width;
+              canvas.height = info.height;
+              const img = canvas.createImage();
+              img.onload = () => {
+                ctx.drawImage(img, 0, 0, info.width, info.height);
+                const size = Math.max(16, Math.round(info.width / 30));
+                const bar = Math.round(size * 2.2);
+                ctx.fillStyle = 'rgba(0,0,0,.5)';
+                ctx.fillRect(0, info.height - bar, info.width, bar);
+                ctx.fillStyle = '#fff';
+                ctx.font = `${size}px sans-serif`;
+                ctx.fillText(text, size, info.height - size * 0.8);
+                wx.canvasToTempFilePath({
+                  canvas,
+                  success: (r) => { out.push(r.tempFilePath); step(index + 1); },
+                  fail: () => { out.push(photos[index]); step(index + 1); }
+                });
+              };
+              img.onerror = () => { out.push(photos[index]); step(index + 1); };
+              img.src = info.path;
+            },
+            fail: () => { out.push(photos[index]); step(index + 1); }
+          });
+        };
+        step(0);
+      });
+    });
   },
 
   choosePhotos() {
@@ -104,15 +168,23 @@ Page({
     this.setData({ 'draft.photos': photos });
   },
 
-  save() {
+  async save() {
     const draft = this.data.draft;
     const title = String(draft.title || '').trim();
     if (!title) {
       wx.showToast({ title: '先写活动名称', icon: 'none' });
       return;
     }
+    let photos = draft.photos;
+    if (draft.watermark && draft.location && photos.length) {
+      wx.showLoading({ title: '正在加水印', mask: true });
+      photos = await this.stamp(photos, `${draft.location.at}  ${draft.location.longitude}, ${draft.location.latitude}`);
+      wx.hideLoading();
+    }
+
     const record = normalizeRecord(Object.assign({}, draft, {
       title,
+      photos,
       score: Number(draft.score) || 0
     }));
 

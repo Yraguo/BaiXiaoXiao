@@ -31,3 +31,8 @@
 .photo-img { width: 150rpx; height: 150rpx; border-radius: 14rpx; }
 .photo-remove { position: absolute; top: -8rpx; right: -8rpx; width: 36rpx; height: 36rpx; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 24rpx; line-height: 34rpx; text-align: center; }
 .photo-add { display: flex; width: 150rpx; height: 150rpx; align-items: center; justify-content: center; border: 1rpx dashed rgba(0,122,255,.4); border-radius: 14rpx; background: rgba(0,122,255,.04); color: var(--brand); font-size: 44rpx; }
+
+.loc-row { display: flex; flex-direction: column; gap: 8rpx; margin-top: 12rpx; }
+.loc-btn { align-self: flex-start; padding: 12rpx 24rpx; border-radius: 999rpx; background: var(--brand-light); color: var(--brand); font-size: 22rpx; font-weight: 600; }
+.loc-text { color: #b3bac5; font-size: 20rpx; }
+.wm-canvas { position: fixed; left: -9999rpx; top: 0; width: 300rpx; height: 300rpx; }

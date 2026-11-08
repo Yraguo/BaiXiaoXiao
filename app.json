@@ -58,6 +58,13 @@
     ]
   },
   "style": "v2",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于给二课照片添加拍摄位置水印"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
 }
-
