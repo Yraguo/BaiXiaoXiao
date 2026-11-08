@@ -30,9 +30,17 @@ npm test
 在微信开发者工具里：
 
 1. 选择「导入项目」，目录选**本仓库根目录**（就是能看到 `app.json` 的那一层）
-2. 把 `project.config.json` 的 `appid` 换成你自己的小程序 AppID（仓库里是占位符 `wxYOUR_APPID_HERE`）
+2. 打开后进「详情 → 基本信息 → AppID」，改成你自己的小程序 AppID
 3. 要用「云端导入」，还需开通云开发并把环境 ID 填到 `app.js` 顶部的 `CLOUD_ENV`（留空则使用该 AppID 下的默认环境）
 4. 点击「编译」
+
+> **AppID 不要写进 `project.config.json`。**
+> 仓库里那一行固定是占位符 `wxYOUR_APPID_HERE`，真实的 AppID 请让它落在
+> `project.private.config.json`（已在 `.gitignore` 里）。开发者工具改 AppID 时也会
+> 自动写进这个私有文件——官方文档的原话是「如在 `project.private.config.json` 有
+> `appid` 字段，那么在详情-基本信息中修改了 appid，会写到 `project.private.config.json`
+> 中，不会覆盖掉 `project.config.json` 的 `appid` 字段的内容」。
+> 这样两个人的本地配置互不影响，PR 合并也不会再在 appid 那行打架。
 
 项目使用微信原生小程序语法，**没有任何第三方运行时依赖**，也不需要 `npm install`。
 

@@ -366,3 +366,28 @@ test('课表根节点不再套一层纵向滚动容器（回归：拖不动）',
     assert.doesNotMatch(block, /overflow/, `.page 上不能写 overflow —— 内容在 ${block}`);
   });
 });
+
+test('仓库里的 AppID 只能是占位符，真实的留在 project.private.config.json', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'project.config.json'), 'utf8'));
+  assert.equal(
+    config.appid,
+    'wxYOUR_APPID_HERE',
+    'project.config.json 的 appid 必须保持占位符：真实 AppID 一提交进来，两个人的分支每次合并都会在这行打架'
+  );
+
+  // 全仓扫一遍：源码与配置里都不该出现 18 位真实 AppID
+  const skipped = new Set(['.git', 'node_modules', 'debug', '.workbuddy', 'graphify-out', 'project.private.config.json']);
+  const hits = [];
+  const walk = (dir) => {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+      if (skipped.has(entry.name)) return;
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) { walk(file); return; }
+      if (!/\.(js|json|md|wxml|wxss)$/.test(entry.name)) return;
+      const found = fs.readFileSync(file, 'utf8').match(/\bwx[0-9a-f]{16}\b/g) || [];
+      found.forEach((id) => hits.push(`${path.relative(root, file)}: ${id}`));
+    });
+  };
+  walk(root);
+  assert.deepEqual(hits, [], `真实 AppID 应该只存在 project.private.config.json（已 gitignore）：\n${hits.join('\n')}`);
+});
