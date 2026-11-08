@@ -237,28 +237,49 @@
 
 /* ---------------- 顶部视图切换 + 记事本 ---------------- */
 
+/*
+ * 切换动画对齐开源方案（SwiperTab / wx-scrollable-tab-view）：
+ * 两个视图常驻在一条 200% 宽的轨道上，切换时轨道整体平移，
+ * 滑动全程两页内容都真实可见；指示器同步滑动。
+ */
 .view-switch {
+  position: relative;
   display: flex;
-  gap: 8rpx;
   margin: 4rpx 0 16rpx;
   padding: 6rpx;
   border-radius: 18rpx;
   background: #e9ebf0;
 }
+.view-indicator {
+  position: absolute;
+  top: 6rpx;
+  bottom: 6rpx;
+  left: 6rpx;
+  width: calc((100% - 12rpx) / 2);
+  border-radius: 14rpx;
+  background: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(22, 32, 49, .08);
+  transition: transform .28s cubic-bezier(.22, .61, .36, 1);
+}
+.view-indicator.right { transform: translateX(100%); }
 .view-item {
+  position: relative;
   flex: 1;
   padding: 14rpx 0;
   border-radius: 14rpx;
   color: var(--muted);
   font-size: 25rpx;
   text-align: center;
+  transition: color .2s ease;
 }
-.view-item.active {
-  background: #fff;
-  color: var(--text);
-  font-weight: 600;
-  box-shadow: 0 2rpx 8rpx rgba(22, 32, 49, .08);
+.view-item.active { color: var(--text); font-weight: 600; }
+
+.view-track {
+  display: flex;
+  width: 200%;
+  transition: transform .3s cubic-bezier(.22, .61, .36, 1);
 }
+.view-page { width: 50%; flex: none; min-width: 0; }
 
 .calendar {
   margin-top: 4rpx;

@@ -76,8 +76,8 @@ Page({
   onShow() {
     if (this.loadedOnce) this.reload(false);
     this.loadedOnce = true;
-    // 从记事编辑页返回时要重算日历圆点和当天列表
-    if (this.data.selectedDate) this.renderNotes();
+    // 两个视图常驻在轨道上，回到页面时两个都要刷新
+    this.renderNotes();
   },
 
   onUnload() {

@@ -1,6 +1,9 @@
 <view class="page" bindtouchstart="rememberTouch" bindtouchmove="moveTouch" bindtouchend="finishTouch">
-  <!-- 课表 / 记事本 两个视图并排，空出来的 tab 位置让给第二课堂 -->
+  <!-- 课表 / 记事本：两个视图常驻在一条水平轨道上，切换时整条轨道平移。
+       做法对齐开源的 SwiperTab / wx-scrollable-tab-view：
+       与"删旧视图再渲染新的"相比，滑动过程中两页内容都真实可见 -->
   <view class="view-switch">
+    <view class="view-indicator {{view === 'notes' ? 'right' : ''}}"></view>
     <view
       class="view-item {{view === 'timetable' ? 'active' : ''}}"
       data-view="timetable"
@@ -13,7 +16,8 @@
     >记事本</view>
   </view>
 
-  <block wx:if="{{view === 'timetable'}}">
+  <view class="view-track" style="transform:translateX({{view === 'notes' ? '-50%' : '0%'}})">
+    <view class="view-page">
   <view class="week-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
     <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
     <view
@@ -109,10 +113,9 @@
     </view>
     <text class="chevron">›</text>
   </view>
+    </view>
 
-  </block>
-
-  <block wx:else>
+    <view class="view-page">
     <view class="notes-layer" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
     <view class="calendar">
       <view class="calendar-head">
@@ -167,7 +170,8 @@
 
     <view class="add-bar" bindtap="addNote">＋ 在 {{selectedLabel}} 添加记事</view>
     </view>
-  </block>
+    </view>
+  </view>
 
   <view wx:if="{{view === 'timetable'}}" class="floating-actions">
     <view class="circle-button settings-button" bindtap="openSettings" aria-role="button" aria-label="课表设置">⚙</view>
