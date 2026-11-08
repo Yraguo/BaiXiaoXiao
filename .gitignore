@@ -23,3 +23,6 @@ preview-*.png
 
 # graphify 生成的图谱
 graphify-out/
+
+# impeccable 本地评审快照
+.impeccable/
