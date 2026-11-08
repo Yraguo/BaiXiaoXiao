@@ -219,3 +219,16 @@
   width: 375px;
   height: 600px;
 }
+
+.export-option.primary { background: #eef4ff; }
+.export-ico.tone-indigo { background: linear-gradient(140deg, #7f8dff, #4b57d8); }
+.export-badge {
+  margin-left: 8rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 600;
+  vertical-align: 2rpx;
+}

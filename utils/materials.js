@@ -228,4 +228,97 @@ function draw(ctx, model) {
   ctx.fillText('分数为自行填报与自评，最终认定以学校审核为准。', PAD, model.footerY + 16);
 }
 
-module.exports = { COLORS, PLATE_INK, layout, draw, fitText, roundRect };
+/** CSV 单元格：含逗号/引号/换行就加引号并转义 */
+function csvCell(value) {
+  const text = String(value == null ? '' : value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** 照片在 zip 里的相对路径，序号和 CSV 的「序号」列对得上 */
+function photoNameFor(record, index, photoIndex, total) {
+  const seq = String(index + 1).padStart(2, '0');
+  const title = String(record.title || '活动')
+    .replace(/[\\/:*?"<>|,，\s]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 24) || '活动';
+  const suffix = total > 1 ? `-${photoIndex + 1}` : '';
+  const match = String((record.photos || [])[photoIndex] || '').match(/\.([a-z0-9]+)(?:\?|$)/i);
+  return `照片/${seq}-${title}${suffix}.${match ? match[1] : 'jpg'}`;
+}
+
+/**
+ * 记录表：Excel / WPS 直接打开，一行一条，最后一列是照片文件名。
+ * @param {Array<Array<string>>} photoNamesByIndex 每条记录对应的照片文件名
+ */
+function buildCsv(summary, photoNamesByIndex) {
+  const header = ['序号', '板块', '评定类型', '活动名称', '活动日期', '时长(小时)', '自评分', '地点', '备注', '照片文件'];
+  const rows = summary.list.map((record, index) => {
+    const plate = summary.plates.find((item) => item.key === record.plate);
+    return [
+      index + 1,
+      plate ? `${plate.short} ${plate.name}` : record.plate,
+      record.level === 'extra' ? '拓展' : '基础',
+      record.title,
+      record.date,
+      record.hours || '',
+      record.score,
+      record.address,
+      record.note,
+      (photoNamesByIndex[index] || []).join('、')
+    ].map(csvCell).join(',');
+  });
+  // 带 BOM，否则 Windows 的 Excel 会把中文读成乱码
+  return `\ufeff${header.join(',')}\n${rows.join('\n')}\n`;
+}
+
+/** 机器可读的一份，将来做「导入恢复」直接读它 */
+function buildJson(summary, photoNamesByIndex, when) {
+  const at = when || new Date();
+  return JSON.stringify({
+    app: '百小鸮',
+    schema: 'second-class/v1',
+    exportedAt: dateText(at),
+    total: summary.total,
+    full: summary.full,
+    plates: summary.plates.map((plate) => ({
+      key: plate.key,
+      name: plate.name,
+      score: plate.score,
+      full: plate.full
+    })),
+    records: summary.list.map((record, index) => Object.assign({}, record, {
+      photos: photoNamesByIndex[index] || []
+    }))
+  }, null, 2);
+}
+
+function buildReadme(summary, when) {
+  const at = dateText(when || new Date());
+  return [
+    '百小鸮 · 第二课堂材料包',
+    `导出时间：${at}`,
+    `记录条数：${summary.count} 条`,
+    `合计自评：${summary.totalText} / ${summary.full}`,
+    '',
+    '目录说明：',
+    '  二课记录.csv   一行一条，最后一列写了对应对的照片文件名',
+    '  二课记录.json  同样的内容，机器可读，便于以后导入恢复',
+    '  照片/          文件名前缀是记录序号，和 CSV 的「序号」一一对应',
+    '',
+    '照片是原图，水印（时间 + 地点）已经打进图里。',
+    '分数为自行填报与自评，最终认定以学校审核为准。'
+  ].join('\n');
+}
+
+module.exports = {
+  COLORS,
+  PLATE_INK,
+  buildCsv,
+  buildJson,
+  buildReadme,
+  layout,
+  draw,
+  fitText,
+  photoNameFor,
+  roundRect
+};

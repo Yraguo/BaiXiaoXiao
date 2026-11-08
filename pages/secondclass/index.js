@@ -15,7 +15,15 @@ const {
   summarize,
   summarizeHours
 } = require('../../utils/secondclass');
-const { draw: drawSheet, layout: layoutSheet } = require('../../utils/materials');
+const {
+  buildCsv,
+  buildJson,
+  buildReadme,
+  draw: drawSheet,
+  layout: layoutSheet,
+  photoNameFor
+} = require('../../utils/materials');
+const { buildZip } = require('../../utils/zip');
 
 const DAY_CN = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
@@ -198,6 +206,97 @@ Page({
       content: '微信没有「保存到相册」的权限。去设置里打开后，再点一次导出。',
       confirmText: '去设置',
       success: (res) => { if (res.confirm) wx.openSetting(); }
+    });
+  },
+
+  /**
+   * 打包成一个 zip：记录表（CSV + JSON）+ 照片原图 + 说明。
+   * 小程序没法往手机文件系统写文件，但可以把沙箱里的文件通过
+   * wx.shareFileMessage 发到微信会话——发给「文件传输助手」就长期留着了。
+   */
+  saveBundle() {
+    if (this.data.exporting) return;
+    const summary = summarize(loadClasses());
+    if (!summary.count) {
+      wx.showToast({ title: '还没有填报记录', icon: 'none' });
+      return;
+    }
+
+    this.setData({ exporting: true });
+    wx.showLoading({ title: '正在打包', mask: true });
+
+    try {
+      const manager = wx.getFileSystemManager();
+      const entries = [];
+      const photoNames = [];
+      let missing = 0;
+
+      summary.list.forEach((record, index) => {
+        const names = [];
+        (record.photos || []).forEach((path, photoIndex) => {
+          const name = photoNameFor(record, index, photoIndex, record.photos.length);
+          try {
+            entries.push({ name, data: manager.readFileSync(path) });
+            names.push(name);
+          } catch (error) {
+            // 照片被清理掉了就跳过，别让整包失败
+            missing += 1;
+          }
+        });
+        photoNames[index] = names;
+      });
+
+      entries.unshift({ name: '二课记录.csv', data: buildCsv(summary, photoNames) });
+      entries.push({ name: '二课记录.json', data: buildJson(summary, photoNames) });
+      entries.push({ name: '说明.txt', data: buildReadme(summary) });
+
+      const zip = buildZip(entries);
+      const now = new Date();
+      const pad = (value) => String(value).padStart(2, '0');
+      const fileName = `二课材料-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.zip`;
+      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+      manager.writeFileSync(filePath, zip.buffer);
+
+      wx.hideLoading();
+      this.setData({ exporting: false, exportOpen: false });
+
+      const sizeText = zip.length > 1024 * 1024
+        ? `${(zip.length / 1024 / 1024).toFixed(1)} MB`
+        : `${Math.max(1, Math.round(zip.length / 1024))} KB`;
+      if (missing) {
+        wx.showToast({ title: `${missing} 张照片已丢失，其余已打包`, icon: 'none' });
+      }
+      this.shareBundle(filePath, fileName, sizeText);
+    } catch (error) {
+      wx.hideLoading();
+      this.setData({ exporting: false });
+      wx.showToast({ title: '打包失败，重试一次', icon: 'none' });
+    }
+  },
+
+  /** 交给微信的会话选择器，发给自己（文件传输助手）就能长期保存 */
+  shareBundle(filePath, fileName, sizeText) {
+    if (!wx.shareFileMessage) {
+      wx.showModal({
+        title: '已打包',
+        content: `${fileName}（${sizeText}）已存到小程序目录。当前微信版本不支持直接转发文件，升级微信后再试。`,
+        showCancel: false
+      });
+      return;
+    }
+    wx.shareFileMessage({
+      filePath,
+      fileName,
+      success: () => wx.showToast({ title: '已发送', icon: 'success' }),
+      fail: (error) => {
+        const message = String((error && error.errMsg) || '');
+        if (message.indexOf('cancel') >= 0) return;
+        wx.showModal({
+          title: '没发出去',
+          content: `文件已存在小程序目录（${sizeText}）。可以重试一次，或先从微信设置里清理空间再试。`,
+          showCancel: false
+        });
+      }
     });
   },
 

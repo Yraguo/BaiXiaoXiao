@@ -35,7 +35,7 @@
       <view class="sc-export-ico">📦</view>
       <view class="sc-export-main">
         <view class="sc-export-title">导出二课材料</view>
-        <view class="sc-export-copy">清单长图 · {{photoCount}} 张照片</view>
+        <view class="sc-export-copy">打包记录 + 照片，或存一张清单图</view>
       </view>
       <text class="chevron">›</text>
     </view>
@@ -237,7 +237,16 @@
       <view class="export-title">导出二课材料</view>
       <view class="export-close" bindtap="closeExport">关闭</view>
     </view>
-    <view class="export-note">小程序没有写手机文件的权限，能交给你的只有「相册」。存完可以在微信里直接发给老师，或上传到学校系统。</view>
+    <view class="export-note">小程序没有写手机文件的权限，但它能把文件发到微信会话里：选「发给文件传输助手」，这份材料包就长期留在你手机上了。</view>
+
+    <view class="export-option primary" bindtap="saveBundle" aria-role="button">
+      <view class="export-ico tone-indigo">包</view>
+      <view class="export-option-main">
+        <view class="export-option-name">打包成材料包（推荐）<text class="export-badge">zip</text></view>
+        <view class="export-option-desc">记录表 CSV + JSON + {{photoCount}} 张照片原图，一条记录对一张图</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
 
     <view class="export-option" bindtap="saveSheet" aria-role="button">
       <view class="export-ico tone-blue">图</view>
@@ -257,7 +266,7 @@
       <text class="chevron">›</text>
     </view>
 
-    <view class="export-foot">清单图只包含分数与文字，不含照片；照片走第二个入口单独保存。</view>
+    <view class="export-foot">清单图只包含分数与文字，用于快速打印或发群里；要留底、要交给学校，用材料包。</view>
   </view>
 </view>
 
