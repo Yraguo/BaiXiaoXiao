@@ -428,3 +428,17 @@
 
 .add-bar { margin: 22rpx 4rpx 0; padding: 22rpx; border: 1rpx dashed rgba(0, 122, 255, .38); border-radius: 20rpx; background: rgba(0, 122, 255, .05); color: var(--brand); font-size: 24rpx; text-align: center; }
 .add-bar:active { background: rgba(0, 122, 255, .12); }
+
+/* 「本周」小按钮：只在本周以外出现，贴在右箭头右边 */
+.today-chip {
+  flex: none;
+  margin-left: 6rpx;
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  background: var(--brand-light);
+  color: var(--brand);
+  font-size: 20rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.today-chip:active { background: rgba(0, 122, 255, .18); }

@@ -37,9 +37,8 @@
       aria-role="button"
       aria-label="下一周"
     >›</view>
+    <view wx:if="{{week !== currentWeek}}" class="today-chip" bindtap="goCurrentWeek">本周</view>
   </view>
-
-  <view wx:if="{{week !== currentWeek}}" class="back-current" bindtap="goCurrentWeek">回到本周（第 {{currentWeek}} 周）</view>
 
   <view wx:if="{{!hasCourses}}" class="empty-state">
     <image class="empty-owl" src="/assets/owl/owl-study.png" mode="aspectFit"></image>
