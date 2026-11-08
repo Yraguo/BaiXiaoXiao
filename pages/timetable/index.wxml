@@ -118,7 +118,7 @@
     </view>
 
     <view class="view-page">
-    <view class="notes-layer {{weekAnim}}">
+    <view class="notes-layer">
     <view class="calendar">
       <view class="calendar-head">
         <view class="month-nav" bindtap="previousMonth" aria-role="button" aria-label="上个月">‹</view>
@@ -133,7 +133,7 @@
         <text wx:for="{{weekdays}}" wx:key="*this" class="weekday">{{item}}</text>
       </view>
 
-      <view class="grid">
+      <view class="grid {{weekAnim}}">
         <view
           wx:for="{{cells}}"
           wx:key="date"

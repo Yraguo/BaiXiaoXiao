@@ -86,11 +86,11 @@
  * 往后翻从右边进来，往前翻从左边进来，位移只有 56rpx，不会看到空白。
  * 只动 transform 和 opacity，不触发重排。
  */
-/* 只有课表网格动，周次卡片保持不动 */
-.timetable-card.wk-leave-left, .notes-layer.wk-leave-left { animation: wk-leave-left .12s ease-in forwards; }
-.timetable-card.wk-leave-right, .notes-layer.wk-leave-right { animation: wk-leave-right .12s ease-in forwards; }
-.timetable-card.wk-enter-right, .notes-layer.wk-enter-right { animation: wk-enter-right .2s ease-out; }
-.timetable-card.wk-enter-left, .notes-layer.wk-enter-left { animation: wk-enter-left .2s ease-out; }
+/* 只有课表网格 / 日历数字区动，其它卡片保持不动 */
+.timetable-card.wk-leave-left, .grid.wk-leave-left { animation: wk-leave-left .12s ease-in forwards; }
+.timetable-card.wk-leave-right, .grid.wk-leave-right { animation: wk-leave-right .12s ease-in forwards; }
+.timetable-card.wk-enter-right, .grid.wk-enter-right { animation: wk-enter-right .2s ease-out; }
+.timetable-card.wk-enter-left, .grid.wk-enter-left { animation: wk-enter-left .2s ease-out; }
 
 @keyframes wk-leave-left { to { transform: translateX(-26%); opacity: 0; } }
 @keyframes wk-leave-right { to { transform: translateX(26%); opacity: 0; } }
