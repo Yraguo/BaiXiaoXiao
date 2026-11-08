@@ -83,13 +83,15 @@ test('切换周次有横向滑入动画', () => {
   assert.match(wxss, /@keyframes week-in-left/, '往前翻从左侧滑入');
 });
 
-test('切周次是跟手拖动，不是只播一段动画', () => {
+test('切周次走两段式过渡（对齐 UniMate：只判起止，不跟手）', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
   const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
-  assert.match(wxml, /bindtouchmove="moveTouch"/, '要监听 touchmove 才能跟手');
-  assert.match(wxml, /translateX\(\{\{dragX\}\}rpx\)/, '内容和手指一起位移');
-  assert.match(js, /moveTouch\(/, '要按手指位移更新 dragX');
-  assert.match(js, /snapMonth\(/, '记事本里左右滑也要能切月份');
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  assert.doesNotMatch(wxml, /bindtouchmove/, '不再监听 touchmove，内容不跟手');
+  assert.match(wxml, /bindtouchend="finishTouch"/, '只靠起止判断方向');
+  assert.match(js, /wk-leave-left/, '旧内容先滑出');
+  assert.match(wxss, /@keyframes wk-enter-right/, '新内容从反方向进入');
+  assert.doesNotMatch(js, /dragX/, '拖动位移已移除');
 });
 
 test('吉祥物图片是抠过图的（不是画上去的灰白格子）', () => {

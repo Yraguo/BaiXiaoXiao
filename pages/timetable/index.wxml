@@ -1,4 +1,4 @@
-<view class="page" bindtouchstart="rememberTouch" bindtouchmove="moveTouch" bindtouchend="finishTouch">
+<view class="page" bindtouchstart="rememberTouch" bindtouchend="finishTouch">
   <!-- 课表 / 记事本：两个视图常驻在一条水平轨道上，切换时整条轨道平移。
        做法对齐开源的 SwiperTab / wx-scrollable-tab-view：
        与"删旧视图再渲染新的"相比，滑动过程中两页内容都真实可见 -->
@@ -19,7 +19,7 @@
   <view class="view-viewport">
   <view class="view-track" style="transform:translateX({{view === 'notes' ? '-50%' : '0%'}})">
     <view class="view-page">
-  <view class="week-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
+  <view class="week-card {{weekAnim}}">
     <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
     <view
       class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
@@ -49,7 +49,7 @@
     <button class="secondary-button empty-button" bindtap="openImport">导入课表</button>
   </view>
 
-  <view wx:else class="timetable-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
+  <view wx:else class="timetable-card {{weekAnim}}">
     <view class="table-head">
       <view class="period-head">
         <text class="period-month">{{headMonth}}</text>
@@ -119,7 +119,7 @@
     </view>
 
     <view class="view-page">
-    <view class="notes-layer" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
+    <view class="notes-layer">
     <view class="calendar">
       <view class="calendar-head">
         <view class="month-nav" bindtap="previousMonth" aria-role="button" aria-label="上个月">‹</view>

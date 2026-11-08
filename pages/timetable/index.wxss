@@ -86,6 +86,108 @@
  * 往后翻从右边进来，往前翻从左边进来，位移只有 56rpx，不会看到空白。
  * 只动 transform 和 opacity，不触发重排。
  */
+.week-card.wk-leave-left, .timetable-card.wk-leave-left,
+.notes-layer.wk-leave-left { animation: wk-leave-left .12s ease-in forwards; }
+.week-card.wk-leave-right, .timetable-card.wk-leave-right,
+.notes-layer.wk-leave-right { animation: wk-leave-right .12s ease-in forwards; }
+.week-card.wk-enter-right, .timetable-card.wk-enter-right,
+.notes-layer.wk-enter-right { animation: wk-enter-right .2s ease-out; }
+.week-card.wk-enter-left, .timetable-card.wk-enter-left,
+.notes-layer.wk-enter-left { animation: wk-enter-left .2s ease-out; }
+
+@keyframes wk-leave-left { to { transform: translateX(-26%); opacity: 0; } }
+@keyframes wk-leave-right { to { transform: translateX(26%); opacity: 0; } }
+@keyframes wk-enter-right { from { transform: translateX(26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes wk-enter-left { from { transform: translateX(-26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* 拖动换周/换月时内容会左右越界，裁剪掉横向滚动条 */
+.page { padding: 20rpx 20rpx 160rpx; overflow-x: hidden; }
+
+.week-card {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx;
+  border-radius: 24rpx;
+  background: var(--card);
+  box-shadow: 0 6rpx 26rpx rgba(38, 57, 88, .06);
+}
+
+/*
+ * 周次箭头。
+ * 【坑】原来是 <button>，在 flex 容器里 width 约束会失效，两个按钮被拉成
+ * 各自 ~300rpx 的长条，把中间的"第 10 周 / 11月2日–11月8日"挤成竖排单字，
+ * 整个周次卡片被撑得又高又空。改成 view，并把宽高四重锁定（flex + width +
+ * min/max），与平台实现无关。
+ */
+.week-arrow {
+  display: flex;
+  flex: 0 0 68rpx;
+  align-items: center;
+  justify-content: center;
+  width: 68rpx;
+  min-width: 68rpx;
+  max-width: 68rpx;
+  height: 68rpx;
+  min-height: 68rpx;
+  max-height: 68rpx;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  background: #edf1f7;
+  color: var(--brand);
+  font-size: 42rpx;
+  line-height: 1;
+}
+
+.week-arrow.is-disabled { opacity: .35; }
+.week-center { flex: 1; min-width: 0; text-align: center; }
+.week-heading { overflow: hidden; font-size: 30rpx; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.week-range { margin-left: 8rpx; color: var(--muted); font-size: 21rpx; font-weight: 400; }
+.semester { margin-top: 4rpx; overflow: hidden; color: var(--muted); font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 「回到本周」：只在翻到别的周时出现，做成一条可点的提示，不占常驻空间 */
+.back-current { margin-top: 12rpx; padding: 14rpx; border-radius: 16rpx; background: rgba(0, 122, 255, .08); color: var(--brand); font-size: 23rpx; text-align: center; }
+.back-current:active { background: rgba(0, 122, 255, .16); }
+
+/* 导入入口下沉到课表下方：这是低频操作，不该占着首屏 */
+.import-entry { display: flex; align-items: center; gap: 16rpx; margin-top: 14rpx; padding: 22rpx 20rpx; border-radius: 20rpx; background: #fff; box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .05); }
+.import-entry:active { background: #f8f8fa; }
+.import-entry-main { flex: 1; min-width: 0; }
+.import-entry-title { font-size: 26rpx; font-weight: 600; }
+.import-entry-copy { margin-top: 5rpx; color: var(--muted); font-size: 21rpx; }
+
+.next-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 16rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 20rpx;
+  background: var(--card);
+  box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .06);
+}
+.next-card:active { background: #f8f8fa; }
+
+.next-dot { width: 18rpx; height: 18rpx; flex: none; border-radius: 6rpx; }
+.next-content { flex: 1; min-width: 0; }
+.next-title { overflow: hidden; font-size: 25rpx; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.next-title text { margin-left: 12rpx; color: var(--brand); font-size: 21rpx; font-weight: 500; }
+.next-meta { margin-top: 4rpx; overflow: hidden; color: var(--muted); font-size: 21rpx; text-overflow: ellipsis; white-space: nowrap; }
+.chevron { color: #a5adba; font-size: 34rpx; }
+
+.timetable-card {
+  overflow: hidden;
+  border-radius: 22rpx;
+  background: var(--card);
+  box-shadow: 0 6rpx 26rpx rgba(38, 57, 88, .06);
+}
+
+/*
+ * 切换周次的入场动画。
+ * 原来点箭头是整块内容"啪"地换掉，很生硬；现在按方向横向滑入：
+ * 往后翻从右边进来，往前翻从左边进来，位移只有 56rpx，不会看到空白。
+ * 只动 transform 和 opacity，不触发重排。
+ */
 .week-card.week-in-right,
 .timetable-card.week-in-right { animation: week-in-right .24s cubic-bezier(.22, .61, .36, 1); }
 
