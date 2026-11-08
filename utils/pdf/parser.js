@@ -75,12 +75,14 @@ function parseBlock(text, day) {
   const weekText = (weekMatch ? weekMatch[1] : '').replace(/[()（）]/g, '');
   const room = /\/场地[:：]([^/]*?)(?=\/教师|$)/.exec(detail);
   const teacher = /\/教师[:：]([^/]*?)(?=\/教学班|$)/.exec(detail);
+  const campus = /\/校区[:：]([^/]*?)(?=\/|$)/.exec(detail);
   return {
     name: name || '',
     day,
     startPeriod: Number(period[1]),
     endPeriod: Number(period[2]),
     weeks: parseWeeks(weekText, MAX_WEEKS),
+    campus: campus ? campus[1].trim() : '',
     room: room ? room[1].trim() : '',
     teacher: teacher ? teacher[1].trim() : ''
   };
@@ -171,6 +173,7 @@ function toListRow(entry) {
     startPeriod: entry.startPeriod,
     endPeriod: entry.endPeriod,
     weeks: parseWeeks(pick('周数'), MAX_WEEKS),
+    campus: pick('校区'),
     room: pick('地点'),
     teacher: pick('教师')
   };

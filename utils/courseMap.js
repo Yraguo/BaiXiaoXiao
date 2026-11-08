@@ -10,7 +10,7 @@ const { courseColorIndex } = require('./colors');
 
 /** 应用侧课程对象的完整字段，改结构时同步这里和测试 */
 const COURSE_FIELDS = [
-  'id', 'name', 'teacher', 'room', 'day',
+  'id', 'name', 'teacher', 'room', 'campus', 'day',
   'startPeriod', 'endPeriod', 'weeks', 'colorIndex', 'note'
 ];
 
@@ -37,6 +37,7 @@ function toCourses(rows, totalWeeks, idPrefix) {
     name: row.name,
     teacher: row.teacher || '',
     room: row.room || '',
+    campus: row.campus || '',
     day: row.day,
     startPeriod: row.startPeriod,
     endPeriod: row.endPeriod,

@@ -16,6 +16,10 @@
 
   <view class="section-title">通用</view>
   <view class="card">
+    <view class="row" bindtap="openSecondClass">
+      <view class="row-main"><view class="row-title">第二课堂</view><view class="row-copy">志愿公益、劳动教育等活动的学分记录</view></view>
+      <text class="chevron">›</text>
+    </view>
     <view class="row" bindtap="openEditor">
       <view class="row-main"><view class="row-title">头像与昵称</view><view class="row-copy">修改头像和昵称，只保存在本机</view></view>
       <text class="chevron">›</text>

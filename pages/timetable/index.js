@@ -1,4 +1,4 @@
-const { COURSE_COLORS, assignCourseColors, normalizeName } = require('../../utils/colors');
+const { COURSE_COLORS, assignCourseColors, courseTint, normalizeName } = require('../../utils/colors');
 const { DAY_NAMES } = require('../../utils/constants');
 const {
   currentWeek,
@@ -117,20 +117,23 @@ Page({
         .filter((course) => Number(course.day) === dayIndex + 1 && course.weeks.includes(week))
         .sort((left, right) => left.startPeriod - right.startPeriod)
         .map((course) => {
-          const automatic = colorAllocation[normalizeName(course.name)] || 0;
-          const colorIndex = Number.isInteger(course.colorIndex) ? course.colorIndex : automatic;
+          // 配色以「所有课程名的一次性分配」为准，保证一门课一个颜色。
+          // 之前优先用课程自带的 colorIndex（按名字哈希），不同课会撞到同一个
+          // 颜色，看上去就像"好几门课共用一个色"。
+          const colorIndex = colorAllocation[normalizeName(course.name)] || 0;
           const isNow = isToday
             && Number(course.startPeriod) <= activePeriod
             && Number(course.endPeriod) >= activePeriod;
           const top = (Number(course.startPeriod) - 1) * ROW_HEIGHT + 4;
           const height = (Number(course.endPeriod) - Number(course.startPeriod) + 1) * ROW_HEIGHT - 8;
+          const ink = COURSE_COLORS[colorIndex % COURSE_COLORS.length];
           return {
             ...course,
-            color: COURSE_COLORS[colorIndex % COURSE_COLORS.length],
+            color: ink,
             isNow,
             // 单节次的格子只有 88rpx 高，塞不下两行课名 + 教室
             short: Number(course.endPeriod) - Number(course.startPeriod) < 1,
-            style: `top:${top}rpx;height:${height}rpx;background:${COURSE_COLORS[colorIndex % COURSE_COLORS.length]};`,
+            style: `top:${top}rpx;height:${height}rpx;background:${courseTint(colorIndex)};color:${ink};`,
             timeText: this.timeText(course)
           };
         });
@@ -268,8 +271,8 @@ Page({
     const course = this.courses.find((item) => item.id === id);
     if (!course) return;
     const colorAllocation = assignCourseColors(this.courses.map((item) => item.name));
-    const automatic = colorAllocation[normalizeName(course.name)] || 0;
-    const colorIndex = Number.isInteger(course.colorIndex) ? course.colorIndex : automatic;
+    // 与格子里的配色保持同一套分配，否则详情页圆点和格子颜色会对不上
+    const colorIndex = colorAllocation[normalizeName(course.name)] || 0;
     this.setData({
       detail: {
         ...course,

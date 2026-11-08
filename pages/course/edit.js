@@ -29,6 +29,7 @@ Page({
           name: '',
           teacher: '',
           room: '',
+          campus: '',
           day: 1,
           startPeriod: 1,
           endPeriod: 2,

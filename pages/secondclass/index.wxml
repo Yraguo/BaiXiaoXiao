@@ -1,0 +1,68 @@
+<view class="page-shell">
+  <view class="sc-hero">
+    <view class="sc-hero-top">
+      <view>
+        <text class="sc-total">{{totalText}}</text>
+        <text class="sc-unit">学分</text>
+      </view>
+      <view class="sc-count">
+        <text>{{count}} 条记录</text>
+        <text wx:if="{{count}}" class="sc-clear" bindtap="clearAll">清空</text>
+      </view>
+    </view>
+
+    <view wx:if="{{breakdown.length}}" class="sc-bar">
+      <view
+        wx:for="{{breakdown}}"
+        wx:key="key"
+        class="sc-bar-seg"
+        style="width:{{item.percent}}%;background:{{item.color}}"
+      ></view>
+    </view>
+
+    <view wx:if="{{breakdown.length}}" class="sc-legend">
+      <view wx:for="{{breakdown}}" wx:key="key" class="sc-legend-item">
+        <view class="sc-dot" style="background:{{item.color}}"></view>
+        <text class="sc-legend-name">{{item.name}}</text>
+        <text class="sc-legend-value">{{item.creditsText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{chips.length > 1}}" class="sc-chips">
+    <view
+      wx:for="{{chips}}"
+      wx:key="key"
+      class="sc-chip {{item.active ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="changeFilter"
+    >{{item.name}}</view>
+  </view>
+
+  <view wx:if="{{!records.length}}" class="sc-empty">
+    <image class="sc-empty-owl" src="/assets/owl/owl-study.png" mode="aspectFit"></image>
+    <view class="sc-empty-title">{{count ? '这一类还没有记录' : '还没有二课记录'}}</view>
+    <view class="sc-empty-copy">{{count ? '换一个分类看看' : '点右下角的 ＋ 记第一条'}}</view>
+  </view>
+
+  <view wx:else class="sc-list">
+    <view
+      wx:for="{{records}}"
+      wx:key="id"
+      class="sc-item"
+      data-id="{{item.id}}"
+      bindtap="openRecord"
+    >
+      <view class="sc-item-dot" style="background:{{item.color}}"></view>
+      <view class="sc-item-main">
+        <view class="sc-item-title">{{item.title}}</view>
+        <view class="sc-item-meta">{{item.dateText}} · {{item.categoryName}}{{item.organizer ? ' · ' + item.organizer : ''}}</view>
+      </view>
+      <text class="sc-item-credits">{{item.creditsText}}</text>
+    </view>
+  </view>
+
+  <view class="sc-tip">二课记录只保存在本机，用来自己核对学分，不会同步到学校系统。</view>
+</view>
+
+<view class="sc-fab" bindtap="addRecord" aria-role="button" aria-label="添加二课记录">＋</view>

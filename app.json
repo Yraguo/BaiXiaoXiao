@@ -9,7 +9,9 @@
     "pages/note/edit",
     "pages/settings/index",
     "pages/import/index",
-    "pages/pdfimport/index"
+    "pages/pdfimport/index",
+    "pages/secondclass/index",
+    "pages/secondclass/edit"
   ],
   "window": {
     "navigationBarTitleText": "百小鸮",

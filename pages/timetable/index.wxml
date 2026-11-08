@@ -70,7 +70,9 @@
           catchtap="showCourse"
         >
           <view class="course-name">{{course.name}}</view>
-          <view class="course-room">{{course.room}}</view>
+          <view wx:if="{{course.campus}}" class="course-meta course-campus">@{{course.campus}}</view>
+          <view wx:if="{{course.room}}" class="course-meta course-room">{{course.room}}</view>
+          <view wx:if="{{course.teacher}}" class="course-meta course-teacher">{{course.teacher}}</view>
         </view>
       </view>
     </view>
@@ -124,6 +126,7 @@
     <view class="detail-list">
       <view class="detail-row"><text>时间</text><view>{{detail.dayText}} {{detail.periodText}}<text class="detail-subline">{{detail.timeText}}</text></view></view>
       <view class="detail-row"><text>周次</text><view>{{detail.weeksText}}</view></view>
+      <view class="detail-row"><text>校区</text><view>{{detail.campus || '未填写'}}</view></view>
       <view class="detail-row"><text>地点</text><view>{{detail.room || '未填写'}}</view></view>
       <view class="detail-row"><text>教师</text><view>{{detail.teacher || '未填写'}}</view></view>
       <view class="detail-row"><text>备注</text><view>{{detail.note || '无'}}</view></view>

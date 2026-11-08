@@ -1,8 +1,38 @@
-const COURSE_COLORS = [
-  '#2E5AAC', '#E8624C', '#3FA97B', '#8E6BC9', '#D58B25', '#2F9DB5',
-  '#C9547E', '#6B8F3F', '#5A6EE8', '#A8672D', '#3F8F82', '#825690',
-  '#B23A2E', '#2F6B4F', '#3B4A6B', '#7A4E2C', '#5E3A87', '#276B7A'
+/**
+ * 课程配色：一门课一个颜色。
+ * 每项是「浅色底 + 同色系深字」一对，色块用底、文字用字，
+ * 白卡片上比纯色块更耐看，也不会因为颜色太多而花。
+ */
+const COURSE_PALETTE = [
+  { bg: '#E9EEFB', ink: '#2E5AAC' },
+  { bg: '#FDE8E4', ink: '#C0492F' },
+  { bg: '#E3F5EC', ink: '#2F8F63' },
+  { bg: '#EFE8FA', ink: '#6E4BB0' },
+  { bg: '#FCF1DC', ink: '#A9701C' },
+  { bg: '#E3F2F6', ink: '#2A7F94' },
+  { bg: '#FBE6EF', ink: '#B23A6B' },
+  { bg: '#F0F4E3', ink: '#5C7A33' },
+  { bg: '#E7E9FE', ink: '#4753C4' },
+  { bg: '#F6EADD', ink: '#8A5A29' },
+  { bg: '#E3F1F0', ink: '#2F7F76' },
+  { bg: '#F1E7F5', ink: '#6B3F80' },
+  { bg: '#FBE7E5', ink: '#9C3A2E' },
+  { bg: '#E4F2E9', ink: '#2A6B4B' },
+  { bg: '#E8EBF2', ink: '#39455F' },
+  { bg: '#F3EAE0', ink: '#6B4726' },
+  { bg: '#EDE7F7', ink: '#4E3373' },
+  { bg: '#E2F0F2', ink: '#225E6B' }
 ];
+
+/** 深色字，也用作详情页/下一节课前面的小圆点 */
+const COURSE_COLORS = COURSE_PALETTE.map((item) => item.ink);
+/** 浅色底，给课表格子用 */
+const COURSE_TINTS = COURSE_PALETTE.map((item) => item.bg);
+
+function courseTint(index) {
+  const size = COURSE_TINTS.length;
+  return COURSE_TINTS[((Number(index) || 0) % size + size) % size];
+}
 
 function normalizeName(name) {
   return String(name || '').replace(/\s+/g, '');
@@ -40,5 +70,5 @@ function assignCourseColors(names) {
   return output;
 }
 
-module.exports = { COURSE_COLORS, assignCourseColors, courseColorIndex, normalizeName };
+module.exports = { COURSE_COLORS, COURSE_TINTS, assignCourseColors, courseColorIndex, courseTint, normalizeName };
 

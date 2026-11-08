@@ -137,19 +137,17 @@
   left: 4rpx;
   box-sizing: border-box;
   overflow: hidden;
-  padding: 7rpx 6rpx;
+  padding: 8rpx 7rpx;
   border-radius: 12rpx;
-  color: #fff;
   font-size: 17rpx;
   line-height: 1.2;
-  box-shadow: 0 3rpx 10rpx rgba(22, 32, 49, .12);
+  box-shadow: 0 2rpx 8rpx rgba(22, 32, 49, .05);
 }
-.course-block.is-now { border: 4rpx solid #18202d; padding: 3rpx 2rpx; }
+/* 底和字都由内联 style 给出（一门课一对颜色），这里只补"正在进行"的描边 */
+.course-block.is-now { border: 3rpx solid currentColor; padding: 5rpx 4rpx; }
 /*
- * 格子里只有一列宽（约 90px），课名、教室、上课时间三行塞不下：
- * 原来用 word-break: break-all，"一教B-210" 会被拆成 "一教B-21" + "0"，
- * 第三行再溢出把第一行顶掉。现在课名最多两行省略，教室单行省略，
- * 时间去掉了——节次列本来就标着每节的起止时间。
+ * 格子里只有一列宽（约 90px）。课名最多两行，下面按「@校区 / 地点 / 教师」
+ * 一行一条竖着排；单节次的格子只有 88rpx 高，只留课名和教室。
  */
 .course-name {
   display: -webkit-box;
@@ -161,16 +159,19 @@
   line-height: 1.25;
   word-break: break-all;
 }
-.course-block.is-short { padding: 6rpx; }
-.course-block.is-short .course-name { -webkit-line-clamp: 1; }
-.course-room {
-  margin-top: 4rpx;
+.course-meta {
+  margin-top: 3rpx;
   overflow: hidden;
-  font-size: 17rpx;
-  opacity: .92;
+  font-size: 15rpx;
+  line-height: 1.25;
+  opacity: .82;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.course-block.is-short { padding: 6rpx; }
+.course-block.is-short .course-name { -webkit-line-clamp: 1; }
+.course-block.is-short .course-campus,
+.course-block.is-short .course-teacher { display: none; }
 
 /*
  * 悬浮操作按钮。

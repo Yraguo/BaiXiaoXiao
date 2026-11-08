@@ -1,0 +1,76 @@
+<view class="page-shell">
+  <view class="card form-card">
+    <view class="field">
+      <text class="field-label">活动名称</text>
+      <input
+        class="field-input"
+        value="{{draft.title}}"
+        placeholder="如：社区志愿服务"
+        maxlength="40"
+        data-field="title"
+        bindinput="updateField"
+      />
+    </view>
+
+    <view class="field">
+      <text class="field-label">类别</text>
+      <picker mode="selector" range="{{categoryNames}}" value="{{categoryIndex}}" bindchange="changeCategory">
+        <view class="field-picker">
+          <text>{{categoryNames[categoryIndex]}}</text>
+          <text class="chevron">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <text class="field-label">日期</text>
+      <picker mode="date" value="{{draft.date}}" bindchange="changeDate">
+        <view class="field-picker">
+          <text>{{draft.date || '选择日期'}}</text>
+          <text class="chevron">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <text class="field-label">学分</text>
+      <input
+        class="field-input"
+        type="digit"
+        value="{{draft.credits}}"
+        placeholder="0.5"
+        data-field="credits"
+        bindinput="updateField"
+      />
+    </view>
+
+    <view class="field">
+      <text class="field-label">组织方</text>
+      <input
+        class="field-input"
+        value="{{draft.organizer}}"
+        placeholder="选填，如：校团委"
+        maxlength="30"
+        data-field="organizer"
+        bindinput="updateField"
+      />
+    </view>
+
+    <view class="field field-last">
+      <text class="field-label">备注</text>
+      <textarea
+        class="field-textarea"
+        value="{{draft.note}}"
+        placeholder="选填，如：服务时长 4 小时"
+        maxlength="120"
+        data-field="note"
+        bindinput="updateField"
+      />
+    </view>
+  </view>
+
+  <button class="primary-button form-save" bindtap="save">保存</button>
+  <button wx:if="{{isEditing}}" class="danger-button form-delete" bindtap="remove">删除这条记录</button>
+
+  <view class="form-tip">只记在本机，用来自己核对学分。学校系统里的成绩以教务公布为准。</view>
+</view>
