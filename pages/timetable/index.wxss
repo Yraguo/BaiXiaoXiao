@@ -109,7 +109,7 @@
 .period-month { font-size: 24rpx; font-weight: 700; }
 .period-month-unit { margin-top: 2rpx; color: var(--muted); font-size: 18rpx; }
 .day-head { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); line-height: 1.15; }
-.day-week { font-size: 22rpx; }
+.day-week { font-size: 20rpx; }
 .day-date { margin-top: 4rpx; color: #b3bac5; font-size: 19rpx; }
 .day-head.today .day-week, .day-head.today .day-date { color: var(--brand); font-weight: 700; }
 .day-head.today { background: var(--brand-light); color: var(--brand); font-weight: 700; }

@@ -171,7 +171,7 @@ Page({
       return {
         dayIndex,
         label: DAY_NAMES[dayIndex],
-        weekChar: DAY_NAMES[dayIndex].slice(1),
+        weekChar: DAY_NAMES[dayIndex],
         dayNum: date.getDate(),
         date: monthDay(date),
         isToday,
