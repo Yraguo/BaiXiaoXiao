@@ -17,6 +17,12 @@ button::after { border: 0; }
 
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
+/*
+ * 三个主按钮类共享的底子。
+ * text-align 必须显式写：<button> 自带居中，但这些类也被 <view> 复用
+ * （项目踩过 button 在 flex 里宽度失控的坑，很多交互元素改成了 view），
+ * view 没有默认居中，不写就会把「保存」贴在色块最左边，像没写完的控件。
+ */
 .primary-button,
 .secondary-button,
 .danger-button {
@@ -25,6 +31,7 @@ button::after { border: 0; }
   font-size: 28rpx;
   font-weight: 600;
   line-height: 84rpx;
+  text-align: center;
 }
 
 .primary-button { background: var(--brand); color: #fff; }

@@ -12,7 +12,7 @@
 
 | 模块 | 能做什么 |
 |---|---|
-| **课表** | 按周查看，左右滑动或点箭头切周，自动定位本周、高亮今天与当前节次，显示下一节课与倒计时；百宝箱里可一键生成本周课表图分享给同学 |
+| **课表** | 按周查看，左右滑动或点箭头切周，自动定位本周、高亮今天与当前节次，显示下一节课与倒计时；右下角**百宝箱**可自由拖动，装下导入课表、教务直连、添加课程、课表设置、记一件事、回到本周与分享课表 |
 | **课表导入** | ① 云函数代登教务系统抓取（推荐）；② 选课表 PDF 本机解析。导入前弹窗预览，可替换或追加 |
 | **记事** | 课表页顶部切到「记事本」：42 格月历，有记事的日期打点，点某天看当天待办；支持日期归档、完成状态、二次确认删除 |
 | **小鸮** | 本机 Agent：回答本周几节课、某天课表、下一节在哪、某门课第几周、今天还剩几节；能直接说「记一下 周五交实验报告」 |
@@ -88,7 +88,9 @@ npm test
 
 ## 课表导入
 
-课表页 →「导入课表」默认进入**云端导入**：小程序把学号密码交给自己的云函数，由云函数登录正方 `jwglxt` 取回课表。真机直连过不了微信网络层（请求头被改写、POST 丢 Cookie、多节点会话漂移），云函数绕开了这三层。页面顶部可随时切到 PDF 导入，云端失败时也固定给出「改用 PDF 导入」的出口。
+课表页右下角的**百宝箱**里有「导入课表」与「PDF 导入」两个并列入口。
+
+「导入课表」走**云端导入**：小程序把学号密码交给自己的云函数，由云函数登录正方 `jwglxt` 取回课表。真机直连过不了微信网络层（请求头被改写、POST 丢 Cookie、多节点会话漂移），云函数绕开了这三层。页面顶部可随时切到 PDF 导入，云端失败时也固定给出「改用 PDF 导入」的出口。
 
 ### ① 云函数导入（推荐）
 
@@ -104,7 +106,7 @@ npm test
 
 ### ② PDF 导入
 
-课表页 →「导入课表」→「选择 PDF 并导入」→ 确认预览 → 选替换或追加。
+百宝箱 →「PDF 导入」→ 选文件 → 确认预览 → 选替换或追加。
 
 导出方式：浏览器进教务「信息查询 → 学生课表查询」，选好学年学期点「输出 PDF」，把文件发到微信（文件传输助手即可），再回小程序选择。
 
@@ -158,7 +160,8 @@ node -e "console.log(require('./utils/agent/index.js').explain('周三下午有�
 
 ## 数据与隐私
 
-- 课表、记事、头像昵称、对话历史全部存在 `wx.setStorageSync`，卸载或清理小程序数据即消失
+- 课表、记事、第二课堂记录与时长、头像昵称、对话历史、未保存的草稿、分享码缓存，全部存在 `wx.setStorageSync`，卸载或清理小程序数据即消失
+- 共 10 个存储键：7 个业务数据（课表 / 作息 / 记事 / 对话 / 二课 / 二课时长 / 资料）+ 3 个临时态（未保存的草稿 / 分享码缓存 / 百宝箱浮球位置），彼此独立，删一个不影响别的
 - 未导入时课表为空，仓库不带示例数据；旧版本写入的 demo 课表会在读取时自动清理
 - PDF 只在本机内存解析，文件不上传
 - 云端导入时学号与密码会经过**你自己的云函数**（腾讯云托管）：只在内存里用一次，不写数据库、不写日志，导入结束即弃
@@ -167,23 +170,73 @@ node -e "console.log(require('./utils/agent/index.js').explain('周三下午有�
 
 ## 工程实现
 
+### 目录
+
 ```
 .
 ├── app.js / app.json / app.wxss   小程序入口、全局配置与样式
-├── pages/           课表（含记事本视图）、第二课堂、小鸮、校园、我的 + 课程/记事/二课编辑、设置、两个导入页
-├── cloudfunctions/  云函数 jwimport：代登正方并取回课表（node:https，零依赖）
+├── pages/           课表（含记事本视图）、第二课堂、小鸮、校园、我的
+│                    + 课程/记事/二课编辑、设置、两个导入页
+├── cloudfunctions/  jwimport：代登正方并取回课表（node:https，零依赖）
+│                    share：存课表快照、出小程序码
 ├── utils/
 │   ├── jw/          正方协议层（RSA、登录页解析、Cookie 罐）与云端调用封装
 │   ├── pdf/         自研 DEFLATE、文字坐标提取、课程块还原
 │   ├── agent/       小鸮的 NLU、工具表、BM25 兜底
-│   └── 其它         日期/周次、配色、存储、二次确认、个人资料、二课统计
+│   ├── secondclass.js  第二课堂的板块、条款、分值表与统计口径
+│   ├── zip.js       手写 zip 写入/解析（小程序没有 zlib）
+│   ├── backup.js    备份包与材料包的内容组织
+│   ├── materials.js 清单长图与 CSV/JSON 的排版计算
+│   ├── shareCard.js 课表分享图与海报排版
+│   └── 其它         日期/周次、配色、存储、二次确认、个人资料
 ├── data/            默认作息、校园服务清单（示例课表仅供测试，不参与初始化）
 ├── assets/          品牌图、校园服务图标、tabBar 图标、吉祥物
-├── scripts/         图标生成、吉祥物抠图、教务链路探测、素材处理（不参与打包）
+├── scripts/         图标生成、吉祥物抠图与水印、PNG 重压缩、
+│                    教务链路探测、图谱构建（都不参与打包）
 └── tests/           Node 单元与结构测试
 ```
 
-**体积红线**：小程序主包上限 2MB。吉祥物原图（10 张 512px）就有 2.3MB，直接打包会失败——所以只把压到 256px 的 6 张放进 `assets/owl/`，原图与仓库、安装包都隔离。当前打包体积约 **937KB**。
+### 架构地图
+
+用 [graphify](https://github.com/safishamsi/graphify) 对全仓建过知识图谱：**1062 节点 / 2161 边 / 48 个社区，无循环依赖**。产物在 `graphify-out/`（已 gitignore，不进包），打开 `graph.html` 可以拖拽查看、按社区着色。
+
+按图谱的社区聚类，代码大致分成六块：
+
+| 区域 | 主要文件 | 耦合情况 |
+|---|---|---|
+| 课表主链路 | `pages/timetable` `pages/course` `utils/{storage,date,weeks,colors,courseMap}.js` | `pages/timetable/index.js` 一个文件横跨 7 个社区，其余只碰 1~2 个 |
+| 课表导入（三条通道） | `pages/{import,pdfimport}` `utils/jw/` `utils/pdf/` `cloudfunctions/jwimport` | `utils/jw/` 与 `cloudfunctions/jwimport/lib/` 落在同一个社区 —— 图谱也认为它们是同源的 |
+| 第二课堂 | `utils/secondclass.js` `pages/secondclass/` `utils/{materials,backup,zip}.js` | `pages/secondclass/index.js` 横跨 5 个社区 |
+| 小鸮 | `utils/agent/` `utils/uni.js` `pages/uni/` | `pages/uni/index.js` 横跨 3 个 |
+| 记事与设置 | `pages/{note,settings}` `utils/appStore.js` | 各碰 1~2 个 |
+| 分享与备份 | `cloudfunctions/share` `utils/shareCard.js` `pages/me` | `pages/me/index.js` 横跨 3 个 |
+
+图谱给出的三个结论：
+
+1. **全仓没有循环依赖。** `utils/` 只被 `pages/` 依赖，反向不依赖，所以数据层可以放心改。
+2. **真正的核心抽象是四个函数**（按连接度排）：`importTimetable()` 32 条边 —— 三条导入通道的总入口；`loadSettings()` 与 `loadCourses()` 各 22 —— 课表状态的出入口；`dateStamp()` 19 —— 日期与周次计算；`currentWeek()` / `saveCourses()` 各 16。改这四个要格外小心，其余函数都在 15 条以下。
+3. **复杂度集中在两个页面文件里**：`pages/timetable/index.js`（7 个社区）与 `pages/secondclass/index.js`（5 个），其余页面都只碰 1~3 个区。模块边界基本成立，但「总控页」在变大 —— 课表页同时装着课表网格、记事本视图、百宝箱浮球与分享逻辑。**要拆的话先拆这两个页面**，其余地方不用动。
+
+另外，`utils/jw/` 与 `cloudfunctions/jwimport/lib/` 是**同一份正方协议层的两份拷贝**，改协议要记得两边一起改。它们不共享文件是有原因的：云函数要零依赖部署，小程序端也不能带 node 模块。
+
+**图谱的覆盖边界**：图谱吃的是 `.js`（tree-sitter AST）加 README 的语义抽取，**25 个文件没有进图**（12 个 `.wxss`、11 个 `.wxml`，另 2 个未分类）。所以看图谱能知道「谁调用了谁」，看不出「界面长什么样」。
+
+**重建图谱**：
+
+```bash
+pip install graphifyy networkx numpy pyyaml rapidfuzz tree-sitter
+python3 scripts/build-graph.py
+```
+
+脚本走的是 graphify 的 Python API 而不是它的 `graphify update` 命令 —— 那个命令在 0.9.104 上稳定报 `EEXIST`（包内部并发建目录的竞态），但各个步骤单独调都是好的，所以脚本自己串了一遍。语义抽取需要 LLM，跑不了时脚本会复用上一版图里的语义节点，图不会丢；48 个社区的人工命名存在 `scripts/graph-labels.json` 里，跟着仓库走，重建后不用重新起名。
+
+### 体积红线
+
+小程序主包上限 2MB。三个要点：
+
+- 吉祥物原图（10 张 512px）就有 2.3MB，直接打包会失败 —— 所以只把压到 256px 的 6 张放进 `assets/owl/`，原图留在 `assets/mascot/`（已被 `packOptions` 排除）。
+- `project.config.json` 的 `packOptions.ignore` 排除 `tests` `scripts` `debug` `.workbuddy` 与根目录的 `preview-*.png` / `preview-*.html`（本地设计稿预览，合计约 470KB，不该进包）。
+- 当前主包约 **852KB**。
 
 **图标**：`assets/icons/`、`assets/tabbar/` 下的 PNG 全部由 `scripts/build-icons.js` 从 SVG 路径生成，改图标只改脚本再重跑。
 
@@ -191,6 +244,8 @@ node -e "console.log(require('./utils/agent/index.js').explain('周三下午有�
 
 - **正方 modulus 带前导 `0x00`**：Base64 解出 129 字节，真实模长是 1024 位 = 128 字节。按 129 算，服务端私钥解不开，表现为「密码正确也说密码错」。
 - **`<button>` 在 flex 容器里宽度失效**：周次箭头、悬浮按钮、输入区都被拉成过胶囊，把相邻内容挤成一列。改用 `view` + `flex: 0 0 68rpx` + min/max 四重锁宽。
+- **`<button>` 自带居中，`<view>` 不带**：上面那条坑让很多交互元素改用 `view`，而 `view` 没有 `text-align: center` 的默认值，`.primary-button` 这类被两边共用的类必须显式写居中，否则「保存」会贴在色块最左边，像没写完的控件。
+- **`packOptions.ignore` 的 `file` 类型不支持通配符**：要排除一整类文件得用 `type: "regexp"`，写 `preview-*.png` 这种是不生效的。
 - **WXML 与 WXSS 半更新**：删掉某个元素的样式、却还在跑旧 WXML 时，那一块会退化成无样式裸文本，看起来像「字体变了」。清缓存重编译即可。
 
 ## 测试
@@ -199,13 +254,13 @@ node -e "console.log(require('./utils/agent/index.js').explain('周三下午有�
 npm test
 ```
 
-当前 **154 个用例，150 通过 / 0 失败 / 4 跳过**（跳过的是需要真实课表 PDF 的样本测试，样本含个人信息，不随仓库分发）。
+当前 **156 个用例，152 通过 / 0 失败 / 4 跳过**（跳过的是需要真实课表 PDF 的样本测试，样本含个人信息，不随仓库分发）。
 
 覆盖：RSA 加密端到端验签、登录页字段判定、kbList 解析、DEFLATE 与 zlib 逐字节对比、真实 PDF 的文字坐标与课程还原、周次/日期/月历、单双周解析、配色稳定性、课程映射一致性、Agent 的槽位与多轮对话、每个页面的 bind 事件都能找到对应方法。
 
 ## 已知限制
 
-- 教务直连受微信网络层与学校多节点会话影响，**部分真机登录失败**；PDF 导入不受影响
+- 真机直连教务（已从界面收起）受微信网络层与学校多节点会话影响，**成功率不稳**；走云函数或 PDF 导入不受影响
 - 照片水印的地点由用户在微信地图里选，不保证是拍摄当时的位置
 - 仅适配正方教务系统；PDF 解析支持表格式与列表式两种导出模板，其它模板会明确报错
 - 空教室、考试成绩、选课等没有数据源，暂不提供

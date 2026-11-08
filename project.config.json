@@ -72,6 +72,10 @@
       {
         "value": "assets/mascot",
         "type": "folder"
+      },
+      {
+        "value": "preview-.*\\.(png|html)$",
+        "type": "regexp"
       }
     ],
     "include": []

@@ -281,3 +281,28 @@ test('搜条款能搜到别的板块，点了会自动切过去', () => {
   assert.match(wxml, /data-plate="\{\{item\.plateKey\}\}"/, '要带上板块 key');
   assert.match(wxml, /clause-other/, '别的板块要标出来');
 });
+
+test('按钮类显式居中，不依赖 <button> 的默认样式', () => {
+  const css = fs.readFileSync(path.join(root, 'app.wxss'), 'utf8');
+  const block = css.slice(css.indexOf('.primary-button,'), css.indexOf('.primary-button {'));
+  // <button> 自带 text-align:center，但这些类也被 <view> 复用（button 在 flex 里宽度失控），
+  // view 没有默认居中，不显式写就会把「保存」贴在色块最左边
+  assert.match(block, /text-align:\s*center/, '三个按钮类必须共享 text-align:center');
+  ['.primary-button', '.secondary-button', '.danger-button'].forEach((name) => {
+    assert.match(css, new RegExp(name.replace('.', '\\.')), `要有 ${name}`);
+  });
+});
+
+test('设计预览文件不进小程序包（省下约 470KB）', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'project.config.json'), 'utf8'));
+  const rules = config.packOptions.ignore;
+  const patterns = rules.filter((r) => r.type === 'regexp').map((r) => new RegExp(r.value));
+  assert.ok(patterns.length, '要用 regexp 规则（file 类型不支持通配符）');
+  ['preview-sheet.png', 'preview-week.png', 'preview-toolbox.html', 'preview-form.html']
+    .forEach((name) => {
+      assert.ok(
+        patterns.some((rx) => rx.test(name)),
+        `${name} 必须被 packOptions 排除，否则会白占主包体积`
+      );
+    });
+});
