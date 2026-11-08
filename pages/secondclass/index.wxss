@@ -147,3 +147,75 @@
   text-align: center;
 }
 .hour-save:active { opacity: .85; }
+
+/* ---------------- 导出二课材料 ---------------- */
+
+.sc-export {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 14rpx;
+  padding: 22rpx 20rpx;
+  border-radius: 20rpx;
+  background: #fff;
+  box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .05);
+}
+.sc-export:active { background: #f8f9fb; }
+.sc-export-ico {
+  display: flex;
+  width: 64rpx;
+  height: 64rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  background: #eef4ff;
+  font-size: 30rpx;
+}
+.sc-export-main { flex: 1; min-width: 0; }
+.sc-export-title { font-size: 26rpx; font-weight: 600; }
+.sc-export-copy { margin-top: 4rpx; color: var(--muted); font-size: 21rpx; }
+
+.sc-sheet.export { padding: 30rpx 26rpx calc(34rpx + env(safe-area-inset-bottom)); }
+.export-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx; }
+.export-title { font-size: 34rpx; font-weight: 700; }
+.export-close { padding: 8rpx 20rpx; border-radius: 999rpx; background: #f2f4f8; color: var(--muted); font-size: 22rpx; }
+.export-note { margin-bottom: 20rpx; color: #9aa2af; font-size: 20rpx; line-height: 1.65; }
+
+.export-option {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  background: #f7f9fc;
+}
+.export-option:active { background: #eef2f8; }
+.export-ico {
+  display: flex;
+  width: 68rpx;
+  height: 68rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.export-ico.tone-blue { background: linear-gradient(140deg, #4d9dff, #007aff); }
+.export-ico.tone-green { background: linear-gradient(140deg, #45c48b, #16a163); }
+.export-option-main { flex: 1; min-width: 0; }
+.export-option-name { font-size: 27rpx; font-weight: 600; }
+.export-option-desc { margin-top: 5rpx; color: var(--muted); font-size: 21rpx; }
+.export-foot { margin-top: 8rpx; color: #b3bac5; font-size: 19rpx; line-height: 1.6; }
+
+/* 离屏画布：不参与布局，也不能 display:none（否则拿不到 node） */
+.export-canvas {
+  position: fixed;
+  top: 0;
+  left: -9999rpx;
+  width: 375px;
+  height: 600px;
+}

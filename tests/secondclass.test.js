@@ -15,6 +15,8 @@ const {
   summarizeHours
 } = require('../utils/secondclass');
 
+const { layout: layoutSheet, fitText } = require('../utils/materials');
+
 const SAMPLE = [
   { id: '1', plate: 'lao', title: '社区志愿服务', date: '2026-10-15', score: 20 },
   { id: '2', plate: 'mei', title: '美育讲座', date: '2026-10-13', score: 10 },
@@ -115,4 +117,33 @@ test('三张竞赛分值表的列数与每行分数个数一致', () => {
       assert.equal(row.scores.length, table.columns.length, `${table.title} 的「${row.label}」分数个数与列数不符`);
     });
   });
+});
+
+
+test('材料清单图：高度随记录数增长，副标题带基础/拓展与时长', () => {
+  const summary = summarize([
+    { plate: 'de', title: '主题团日', date: '2026-10-04', score: 10 },
+    { plate: 'de', title: '志愿宣讲', date: '2026-10-06', score: 5, level: 'extra', hours: 4 }
+  ]);
+  const model = layoutSheet(summary, new Date(2026, 10, 8, 16, 20));
+  assert.equal(model.width, 750);
+  assert.equal(model.items.length, 2);
+  assert.ok(model.height > 600, '有记录时要撑开高度');
+  assert.equal(model.plates.length, 5, '五板块都要有');
+  // 记录按日期倒序，10-06 那条（拓展 + 4 小时）排在前面
+  assert.match(model.items[0].meta, /拓展/);
+  assert.match(model.items[0].meta, /4 小时/);
+  assert.match(model.items[1].meta, /基础/);
+
+  const empty = layoutSheet(summarize([]), new Date(2026, 10, 8));
+  assert.ok(model.height > empty.height, '记录越多图越高');
+  assert.equal(empty.items.length, 0);
+});
+
+test('清单图文字超宽时截断加省略号', () => {
+  const ctx = { measureText: (text) => ({ width: String(text).length * 20 }) };
+  assert.equal(fitText(ctx, '短标题', 400), '短标题');
+  const cut = fitText(ctx, '化工过程安全与具身智能前沿研讨', 200);
+  assert.ok(cut.endsWith('…'), '超宽要加省略号');
+  assert.ok(ctx.measureText(cut).width <= 200 + 20, '截断后不能还超宽');
 });

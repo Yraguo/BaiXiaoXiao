@@ -139,11 +139,11 @@ test('导入课表移进百宝箱，课表页不再有独立入口', () => {
   assert.match(toolbox, /课表设置/, '百宝箱里要有课表设置');
 });
 
-test('二课填报表单对齐安卓版：9 张照片、基础/拓展、微信地图选点', () => {
+test('二课填报表单对齐安卓版：单张照片、基础/拓展、微信地图选点', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/edit.wxml'), 'utf8');
   const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
-  assert.match(js, /MAX_PHOTOS = 9/, '照片上限 9 张');
+  assert.match(js, /MAX_PHOTOS = 1/, '照片只要一张');
   assert.match(wxml, /takePhoto/, '要有拍照按钮');
   assert.match(wxml, /choosePhotos/, '要有相册按钮');
   assert.match(js, /基础评定/, '要有基础档');

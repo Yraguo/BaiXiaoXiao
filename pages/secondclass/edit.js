@@ -2,7 +2,8 @@ const { loadClasses, saveClasses } = require('../../utils/appStore');
 const { PLATES, normalizeRecord } = require('../../utils/secondclass');
 const { confirmDelete } = require('../../utils/confirm');
 
-const MAX_PHOTOS = 9;
+// 一张就够用：主要是证明参加过，多了反而占空间（旧记录里的多张照片不会删）
+const MAX_PHOTOS = 1;
 const HOUR_CHIPS = [1, 2, 4, 6, 8, 10, 12, 20];
 const SCORE_CHIPS = ['2', '4', '5', '8', '10', '15', '20', '25', '30'];
 

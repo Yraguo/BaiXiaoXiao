@@ -31,6 +31,15 @@
 
     <view class="sc-link" bindtap="openManual">📋 手册分值表（板块上限 / 学科 / 体育 / 美育 / 计分条款）</view>
 
+    <view class="sc-export" bindtap="openExport" aria-role="button">
+      <view class="sc-export-ico">📦</view>
+      <view class="sc-export-main">
+        <view class="sc-export-title">导出二课材料</view>
+        <view class="sc-export-copy">清单长图 · {{photoCount}} 张照片</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
+
     <scroll-view class="sc-filters" scroll-x>
       <view
         wx:for="{{filters}}"
@@ -220,3 +229,37 @@
     <view class="hour-save" bindtap="saveHour">保存</view>
   </view>
 </view>
+
+<!-- 导出二课材料 -->
+<view wx:if="{{exportOpen}}" class="mask" bindtap="closeExport">
+  <view class="sc-sheet export" catchtap="noop">
+    <view class="export-head">
+      <view class="export-title">导出二课材料</view>
+      <view class="export-close" bindtap="closeExport">关闭</view>
+    </view>
+    <view class="export-note">小程序没有写手机文件的权限，能交给你的只有「相册」。存完可以在微信里直接发给老师，或上传到学校系统。</view>
+
+    <view class="export-option" bindtap="saveSheet" aria-role="button">
+      <view class="export-ico tone-blue">图</view>
+      <view class="export-option-main">
+        <view class="export-option-name">存一张清单长图</view>
+        <view class="export-option-desc">合计自评 + 五板块 + 全部记录，一张图看完</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
+
+    <view class="export-option" bindtap="savePhotos" aria-role="button">
+      <view class="export-ico tone-green">照</view>
+      <view class="export-option-main">
+        <view class="export-option-name">把照片存进相册</view>
+        <view class="export-option-desc">共 {{photoCount}} 张，逐张保存，水印已经打进图里</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
+
+    <view class="export-foot">清单图只包含分数与文字，不含照片；照片走第二个入口单独保存。</view>
+  </view>
+</view>
+
+<!-- 离屏画布：生成清单图用，放在页面最外层 -->
+<canvas type="2d" id="exportCanvas" class="export-canvas"></canvas>

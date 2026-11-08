@@ -15,6 +15,7 @@ const {
   summarize,
   summarizeHours
 } = require('../../utils/secondclass');
+const { draw: drawSheet, layout: layoutSheet } = require('../../utils/materials');
 
 const DAY_CN = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
@@ -63,6 +64,10 @@ Page({
     clauses: CLAUSES,
     clauseKeyword: '',
 
+    exportOpen: false,
+    exporting: false,
+    photoCount: 0,
+
     hourOpen: false,
     hourKind: 'volunteer',
     terms: TERMS,
@@ -106,6 +111,7 @@ Page({
 
     const year = new Date().getFullYear();
     this.setData({
+      photoCount: summary.list.reduce((sum, record) => sum + record.photos.length, 0),
       headLine: headLine(),
       total: summary.total,
       totalText: summary.totalText,
@@ -159,6 +165,124 @@ Page({
   addRecord() {
     const plate = this.data.filter === 'all' ? 'de' : this.data.filter;
     wx.navigateTo({ url: `/pages/secondclass/edit?plate=${plate}` });
+  },
+
+  /* ---------------- 导出材料 ---------------- */
+
+  openExport() {
+    this.setData({ exportOpen: true });
+  },
+
+  closeExport() {
+    this.setData({ exportOpen: false });
+  },
+
+  /** 存相册：失败时区分「用户拒绝授权」和「其它失败」 */
+  saveImage(filePath) {
+    return new Promise((resolve) => {
+      wx.saveImageToPhotosAlbum({
+        filePath,
+        success: () => resolve({ ok: true }),
+        fail: (error) => {
+          const message = String((error && error.errMsg) || '');
+          if (message.indexOf('cancel') >= 0) { resolve({ ok: false, cancel: true }); return; }
+          resolve({ ok: false, auth: message.indexOf('auth') >= 0 || message.indexOf('authorize') >= 0 });
+        }
+      });
+    });
+  },
+
+  askAlbumPermission() {
+    wx.showModal({
+      title: '需要相册权限',
+      content: '微信没有「保存到相册」的权限。去设置里打开后，再点一次导出。',
+      confirmText: '去设置',
+      success: (res) => { if (res.confirm) wx.openSetting(); }
+    });
+  },
+
+  /** 生成一张清单长图，存进相册 */
+  saveSheet() {
+    if (this.data.exporting) return;
+    const summary = summarize(loadClasses());
+    if (!summary.count) {
+      wx.showToast({ title: '还没有填报记录', icon: 'none' });
+      return;
+    }
+    const model = layoutSheet(summary);
+    this.setData({ exporting: true });
+    wx.showLoading({ title: '正在生成清单', mask: true });
+
+    wx.createSelectorQuery().select('#exportCanvas').fields({ node: true, size: true }).exec((res) => {
+      const canvas = res && res[0] && res[0].node;
+      if (!canvas) {
+        wx.hideLoading();
+        this.setData({ exporting: false });
+        wx.showToast({ title: '画布不可用', icon: 'none' });
+        return;
+      }
+      canvas.width = model.width;
+      canvas.height = model.height;
+      const ctx = canvas.getContext('2d');
+      drawSheet(ctx, model);
+
+      wx.canvasToTempFilePath({
+        canvas,
+        x: 0,
+        y: 0,
+        width: model.width,
+        height: model.height,
+        destWidth: model.width,
+        destHeight: model.height,
+        success: async (file) => {
+          const result = await this.saveImage(file.tempFilePath);
+          wx.hideLoading();
+          this.setData({ exporting: false });
+          if (result.ok) {
+            this.setData({ exportOpen: false });
+            wx.showToast({ title: '清单图已存进相册', icon: 'success' });
+          } else if (result.auth) {
+            this.askAlbumPermission();
+          } else if (!result.cancel) {
+            wx.showToast({ title: '生成失败，重试一次', icon: 'none' });
+          }
+        },
+        fail: () => {
+          wx.hideLoading();
+          this.setData({ exporting: false });
+          wx.showToast({ title: '生成失败，重试一次', icon: 'none' });
+        }
+      });
+    });
+  },
+
+  /** 把记录里的照片逐张存进相册 */
+  async savePhotos() {
+    if (this.data.exporting) return;
+    const summary = summarize(loadClasses());
+    const photos = summary.list.reduce((all, record) => all.concat(record.photos), []);
+    if (!photos.length) {
+      wx.showToast({ title: '还没有照片', icon: 'none' });
+      return;
+    }
+    this.setData({ exporting: true });
+    let saved = 0;
+    for (let index = 0; index < photos.length; index += 1) {
+      wx.showLoading({ title: `正在保存 ${index + 1} / ${photos.length}`, mask: true });
+      const result = await this.saveImage(photos[index]);
+      if (result.ok) {
+        saved += 1;
+        continue;
+      }
+      wx.hideLoading();
+      this.setData({ exporting: false });
+      if (result.auth) this.askAlbumPermission();
+      else if (!result.cancel) wx.showToast({ title: `第 ${index + 1} 张保存失败`, icon: 'none' });
+      return;
+    }
+    wx.hideLoading();
+    this.setData({ exporting: false, exportOpen: false });
+    wx.showToast({ title: `已保存 ${saved} 张`, icon: 'none' });
   },
 
   openManual() {

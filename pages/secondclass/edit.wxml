@@ -98,12 +98,12 @@
 
   <view class="card form-card">
     <view class="field-block">
-      <text class="field-label">照片（最多 {{maxPhotos}} 张）</text>
-      <view class="photo-actions">
+      <text class="field-label">照片</text>
+      <view wx:if="{{draft.photos.length < maxPhotos}}" class="photo-actions">
         <view class="photo-btn" bindtap="takePhoto">拍照</view>
-        <view class="photo-btn" bindtap="choosePhotos">相册</view>
-        <text class="photo-count">{{draft.photos.length}} / {{maxPhotos}}</text>
+        <view class="photo-btn" bindtap="choosePhotos">从相册选</view>
       </view>
+      <view wx:else class="field-hint">点照片右上角的 × 可以换一张</view>
       <view class="photo-grid">
         <view wx:for="{{draft.photos}}" wx:key="*this" class="photo-item">
           <image class="photo-img" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="previewPhoto"></image>

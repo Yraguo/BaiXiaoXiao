@@ -19,3 +19,4 @@ tests/fixtures/
 
 # 设计预览（HTML 复刻，不入库）
 preview-*.html
+preview-*.png
