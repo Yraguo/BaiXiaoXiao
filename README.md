@@ -200,6 +200,15 @@ node -e "console.log(require('./utils/agent/index.js').explain('周三下午有�
 
 用 [graphify](https://github.com/safishamsi/graphify) 对全仓建过知识图谱：**1062 节点 / 2161 边 / 48 个社区，无循环依赖**。产物在 `graphify-out/`（已 gitignore，不进包），打开 `graph.html` 可以拖拽查看、按社区着色。
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/graph-dark.svg">
+    <img src="docs/graph-light.svg" width="860" alt="百小鸮架构知识图谱：一个点是一个代码符号，颜色是模块社区，连线是依赖关系">
+  </picture>
+</p>
+
+> 一个点是一个代码符号，颜色是模块社区，连线是依赖关系；大点是被引用最多的核心函数。图由 `scripts/render-graph.py` 从 `graph.json` 现算布局生成（亮 / 暗两套，跟 GitHub 主题自动切换）。
+
 按图谱的社区聚类，代码大致分成六块：
 
 | 区域 | 主要文件 | 耦合情况 |
@@ -225,8 +234,11 @@ node -e "console.log(require('./utils/agent/index.js').explain('周三下午有�
 
 ```bash
 pip install graphifyy networkx numpy pyyaml rapidfuzz tree-sitter
-python3 scripts/build-graph.py
+python3 scripts/build-graph.py     # 图谱本体：graph.html / graph.json / GRAPH_REPORT.md
+python3 scripts/render-graph.py    # 上面那张 SVG 图：docs/graph-{light,dark}.svg
 ```
+
+渲染用的是自己写的力导向布局（纯 numpy，90 轮迭代、seed 固定可复现）——networkx 自带的 `spring_layout` 依赖 scipy，为画一张图多装 100MB 不值。标签带贪心防碰撞：放不下就沿质心向外找空位。
 
 脚本走的是 graphify 的 Python API 而不是它的 `graphify update` 命令 —— 那个命令在 0.9.104 上稳定报 `EEXIST`（包内部并发建目录的竞态），但各个步骤单独调都是好的，所以脚本自己串了一遍。语义抽取需要 LLM，跑不了时脚本会复用上一版图里的语义节点，图不会丢；48 个社区的人工命名存在 `scripts/graph-labels.json` 里，跟着仓库走，重建后不用重新起名。
 
@@ -254,7 +266,7 @@ python3 scripts/build-graph.py
 npm test
 ```
 
-当前 **156 个用例，152 通过 / 0 失败 / 4 跳过**（跳过的是需要真实课表 PDF 的样本测试，样本含个人信息，不随仓库分发）。
+当前 **157 个用例，153 通过 / 0 失败 / 4 跳过**（跳过的是需要真实课表 PDF 的样本测试，样本含个人信息，不随仓库分发）。
 
 覆盖：RSA 加密端到端验签、登录页字段判定、kbList 解析、DEFLATE 与 zlib 逐字节对比、真实 PDF 的文字坐标与课程还原、周次/日期/月历、单双周解析、配色稳定性、课程映射一致性、Agent 的槽位与多轮对话、每个页面的 bind 事件都能找到对应方法。
 

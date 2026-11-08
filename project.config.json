@@ -76,6 +76,10 @@
       {
         "value": "preview-.*\\.(png|html)$",
         "type": "regexp"
+      },
+      {
+        "value": "docs",
+        "type": "folder"
       }
     ],
     "include": []

@@ -306,3 +306,27 @@ test('设计预览文件不进小程序包（省下约 470KB）', () => {
       );
     });
 });
+
+test('README 里嵌的架构图谱：两张 SVG 都在、packOptions 排除了 docs', () => {
+  const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+  // GitHub 的 Markdown 不能嵌交互式 HTML，只能嵌静态图；
+  // <picture> 让深色主题自动切到 graph-dark.svg
+  assert.match(readme, /<picture>/, '要用 picture 做深浅色自适应');
+  assert.match(readme, /srcset="docs\/graph-dark\.svg"/, '暗色主题要用 dark 版');
+  assert.match(readme, /src="docs\/graph-light\.svg"/, '亮色主题用 light 版');
+
+  for (const name of ['graph-light.svg', 'graph-dark.svg']) {
+    const file = path.join(root, 'docs', name);
+    assert.ok(fs.existsSync(file), `${name} 要存在`);
+    const svg = fs.readFileSync(file, 'utf8');
+    assert.match(svg, /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/, `${name} 要是合法 SVG`);
+    assert.match(svg, /1062 nodes/, '注脚要带图谱规模');
+    // 中文社区名至少标了 10 个（防碰撞后可能少于 20）
+    const labels = svg.match(/<text [^>]*font-weight="700"/g) || [];
+    assert.ok(labels.length >= 10, `${name} 至少标注 10 个社区名，实际 ${labels.length}`);
+  }
+
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'project.config.json'), 'utf8'));
+  const folders = config.packOptions.ignore.filter((r) => r.type === 'folder').map((r) => r.value);
+  assert.ok(folders.includes('docs'), 'docs/ 不该进小程序包');
+});
