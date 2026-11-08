@@ -227,6 +227,15 @@
         <view class="tool-desc">第 {{currentWeek}} 周</view>
       </view>
     </view>
+
+    <view class="tool-wide" data-key="share" bindtap="toolboxAction" aria-role="button">
+      <view class="tool-wide-ico">↗</view>
+      <view class="tool-wide-main">
+        <view class="tool-wide-title">分享我的课表</view>
+        <view class="tool-wide-copy">生成一张第 {{week}} 周的课表图，直接发给同学</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
   </view>
 </view>
 
@@ -263,3 +272,6 @@
     <button class="primary-button" bindtap="editCourse">编辑课程</button>
   </view>
 </view>
+
+<!-- 离屏画布：生成课表分享图 -->
+<canvas type="2d" id="shareCanvas" class="share-canvas"></canvas>

@@ -134,7 +134,9 @@ function normalizeRecord(raw) {
     address: String(source.address || '').trim(),
     latitude: String(source.latitude || '').trim(),
     longitude: String(source.longitude || '').trim(),
-    watermark: Boolean(source.watermark)
+    watermark: Boolean(source.watermark),
+    // 旧记录没有这个字段，默认当作「带地点」
+    useLocation: source.useLocation !== false
   };
 }
 

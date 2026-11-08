@@ -15,14 +15,8 @@ const {
   summarize,
   summarizeHours
 } = require('../../utils/secondclass');
-const {
-  buildCsv,
-  buildJson,
-  buildReadme,
-  draw: drawSheet,
-  layout: layoutSheet,
-  photoNameFor
-} = require('../../utils/materials');
+const { draw: drawSheet, layout: layoutSheet, photoNameFor } = require('../../utils/materials');
+const { buildSecondClassPackage } = require('../../utils/backup');
 const { buildZip } = require('../../utils/zip');
 
 const DAY_CN = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -209,12 +203,23 @@ Page({
     });
   },
 
+  /** 问微信这张图到底是什么格式：临时路径的后缀经常不可靠 */
+  imageType(path) {
+    return new Promise((resolve) => {
+      wx.getImageInfo({
+        src: path,
+        success: (info) => resolve(info.type || ''),
+        fail: () => resolve('')
+      });
+    });
+  },
+
   /**
    * 打包成一个 zip：记录表（CSV + JSON）+ 照片原图 + 说明。
    * 小程序没法往手机文件系统写文件，但可以把沙箱里的文件通过
    * wx.shareFileMessage 发到微信会话——发给「文件传输助手」就长期留着了。
    */
-  saveBundle() {
+  async saveBundle() {
     if (this.data.exporting) return;
     const summary = summarize(loadClasses());
     if (!summary.count) {
@@ -227,42 +232,42 @@ Page({
 
     try {
       const manager = wx.getFileSystemManager();
-      const entries = [];
+      const photoEntries = [];
       const photoNames = [];
       let missing = 0;
 
-      summary.list.forEach((record, index) => {
+      for (let index = 0; index < summary.list.length; index += 1) {
+        const record = summary.list[index];
         const names = [];
-        (record.photos || []).forEach((path, photoIndex) => {
-          const name = photoNameFor(record, index, photoIndex, record.photos.length);
+        for (let photoIndex = 0; photoIndex < (record.photos || []).length; photoIndex += 1) {
+          const path = record.photos[photoIndex];
+          // 先问格式再命名，PNG / HEIC 也能落到正确的后缀
+          const type = await this.imageType(path);
+          const name = photoNameFor(record, index, photoIndex, record.photos.length, type);
           try {
-            entries.push({ name, data: manager.readFileSync(path) });
+            photoEntries.push({ name, data: manager.readFileSync(path) });
             names.push(name);
           } catch (error) {
-            // 照片被清理掉了就跳过，别让整包失败
             missing += 1;
           }
-        });
+        }
         photoNames[index] = names;
+      }
+
+      const entries = buildSecondClassPackage({
+        summary,
+        photoEntries,
+        photoNamesByIndex: photoNames
       });
-
-      entries.unshift({ name: '二课记录.csv', data: buildCsv(summary, photoNames) });
-      entries.push({ name: '二课记录.json', data: buildJson(summary, photoNames) });
-      entries.push({ name: '说明.txt', data: buildReadme(summary) });
-
       const zip = buildZip(entries);
-      const now = new Date();
-      const pad = (value) => String(value).padStart(2, '0');
-      const fileName = `二课材料-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.zip`;
+      const fileName = `二课材料-${this.stampName()}.zip`;
       const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
       manager.writeFileSync(filePath, zip.buffer);
 
       wx.hideLoading();
       this.setData({ exporting: false, exportOpen: false });
 
-      const sizeText = zip.length > 1024 * 1024
-        ? `${(zip.length / 1024 / 1024).toFixed(1)} MB`
-        : `${Math.max(1, Math.round(zip.length / 1024))} KB`;
+      const sizeText = this.sizeText(zip.length);
       if (missing) {
         wx.showToast({ title: `${missing} 张照片已丢失，其余已打包`, icon: 'none' });
       }
@@ -272,6 +277,18 @@ Page({
       this.setData({ exporting: false });
       wx.showToast({ title: '打包失败，重试一次', icon: 'none' });
     }
+  },
+
+  stampName() {
+    const now = new Date();
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+  },
+
+  sizeText(bytes) {
+    return bytes > 1024 * 1024
+      ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+      : `${Math.max(1, Math.round(bytes / 1024))} KB`;
   },
 
   /** 交给微信的会话选择器，发给自己（文件传输助手）就能长期保存 */

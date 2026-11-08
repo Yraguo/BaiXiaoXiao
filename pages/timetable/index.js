@@ -15,6 +15,7 @@ const { formatWeeks } = require('../../utils/weeks');
 const { loadCourses, loadSettings } = require('../../utils/storage');
 const { loadNotes, saveNotes } = require('../../utils/appStore');
 const { confirmDelete } = require('../../utils/confirm');
+const { drawWeek, layoutWeek } = require('../../utils/shareCard');
 
 const WEEK_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
@@ -450,6 +451,66 @@ Page({
     this.setData({ toolboxOpen: false });
   },
 
+  /**
+   * 分享课表：画一张本周课表图，走微信的「分享图片」面板。
+   * 真·让对方在小程序里看课表需要云端存一份，现在没有后端，图片是最接近的形态。
+   */
+  shareTimetable() {
+    if (!this.data.hasCourses) {
+      wx.showToast({ title: '还没有课程可以分享', icon: 'none' });
+      return;
+    }
+    const model = layoutWeek(this.data.dayColumns, {
+      week: this.data.week,
+      range: this.data.weekTitle,
+      term: this.data.settings.timetableName,
+      name: '我的课表'
+    });
+
+    wx.showLoading({ title: '正在生成', mask: true });
+    wx.createSelectorQuery().select('#shareCanvas').fields({ node: true }).exec((res) => {
+      const canvas = res && res[0] && res[0].node;
+      if (!canvas) {
+        wx.hideLoading();
+        wx.showToast({ title: '画布不可用', icon: 'none' });
+        return;
+      }
+      canvas.width = model.width;
+      canvas.height = model.height;
+      drawWeek(canvas.getContext('2d'), model);
+
+      wx.canvasToTempFilePath({
+        canvas,
+        x: 0,
+        y: 0,
+        width: model.width,
+        height: model.height,
+        destWidth: model.width,
+        destHeight: model.height,
+        success: (file) => {
+          wx.hideLoading();
+          if (wx.showShareImageMenu) {
+            wx.showShareImageMenu({
+              path: file.tempFilePath,
+              fail: (error) => {
+                const message = String((error && error.errMsg) || '');
+                if (message.indexOf('cancel') >= 0) return;
+                wx.showToast({ title: '分享失败，重试一次', icon: 'none' });
+              }
+            });
+          } else {
+            wx.previewImage({ urls: [file.tempFilePath], current: file.tempFilePath });
+            wx.showToast({ title: '长按图片可保存/转发', icon: 'none' });
+          }
+        },
+        fail: () => {
+          wx.hideLoading();
+          wx.showToast({ title: '生成失败，重试一次', icon: 'none' });
+        }
+      });
+    });
+  },
+
   toolboxAction(event) {
     const key = event.currentTarget.dataset.key;
     this.setData({ toolboxOpen: false });
@@ -458,6 +519,7 @@ Page({
     else if (key === 'course') this.addCourse();
     else if (key === 'settings') this.openSettings();
     else if (key === 'week') this.goCurrentWeek();
+    else if (key === 'share') this.shareTimetable();
     else if (key === 'note') {
       // 先切到记事本并落在今天，再开新建
       this.setData({ view: 'notes' });

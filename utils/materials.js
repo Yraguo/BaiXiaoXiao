@@ -234,16 +234,47 @@ function csvCell(value) {
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+/**
+ * 图片真实类型 → 扩展名。
+ * 微信的 getImageInfo 返回的是 'jpeg' / 'png' / 'gif' / 'webp'…，
+ * 而路径上的后缀经常是临时名甚至没有后缀，所以以探测结果为准。
+ */
+const IMAGE_EXT = {
+  jpeg: 'jpg',
+  jpg: 'jpg',
+  png: 'png',
+  gif: 'gif',
+  webp: 'webp',
+  bmp: 'bmp',
+  heic: 'heic',
+  heif: 'heif',
+  tiff: 'tiff',
+  svg: 'svg'
+};
+
+/** 从路径猜扩展名，猜不到就返回空串 */
+function extFromPath(path) {
+  const match = String(path || '').match(/\.([a-z0-9]+)(?:\?|#|$)/i);
+  const ext = match ? match[1].toLowerCase() : '';
+  return IMAGE_EXT[ext] || (ext && ext.length <= 5 ? ext : '');
+}
+
+/** 统一成规范扩展名；未知类型原样返回小写 */
+function extFromType(type) {
+  const key = String(type || '').toLowerCase().replace(/^image\//, '');
+  return IMAGE_EXT[key] || (key.length <= 5 ? key : '');
+}
+
 /** 照片在 zip 里的相对路径，序号和 CSV 的「序号」列对得上 */
-function photoNameFor(record, index, photoIndex, total) {
+function photoNameFor(record, index, photoIndex, total, ext) {
   const seq = String(index + 1).padStart(2, '0');
   const title = String(record.title || '活动')
     .replace(/[\\/:*?"<>|,，\s]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 24) || '活动';
   const suffix = total > 1 ? `-${photoIndex + 1}` : '';
-  const match = String((record.photos || [])[photoIndex] || '').match(/\.([a-z0-9]+)(?:\?|$)/i);
-  return `照片/${seq}-${title}${suffix}.${match ? match[1] : 'jpg'}`;
+  const finalExt = extFromType(ext) || extFromPath((record.photos || [])[photoIndex]) || 'jpg';
+  return `照片/${seq}-${title}${suffix}.${finalExt}`;
 }
 
 /**
@@ -312,7 +343,10 @@ function buildReadme(summary, when) {
 
 module.exports = {
   COLORS,
+  IMAGE_EXT,
   PLATE_INK,
+  extFromPath,
+  extFromType,
   buildCsv,
   buildJson,
   buildReadme,

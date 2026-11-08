@@ -148,4 +148,79 @@ function buildZip(files, when) {
   return output;
 }
 
-module.exports = { buildZip, crc32, utf8 };
+/** UTF-8 解码，和上面的 utf8() 配对，用于读文件名 */
+function decodeUtf8(bytes) {
+  let text = '';
+  for (let i = 0; i < bytes.length; i += 1) {
+    const byte = bytes[i];
+    if (byte < 0x80) {
+      text += String.fromCharCode(byte);
+    } else if (byte < 0xe0) {
+      text += String.fromCharCode(((byte & 0x1f) << 6) | (bytes[i + 1] & 0x3f));
+      i += 1;
+    } else if (byte < 0xf0) {
+      text += String.fromCharCode(((byte & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f));
+      i += 2;
+    } else {
+      const point = ((byte & 0x07) << 18) | ((bytes[i + 1] & 0x3f) << 12)
+        | ((bytes[i + 2] & 0x3f) << 6) | (bytes[i + 3] & 0x3f);
+      const offset = point - 0x10000;
+      text += String.fromCharCode(0xd800 + (offset >> 10), 0xdc00 + (offset & 0x3ff));
+      i += 3;
+    }
+  }
+  return text;
+}
+
+/**
+ * 读 zip（只支持 store 模式，也就是我们自己打出来的包）。
+ * @param {ArrayBuffer|Uint8Array} input
+ * @returns {Array<{name:string,data:Uint8Array}>}
+ */
+function readZip(input) {
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+  // EOCD 在最末尾，最多往回头看 64KB + 22
+  let eocd = -1;
+  const start = Math.max(0, bytes.length - 65558);
+  for (let i = bytes.length - 22; i >= start; i -= 1) {
+    if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('不是有效的 zip');
+
+  const count = view.getUint16(eocd + 10, true);
+  let cursor = view.getUint32(eocd + 16, true);
+  const files = [];
+
+  for (let index = 0; index < count; index += 1) {
+    if (view.getUint32(cursor, true) !== 0x02014b50) throw new Error('中央目录损坏');
+    const method = view.getUint16(cursor + 10, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
+    const nameLength = view.getUint16(cursor + 28, true);
+    const extraLength = view.getUint16(cursor + 30, true);
+    const commentLength = view.getUint16(cursor + 32, true);
+    const localOffset = view.getUint32(cursor + 42, true);
+    const name = decodeUtf8(bytes.subarray(cursor + 46, cursor + 46 + nameLength));
+
+    if (method === 0) {
+      const localNameLength = view.getUint16(localOffset + 26, true);
+      const localExtraLength = view.getUint16(localOffset + 28, true);
+      const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+      files.push({ name, data: bytes.subarray(dataStart, dataStart + compressedSize) });
+    } else {
+      files.push({ name, data: null, unsupported: true });
+    }
+
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+  return files;
+}
+
+/** 按文件名后缀找条目，返回 UTF-8 文本或 null */
+function readText(files, suffix) {
+  const hit = (files || []).find((file) => file.name && file.name.slice(-suffix.length) === suffix && file.data);
+  return hit ? decodeUtf8(hit.data) : null;
+}
+
+module.exports = { buildZip, crc32, decodeUtf8, readText, readZip, utf8 };

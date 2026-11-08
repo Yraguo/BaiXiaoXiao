@@ -44,7 +44,9 @@ function blankDraft(plateKey) {
     latitude: '',
     longitude: '',
     pinAt: '',
-    watermark: false
+    watermark: false,
+    // 水印里要不要带地点，用开关单独控制
+    useLocation: true
   };
 }
 
@@ -118,6 +120,10 @@ Page({
 
   toggleWatermark(event) {
     this.setData({ 'draft.watermark': Boolean(event.detail.value) });
+  },
+
+  toggleUseLocation(event) {
+    this.setData({ 'draft.useLocation': Boolean(event.detail.value) });
   },
 
   /**
@@ -257,10 +263,12 @@ Page({
     }
 
     let photos = draft.photos;
-    const place = draft.address
-      || (draft.latitude && draft.longitude ? `${draft.latitude}, ${draft.longitude}` : '');
+    // 定位开关关掉时，照片上只写时间，不写地点
+    const place = draft.useLocation
+      ? (draft.address || (draft.latitude && draft.longitude ? `${draft.latitude}, ${draft.longitude}` : ''))
+      : '';
     const watermarkText = [draft.pinAt || stampNow(), place].filter(Boolean).join('  ');
-    if (draft.watermark && place && photos.length) {
+    if (draft.watermark && photos.length) {
       wx.showLoading({ title: '正在加水印', mask: true });
       photos = await this.stamp(photos, watermarkText);
       wx.hideLoading();

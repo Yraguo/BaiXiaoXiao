@@ -467,3 +467,40 @@
 .tone-teal { background: linear-gradient(140deg, #4dc9c4, #12938e); }
 .tool-name { color: var(--text); font-size: 24rpx; font-weight: 600; }
 .tool-desc { color: #b3bac5; font-size: 19rpx; line-height: 1.3; }
+
+/* 百宝箱里那条通栏的「分享我的课表」 */
+.tool-wide {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 12rpx;
+  padding: 20rpx 18rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(120deg, #eef4ff, #f6f9ff);
+}
+.tool-wide:active { background: #e6effd; }
+.tool-wide-ico {
+  display: flex;
+  width: 60rpx;
+  height: 60rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+.tool-wide-main { flex: 1; min-width: 0; }
+.tool-wide-title { color: var(--text); font-size: 25rpx; font-weight: 600; }
+.tool-wide-copy { margin-top: 4rpx; color: var(--muted); font-size: 20rpx; }
+
+/* 离屏画布：不能 display:none，否则拿不到 node */
+.share-canvas {
+  position: fixed;
+  top: 0;
+  left: -9999rpx;
+  width: 375px;
+  height: 600px;
+}

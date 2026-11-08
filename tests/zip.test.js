@@ -64,11 +64,76 @@ test('打包内容：CSV 带 BOM、JSON 可解析、照片名带序号', () => {
   assert.match(readme, /二课记录\.csv/);
   assert.match(readme, /照片\//);
 
-  assert.equal(photoNameFor({ title: 'a/b:c', photos: ['x.jpeg'] }, 0, 0, 1), '照片/01-a_b_c.jpeg');
+  // jpeg 统一写成 jpg；PNG / HEIC 会按 getImageInfo 的结果保留
+  assert.equal(photoNameFor({ title: 'a/b:c', photos: ['x.jpeg'] }, 0, 0, 1), '照片/01-a_b_c.jpg');
+  assert.equal(photoNameFor({ title: '图', photos: ['/tmp/a.PNG'] }, 0, 0, 1), '照片/01-图.png');
+  assert.equal(photoNameFor({ title: '实拍', photos: ['/tmp/b'] }, 0, 0, 1, 'heic'), '照片/01-实拍.heic');
 });
 
 test('CSV 里的逗号和引号要转义', () => {
   const summary = summarize([{ plate: 'de', title: '讲座, 主题"安全"', score: 5 }]);
   const csv = buildCsv(summary, [[]]);
   assert.match(csv, /"讲座, 主题""安全"""/);
+});
+
+test('备份包结构：课表 + 二课 + 时长 + 说明，zip 能原样读回', () => {
+  const { buildFullBackup } = require('../utils/backup');
+  const summary = summarize([
+    { plate: 'de', title: '主题团日', date: '2026-10-04', score: 10 }
+  ]);
+  const courses = [
+    { name: '复变函数与积分变换（A）', day: 1, startPeriod: 1, endPeriod: 2, weeks: [1, 2, 3], campus: '北区', room: '二教C阶-101', teacher: '王凤超' }
+  ];
+  const entries = buildFullBackup({
+    courses,
+    settings: { timetableName: '2026-2027-1', semesterStartMonday: '2026-09-07', totalWeeks: 18 },
+    summary,
+    hours: [{ kind: 'volunteer', term: '大一上', title: '图书馆志愿', hours: 4 }],
+    photoEntries: [{ name: '照片/01-主题团日.png', data: new Uint8Array([1, 2, 3]) }],
+    photoNamesByIndex: [['照片/01-主题团日.png']]
+  });
+
+  const names = entries.map((entry) => entry.name);
+  assert.ok(names.some((name) => name.endsWith('课表.csv')));
+  assert.ok(names.some((name) => name.endsWith('课表.json')));
+  assert.ok(names.some((name) => name.endsWith('二课记录.json')));
+  assert.ok(names.some((name) => name.endsWith('二课时长.json')));
+  assert.ok(names.some((name) => name.endsWith('说明.txt')));
+  assert.ok(names.some((name) => name.endsWith('照片/01-主题团日.png')));
+
+  const zip = buildZip(entries, new Date(2026, 10, 8, 17, 0));
+  const { readZip, readText } = require('../utils/zip');
+  const back = readZip(zip);
+  assert.equal(back.length, entries.length, '条目数一致');
+
+  const courseData = JSON.parse(readText(back, '课表.json'));
+  assert.equal(courseData.schema, 'timetable/v1');
+  assert.equal(courseData.courses.length, 1);
+  assert.equal(courseData.courses[0].name, '复变函数与积分变换（A）');
+  assert.equal(courseData.settings.totalWeeks, 18);
+
+  const hoursData = JSON.parse(readText(back, '二课时长.json'));
+  assert.equal(hoursData.records[0].hours, 4);
+
+  const photo = back.find((entry) => entry.name.endsWith('.png'));
+  assert.deepEqual(Array.from(photo.data), [1, 2, 3], '照片字节要原样保留');
+});
+
+test('课表 CSV 的周次写成「1-3周」，不是原始数组', () => {
+  const { buildCourseCsv } = require('../utils/backup');
+  const csv = buildCourseCsv([
+    { name: '工程训练', day: 6, startPeriod: 1, endPeriod: 4, weeks: [1, 2, 3, 4, 6], room: '工程训练中心' }
+  ]);
+  assert.match(csv, /工程训练,周六,1,4,1-4、6周/, '周次要压缩成 1-4、6周 这种可读写法');
+});
+
+test('课表分享图：课程多的那天更高，空白日也有位置', () => {
+  const { layoutWeek } = require('../utils/shareCard');
+  const model = layoutWeek([
+    { label: '周一', date: '11/9', blocks: [{ name: 'A' }, { name: 'B' }] },
+    { label: '周二', date: '11/10', blocks: [] }
+  ], { week: 11, range: '11/9–11/15', term: '2026-2027-1' });
+  assert.ok(model.days[0].height > model.days[1].height, '有课的那天要撑开');
+  assert.equal(model.days[1].blocks.length, 0);
+  assert.ok(model.height > 300);
 });

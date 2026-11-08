@@ -98,3 +98,6 @@
 .place-name.is-empty { color: #b3bac5; font-weight: 400; }
 .place-sub { margin-top: 6rpx; color: #b3bac5; font-size: 20rpx; }
 .place-clear { flex: none; padding: 8rpx 6rpx; color: var(--muted); font-size: 22rpx; }
+
+.place-main.is-off { opacity: .55; }
+.place-switch { flex: none; transform: scale(.86); }

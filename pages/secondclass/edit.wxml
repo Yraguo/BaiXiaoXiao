@@ -122,14 +122,13 @@
   </view>
 
   <view class="card form-card">
-    <view class="place-row" bindtap="choosePlace">
+    <view class="place-row">
       <text class="field-label">位置</text>
-      <view class="place-main">
+      <view class="place-main {{draft.useLocation ? '' : 'is-off'}}" bindtap="choosePlace">
         <view class="place-name {{draft.address ? '' : 'is-empty'}}">{{draft.address || '点击选择位置'}}</view>
-        <view class="place-sub">{{draft.address ? '微信地图选点 · 只用于照片水印' : '会打开微信地图，选一个地点'}}</view>
+        <view class="place-sub">{{draft.useLocation ? (draft.address ? '微信地图选点 · 会写进水印' : '会打开微信地图，选一个地点') : '已关闭，照片只写时间'}}</view>
       </view>
-      <text wx:if="{{draft.address}}" class="place-clear" catchtap="clearPlace">清除</text>
-      <text class="chevron">›</text>
+      <switch class="place-switch" checked="{{draft.useLocation}}" color="#007aff" bindchange="toggleUseLocation" />
     </view>
   </view>
 

@@ -37,8 +37,12 @@
       <view class="row-main"><view class="row-title">课表设置</view><view class="row-copy">学期、周数与节次时间</view></view>
       <text class="chevron">›</text>
     </view>
-    <view class="row" bindtap="copyMyData">
-      <view class="row-main"><view class="row-title">导出本机数据</view><view class="row-copy">课表、记事、二课打包成一段 JSON 复制走</view></view>
+    <view class="row" bindtap="exportBackup">
+      <view class="row-main"><view class="row-title">备份到微信</view><view class="row-copy">课表 + 二课 + 照片打成一个 zip，发给文件传输助手</view></view>
+      <text class="chevron">›</text>
+    </view>
+    <view class="row" bindtap="restoreBackup">
+      <view class="row-main"><view class="row-title">从备份恢复</view><view class="row-copy">从聊天记录里选备份 zip，覆盖本机数据</view></view>
       <text class="chevron">›</text>
     </view>
     <view class="row" bindtap="showAbout">
