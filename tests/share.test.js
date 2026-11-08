@@ -61,3 +61,11 @@ test('分享图带二维码时更高，并且画了扫码文案', () => {
   assert.ok(calls.includes('qr'), '传了二维码图片就要画出来');
   assert.ok(calls.some((text) => String(text).indexOf('扫码') >= 0), '要有扫码提示');
 });
+
+
+test('转发小程序卡片也带分享码，打开的就是我的课表', () => {
+  const js = read('pages/timetable/index.js');
+  assert.match(js, /prepareShareId\(\)/, '打开百宝箱时预先生成分享码');
+  assert.match(js, /\?share=\$\{id\}/, 'onShareAppMessage 的 path 带 share 参数');
+  assert.match(js, /baixiaoxiao\.share\.cache\.v1/, '分享码要有缓存，别每次开面板都写云端');
+});

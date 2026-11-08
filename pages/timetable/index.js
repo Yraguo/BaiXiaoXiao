@@ -114,10 +114,43 @@ Page({
   },
 
   onShareAppMessage() {
+    // 右上角「···」转发卡片也指向分享快照，对方点开看到的是我的课表
+    const id = this.shareIdCache;
     return {
       title: `${this.data.settings.timetableName || '我的课表'} · 第${this.data.week}周`,
-      path: '/pages/timetable/index'
+      path: id ? `/pages/timetable/index?share=${id}` : '/pages/timetable/index'
     };
+  },
+
+  /** 打开百宝箱时顺手把当前课表存一份，转发卡片才有码可用 */
+  prepareShareId() {
+    if (this.data.shared) return;
+    const KEY = 'baixiaoxiao.share.cache.v1';
+    const now = Date.now();
+    let cache = null;
+    try {
+      cache = wx.getStorageSync(KEY) || null;
+    } catch (error) {
+      cache = null;
+    }
+    // 同一周、6 小时内复用，别每次开面板都往云端写
+    if (cache && cache.id && cache.week === this.data.week && now - cache.at < 6 * 3600 * 1000) {
+      this.shareIdCache = cache.id;
+      return;
+    }
+    this.callShare('save', {
+      courses: this.courses,
+      settings: this.settings,
+      term: (this.data.settings && this.data.settings.timetableName) || ''
+    }).then((result) => {
+      if (!result || !result.ok || !result.id) return;
+      this.shareIdCache = result.id;
+      try {
+        wx.setStorageSync(KEY, { id: result.id, week: this.data.week, at: now });
+      } catch (error) {
+        // 存不下也不影响本次分享
+      }
+    });
   },
 
   reload(resetWeek) {
@@ -457,6 +490,7 @@ Page({
 
   openToolbox() {
     this.setData({ toolboxOpen: true });
+    this.prepareShareId();
   },
 
   closeToolbox() {
