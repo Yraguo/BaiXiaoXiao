@@ -306,7 +306,9 @@ Page({
       this.dragging = true;
       this.setData({ dragTransition: 'none' });
     }
-    this.setData({ dragX: Math.round(dx * 2) });
+    // 限位：内容最多只能被拖出 120rpx，再多就像"整页翻走"，很容易误以为切到了记事本
+    const offset = Math.max(-120, Math.min(120, dx * 2));
+    this.setData({ dragX: Math.round(offset) });
   },
 
   finishTouch(event) {

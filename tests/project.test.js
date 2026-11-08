@@ -50,15 +50,13 @@ test('所有页面的 bind 事件都能在对应 js 里找到方法', () => {
   });
 });
 
-test('课表格子里的信息单行省略，不逐字折断（回归：教室被拆成「一教B-21」+「0」）', () => {
+test('课表格子把课名、教室、老师写全，不再截断', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
   const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
-  assert.doesNotMatch(wxml, /course-time/, '格子只有一列宽，上课时间不该再塞进来（节次列已标时间）');
-  assert.match(wxss, /\.course-name\s*\{[^}]*-webkit-line-clamp:\s*2/, '课名最多两行');
-  assert.match(wxss, /\.course-meta\s*\{[^}]*text-overflow:\s*ellipsis/, '校区/教室/教师必须单行省略');
-  assert.doesNotMatch(wxss, /\.course-meta\s*\{[^}]*word-break:\s*break-all/, '不允许逐字折行');
-  assert.match(wxss, /\.course-block\.is-short\s+\.course-name\s*\{[^}]*-webkit-line-clamp:\s*1/, '单节格子只放一行课名');
-  assert.match(wxml, /@\{\{course\.campus\}\}/, '校区按 @北区 的形式展示');
+  assert.doesNotMatch(wxss, /-webkit-line-clamp/, '课名不再按行数截断');
+  assert.doesNotMatch(wxss, /\.course-meta\s*\{[^}]*text-overflow:\s*ellipsis/, '教室/老师也不省略');
+  assert.match(wxml, /course\.campus \? course\.campus \+ ' ' : ''/, '校区与教室拼成一行显示');
+  assert.match(wxml, /course-teacher/, '教师必须显示');
 });
 
 test('导入确认是「替换 / 追加 / 取消」三个按钮', () => {

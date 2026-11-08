@@ -151,28 +151,20 @@
  * 一行一条竖着排；单节次的格子只有 88rpx 高，只留课名和教室。
  */
 .course-name {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  font-size: 20rpx;
+  font-size: 18rpx;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.22;
   word-break: break-all;
 }
 .course-meta {
   margin-top: 3rpx;
-  overflow: hidden;
-  font-size: 15rpx;
+  font-size: 14rpx;
   line-height: 1.25;
-  opacity: .82;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  opacity: .85;
+  word-break: break-all;
 }
 .course-block.is-short { padding: 6rpx; }
-.course-block.is-short .course-name { -webkit-line-clamp: 1; }
-.course-block.is-short .course-campus,
-.course-block.is-short .course-teacher { display: none; }
+
 
 /*
  * 悬浮操作按钮。
@@ -274,6 +266,7 @@
 }
 .view-item.active { color: var(--text); font-weight: 600; }
 
+.view-viewport { overflow: hidden; }
 .view-track {
   display: flex;
   width: 200%;

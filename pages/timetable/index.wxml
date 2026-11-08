@@ -16,6 +16,7 @@
     >记事本</view>
   </view>
 
+  <view class="view-viewport">
   <view class="view-track" style="transform:translateX({{view === 'notes' ? '-50%' : '0%'}})">
     <view class="view-page">
   <view class="week-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
@@ -89,8 +90,7 @@
           catchtap="showCourse"
         >
           <view class="course-name">{{course.name}}</view>
-          <view wx:if="{{course.campus}}" class="course-meta course-campus">@{{course.campus}}</view>
-          <view wx:if="{{course.room}}" class="course-meta course-room">{{course.room}}</view>
+          <view wx:if="{{course.room}}" class="course-meta course-room">{{course.campus ? course.campus + ' ' : ''}}{{course.room}}</view>
           <view wx:if="{{course.teacher}}" class="course-meta course-teacher">{{course.teacher}}</view>
         </view>
       </view>
@@ -171,6 +171,7 @@
     <view class="add-bar" bindtap="addNote">＋ 在 {{selectedLabel}} 添加记事</view>
     </view>
     </view>
+  </view>
   </view>
 
   <view wx:if="{{view === 'timetable'}}" class="floating-actions">
