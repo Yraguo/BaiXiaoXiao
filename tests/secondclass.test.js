@@ -11,6 +11,7 @@ const {
   TOTAL_FULL,
   normalizeHour,
   normalizeRecord,
+  plateTotals,
   summarize,
   summarizeHours
 } = require('../utils/secondclass');
@@ -146,4 +147,31 @@ test('清单图文字超宽时截断加省略号', () => {
   const cut = fitText(ctx, '化工过程安全与具身智能前沿研讨', 200);
   assert.ok(cut.endsWith('…'), '超宽要加省略号');
   assert.ok(ctx.measureText(cut).width <= 200 + 20, '截断后不能还超宽');
+});
+
+test('板块条上的「已得/满分」：按板块汇总、按满分封顶、编辑时排除自己', () => {
+  const totals = plateTotals(SAMPLE);
+  assert.deepEqual(Object.keys(totals), ['de', 'zhi', 'ti', 'mei', 'lao'], '五板块顺序要与 PLATES 一致');
+  // SAMPLE 里德 10、智 25、体 30、美 10、劳 20，都远没到满分
+  assert.equal(totals.de, '10/180');
+  assert.equal(totals.zhi, '25/120');
+  assert.equal(totals.ti, '30/100');
+  assert.equal(totals.lao, '20/100');
+
+  // 编辑某条记录时，它自己不该算进「已得」
+  const editing = plateTotals(SAMPLE, '3');
+  assert.equal(editing.ti, '0/100');
+
+  // 单条先按档位上限收（基础 144 / 拓展 36），合计再按满分封顶，不出现 200/180 这种
+  const overflow = plateTotals([
+    { plate: 'de', title: '基础堆满', date: '2026-10-01', score: 200, level: 'base' },
+    { plate: 'de', title: '拓展堆满', date: '2026-10-02', score: 60, level: 'extra' }
+  ]);
+  assert.equal(overflow.de, '180/180');
+
+  // 空数据也要给出可读的 0/N，而不是 undefined
+  const empty = plateTotals([]);
+  PLATES.forEach((plate) => {
+    assert.equal(empty[plate.key], `0/${plate.full}`, `${plate.short} 空数据回显不对`);
+  });
 });

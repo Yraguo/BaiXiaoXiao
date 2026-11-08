@@ -1,8 +1,14 @@
 .tab-scroll { width: 100%; height: 100%; }
 .tab-scroll .page-shell { min-height: 0; }
 
-/* 拖动换周/换月时内容会左右越界，裁剪掉横向滚动条 */
-.page { padding: 20rpx 20rpx 160rpx; overflow-x: hidden; }
+/*
+ * .page 是 scroll-view 的直接子节点，**不能**写 overflow-x: hidden。
+ * 按 CSS 规范，一个方向 hidden、另一个方向 visible 时，visible 会被算成 auto，
+ * 于是 .page 自己变成纵向滚动容器（高度 auto、没有可滚内容），
+ * 手势被它吃掉、外层 scroll-view 收不到，表现就是「课表拖不动」。
+ * 换周/换月越界的横向内容由 .view-viewport 的 overflow: hidden 裁掉，够了。
+ */
+.page { padding: 20rpx 20rpx 160rpx; }
 
 .week-card {
   display: flex;
@@ -99,8 +105,7 @@
 @keyframes wk-enter-right { from { transform: translateX(26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes wk-enter-left { from { transform: translateX(-26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* 拖动换周/换月时内容会左右越界，裁剪掉横向滚动条 */
-.page { padding: 20rpx 20rpx 160rpx; overflow-x: hidden; }
+.page { padding: 20rpx 20rpx 160rpx; }
 
 .week-card {
   display: flex;
@@ -468,16 +473,15 @@
   justify-content: center;
   width: 72rpx;
   height: 72rpx;
+  overflow: hidden;
   border-radius: 22rpx;
-  color: #fff;
-  font-size: 24rpx;
-  font-weight: 700;
-  letter-spacing: .5rpx;
 }
+/* 图标是 24×24 线性稿按 144px 预渲染的白描边 PNG，压到 40rpx 才不会糊 */
+.tool-ico-img { width: 40rpx; height: 40rpx; }
 .tone-blue { background: linear-gradient(140deg, #4d9dff, #007aff); }
 .tone-green { background: linear-gradient(140deg, #45c48b, #16a163); }
-.tone-indigo { background: linear-gradient(140deg, #7f8dff, #4b57d8); font-size: 34rpx; }
-.tone-gray { background: linear-gradient(140deg, #a6b0c0, #7d8899); font-size: 34rpx; }
+.tone-indigo { background: linear-gradient(140deg, #7f8dff, #4b57d8); }
+.tone-gray { background: linear-gradient(140deg, #a6b0c0, #7d8899); }
 .tone-orange { background: linear-gradient(140deg, #ffb057, #f0810f); }
 .tone-teal { background: linear-gradient(140deg, #4dc9c4, #12938e); }
 .tool-name { color: var(--text); font-size: 24rpx; font-weight: 600; }
@@ -503,10 +507,8 @@
   justify-content: center;
   border-radius: 18rpx;
   background: var(--brand);
-  color: #fff;
-  font-size: 30rpx;
-  font-weight: 700;
 }
+.tool-wide-ico-img { width: 34rpx; height: 34rpx; }
 .tool-wide-main { flex: 1; min-width: 0; }
 .tool-wide-title { color: var(--text); font-size: 25rpx; font-weight: 600; }
 .tool-wide-copy { margin-top: 4rpx; color: var(--muted); font-size: 20rpx; }

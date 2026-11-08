@@ -4,6 +4,7 @@ const {
   PLATES,
   levelsOf,
   normalizeRecord,
+  plateTotals,
   usageOf
 } = require('../../utils/secondclass');
 const { confirmDelete } = require('../../utils/confirm');
@@ -330,8 +331,16 @@ Page({
     this.setData({
       usage: Object.assign({}, usage, {
         percent: usage.cap ? Math.min(100, Math.round(usage.used / usage.cap * 100)) : 0
-      })
+      }),
+      // 板块条上回显「已得/满分」，改分、换板块都跟着动
+      plates: this.platesWithTotals()
     });
+  },
+
+  /** 五个板块各自的累计分，挂到 plate 上给 WXML 直接用 */
+  platesWithTotals() {
+    const totals = plateTotals(this.records || loadClasses(), this.data.draft.id);
+    return PLATES.map((plate) => Object.assign({}, plate, { usageText: totals[plate.key] }));
   },
 
   /* ---------------- 字段 ---------------- */

@@ -192,9 +192,10 @@
 </view>
 </scroll-view>
 
-<!-- 百宝箱：可自由拖动的小球，位置限制在页面可视区内并持久化 -->
+<!-- 百宝箱：可自由拖动的小球，位置限制在页面可视区内并持久化。
+     只在课表视图出现 —— 记事本里没有可导入/可切周的东西，留着反而挡字 -->
 <view
-  wx:if="{{ballReady && !shared}}"
+  wx:if="{{ballReady && !shared && view === 'timetable'}}"
   class="tool-fab {{ballDragging ? 'is-dragging' : ''}}"
   style="left:{{ballX}}px; top:{{ballY}}px;"
   catchtouchstart="onBallTouchStart"
@@ -218,39 +219,39 @@
     </view>
     <view class="tool-grid">
       <view class="tool-item" data-key="jw" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-blue">云</view>
+        <view class="tool-ico tone-blue"><image class="tool-ico-img" src="/assets/icons/cloud.png" mode="aspectFit"></image></view>
         <view class="tool-name">导入课表</view>
         <view class="tool-desc">学号密码一键读课表</view>
       </view>
       <view class="tool-item" data-key="pdf" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-green">PDF</view>
+        <view class="tool-ico tone-green"><image class="tool-ico-img" src="/assets/icons/doc.png" mode="aspectFit"></image></view>
         <view class="tool-name">PDF 导入</view>
         <view class="tool-desc">解析教务导出的 PDF</view>
       </view>
       <view class="tool-item" data-key="course" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-indigo">＋</view>
+        <view class="tool-ico tone-indigo"><image class="tool-ico-img" src="/assets/icons/plus.png" mode="aspectFit"></image></view>
         <view class="tool-name">添加课程</view>
         <view class="tool-desc">手动填一门课</view>
       </view>
       <view class="tool-item" data-key="settings" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-gray">⚙</view>
+        <view class="tool-ico tone-gray"><image class="tool-ico-img" src="/assets/icons/sliders.png" mode="aspectFit"></image></view>
         <view class="tool-name">课表设置</view>
         <view class="tool-desc">作息、学期与周数</view>
       </view>
       <view class="tool-item" data-key="note" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-orange">记</view>
+        <view class="tool-ico tone-orange"><image class="tool-ico-img" src="/assets/icons/pencil.png" mode="aspectFit"></image></view>
         <view class="tool-name">记一件事</view>
         <view class="tool-desc">打开记事本新建</view>
       </view>
       <view class="tool-item" data-key="week" bindtap="toolboxAction" aria-role="button">
-        <view class="tool-ico tone-teal">今</view>
+        <view class="tool-ico tone-teal"><image class="tool-ico-img" src="/assets/icons/calendar.png" mode="aspectFit"></image></view>
         <view class="tool-name">回到本周</view>
         <view class="tool-desc">第 {{currentWeek}} 周</view>
       </view>
     </view>
 
     <view class="tool-wide" data-key="share" bindtap="toolboxAction" aria-role="button">
-      <view class="tool-wide-ico">↗</view>
+      <view class="tool-wide-ico"><image class="tool-wide-ico-img" src="/assets/icons/share.png" mode="aspectFit"></image></view>
       <view class="tool-wide-main">
         <view class="tool-wide-title">分享我的课表</view>
         <view class="tool-wide-copy">生成一张第 {{week}} 周的课表图，直接发给同学</view>

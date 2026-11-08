@@ -165,6 +165,23 @@ function usageOf(records, plateKey, level, excludeId) {
   };
 }
 
+/**
+ * 每个板块目前累计多少分（按板块满分封顶），返回 { 板块key: '已得/满分' }。
+ * 板块选择条上要能一眼看出「德 144/180」这种，不进去翻列表。
+ */
+function plateTotals(records, excludeId) {
+  const list = (Array.isArray(records) ? records : []).map(normalizeRecord);
+  const out = {};
+  PLATES.forEach((plate) => {
+    const raw = roundScore(
+      list.filter((record) => record.plate === plate.key && record.id !== excludeId)
+        .reduce((sum, record) => sum + record.score, 0)
+    );
+    out[plate.key] = `${Math.min(raw, plate.full)}/${plate.full}`;
+  });
+  return out;
+}
+
 function roundScore(value) {
   return Math.round((Number(value) || 0) * 10) / 10;
 }
@@ -313,6 +330,7 @@ module.exports = {
   normalizeHour,
   normalizeRecord,
   plateOf,
+  plateTotals,
   roundScore,
   summarize,
   summarizeHours,

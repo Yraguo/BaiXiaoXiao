@@ -335,3 +335,34 @@ test('README 里嵌的架构图谱：两张 SVG 都在、packOptions 排除了 d
   const folders = config.packOptions.ignore.filter((r) => r.type === 'folder').map((r) => r.value);
   assert.ok(folders.includes('docs'), 'docs/ 不该进小程序包');
 });
+
+test('百宝箱面板用图形图标，不再拿文字充当图标', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const icons = ['cloud', 'doc', 'plus', 'sliders', 'pencil', 'calendar', 'share'];
+  icons.forEach((name) => {
+    assert.ok(fs.existsSync(path.join(root, 'assets/icons', `${name}.png`)), `${name}.png 要先跑 scripts/build-icons.js 生成`);
+    assert.match(wxml, new RegExp(`/assets/icons/${name}\\.png`), `百宝箱缺少 ${name} 图标`);
+  });
+  // 样式类后面直接跟文字 = 又退回「拿汉字当图标」
+  assert.doesNotMatch(wxml, /class="tool-ico tone-\w+">[^<]/, 'tool-ico 里只能放 <image>');
+  assert.doesNotMatch(wxml, /class="tool-wide-ico">[^<]/, 'tool-wide-ico 里只能放 <image>');
+});
+
+test('百宝箱浮球只在课表视图出现（记事本里不挡字）', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  assert.match(
+    wxml,
+    /wx:if="\{\{ballReady && !shared && view === 'timetable'\}\}"/,
+    '浮球要跟 view 绑定，切到记事本就得消失'
+  );
+});
+
+test('课表根节点不再套一层纵向滚动容器（回归：拖不动）', () => {
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  const blocks = wxss.match(/\.page\s*\{[^}]*\}/g) || [];
+  assert.ok(blocks.length >= 1, '找不到 .page 规则');
+  blocks.forEach((block) => {
+    // 一个方向 hidden、另一个 visible 会被算成 auto，.page 就变成滚动容器把手势吃掉
+    assert.doesNotMatch(block, /overflow/, `.page 上不能写 overflow —— 内容在 ${block}`);
+  });
+});
