@@ -77,7 +77,7 @@ test('切换周次有横向滑入动画', () => {
   const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
   const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
   assert.match(js, /weekAnim/, '切换时要设置动画类');
-  assert.match(wxml, /week-card \{\{weekAnim\}\}/, '周次卡片要挂上动画类');
+  assert.doesNotMatch(wxml, /week-card \{\{weekAnim\}\}/, '周次卡片不参与动画，切周时保持不动');
   assert.match(wxml, /timetable-card \{\{weekAnim\}\}/, '课表卡片要挂上动画类');
   assert.match(wxss, /@keyframes week-in-right/, '往后翻从右侧滑入');
   assert.match(wxss, /@keyframes week-in-left/, '往前翻从左侧滑入');
