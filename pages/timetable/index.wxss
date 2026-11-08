@@ -504,3 +504,27 @@
   width: 375px;
   height: 600px;
 }
+
+/* 扫码打开别人分享的课表时，顶部提示条 */
+.share-banner {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+  padding: 20rpx 20rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(120deg, #eaf3ff, #f4f9ff);
+  border: 1rpx solid rgba(0, 122, 255, .16);
+}
+.share-banner-main { flex: 1; min-width: 0; }
+.share-banner-title { color: var(--text); font-size: 25rpx; font-weight: 600; }
+.share-banner-copy { margin-top: 4rpx; color: var(--muted); font-size: 20rpx; }
+.share-banner-btn {
+  flex: none;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+}

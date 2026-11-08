@@ -1,0 +1,8 @@
+{
+  "name": "share",
+  "version": "1.0.0",
+  "description": "课表分享云函数：存快照、读快照、生成小程序码",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {}
+}

@@ -56,7 +56,8 @@ function roundRect(ctx, x, y, width, height, radius) {
  * @param {Array} dayColumns 页面里的 dayColumns（每项有 label/date/dayNum/blocks）
  * @param {object} meta { week, range, term, totalWeeks, name }
  */
-function layoutWeek(dayColumns, meta) {
+function layoutWeek(dayColumns, meta, options) {
+  const opts = options || {};
   let cursor = 190;
   const days = (dayColumns || []).map((column, index) => {
     const blocks = (column.blocks || []).map((block) => ({
@@ -79,10 +80,16 @@ function layoutWeek(dayColumns, meta) {
     return day;
   });
 
-  const height = cursor + 96;
+  // 带二维码时在底部留一块：白色圆角卡片 + 小程序码 + 两行说明
+  const qr = opts.withQr
+    ? { size: 200, x: (WIDTH - 200) / 2, y: cursor + 30, boxY: cursor + 6, boxHeight: 336 }
+    : null;
+  const height = cursor + (qr ? 360 : 96) + 24;
+
   return {
     width: WIDTH,
     height,
+    qr,
     week: meta.week,
     range: meta.range,
     term: meta.term,
@@ -146,9 +153,30 @@ function drawWeek(ctx, model) {
     });
   });
 
-  ctx.fillStyle = COLORS.faint;
-  ctx.font = '19px sans-serif';
-  ctx.fillText('由 百小鸮 生成 · 课表只存在手机本地', PAD, model.height - 40);
+  if (model.qr) {
+    const { qr } = model;
+    ctx.fillStyle = '#f6f8fc';
+    roundRect(ctx, PAD, qr.boxY, model.width - PAD * 2, qr.boxHeight, 24);
+    ctx.fill();
+
+    if (qr.image) {
+      ctx.drawImage(qr.image, qr.x, qr.y, qr.size, qr.size);
+    }
+
+    ctx.fillStyle = COLORS.ink;
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('扫码看我的课表', model.width / 2, qr.y + qr.size + 48);
+
+    ctx.fillStyle = COLORS.muted;
+    ctx.font = '20px sans-serif';
+    ctx.fillText('微信扫一扫，打开小程序查看完整课表', model.width / 2, qr.y + qr.size + 80);
+    ctx.textAlign = 'left';
+  } else {
+    ctx.fillStyle = COLORS.faint;
+    ctx.font = '19px sans-serif';
+    ctx.fillText('由 百小鸮 生成 · 课表只存在手机本地', PAD, model.height - 40);
+  }
 }
 
 module.exports = { COLORS, DAY_TINT, drawWeek, fitText, layoutWeek, roundRect };

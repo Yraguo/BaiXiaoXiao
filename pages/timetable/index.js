@@ -12,7 +12,7 @@ const {
   weekRange
 } = require('../../utils/date');
 const { formatWeeks } = require('../../utils/weeks');
-const { loadCourses, loadSettings } = require('../../utils/storage');
+const { loadCourses, loadSettings, saveCourses, saveSettings } = require('../../utils/storage');
 const { loadNotes, saveNotes } = require('../../utils/appStore');
 const { confirmDelete } = require('../../utils/confirm');
 const { drawWeek, layoutWeek } = require('../../utils/shareCard');
@@ -74,17 +74,29 @@ Page({
     ballY: 0,
     ballReady: false,
     ballDragging: false,
-    toolboxOpen: false
+    toolboxOpen: false,
+    // 扫码进来的分享课表：{ id, term, count }，null 表示看的是自己的课表
+    shared: null
   },
 
-  onLoad() {
-    this.reload(true);
+  onLoad(options) {
+    const shareId = this.pickShareId(options);
+    if (shareId) {
+      this.loadShared(shareId);
+    } else {
+      this.reload(true);
+    }
     const now = new Date();
     this.openMonth(now.getFullYear(), now.getMonth(), dateStamp(now));
     this.initBall();
   },
 
   onShow() {
+    // 分享进来的课表是只读的，别被本机数据覆盖
+    if (this.data.shared) {
+      this.renderNotes();
+      return;
+    }
     if (this.loadedOnce) this.reload(false);
     this.loadedOnce = true;
     // 两个视图常驻在轨道上，回到页面时两个都要刷新
@@ -451,24 +463,139 @@ Page({
     this.setData({ toolboxOpen: false });
   },
 
+  /* ---------------- 分享 / 打开分享 ---------------- */
+
+  /** 小程序码进来是 options.scene，普通转发进来是 options.share */
+  pickShareId(options) {
+    if (!options) return '';
+    if (options.share) return String(options.share).slice(0, 16);
+    if (options.scene) {
+      const scene = decodeURIComponent(options.scene);
+      const match = /(?:^|[?&])id=([a-z0-9]+)/i.exec(scene);
+      return match ? match[1] : scene.slice(0, 16);
+    }
+    return '';
+  },
+
+  callShare(action, payload) {
+    return new Promise((resolve) => {
+      if (!wx.cloud || !wx.cloud.callFunction) {
+        resolve({ ok: false, error: 'no-cloud' });
+        return;
+      }
+      wx.cloud.callFunction({
+        name: 'share',
+        data: Object.assign({ action }, payload || {}),
+        success: (res) => resolve((res && res.result) || { ok: false }),
+        fail: (error) => resolve({ ok: false, error: String((error && error.errMsg) || error) })
+      });
+    });
+  },
+
+  /** 扫码打开：拉取分享的课表，只读展示 */
+  async loadShared(id) {
+    wx.showLoading({ title: '正在打开', mask: true });
+    const result = await this.callShare('get', { id });
+    wx.hideLoading();
+    if (!result || !result.ok || !result.share) {
+      this.reload(true);
+      wx.showModal({
+        title: '打不开这份课表',
+        content: '分享可能已失效，或者云开发还没部署 share 云函数。先看自己的课表。',
+        showCancel: false
+      });
+      return;
+    }
+    const share = result.share;
+    this.courses = (share.courses || []).map((course, index) => Object.assign({}, course, { id: `share-${index}` }));
+    this.settings = Object.assign({}, loadSettings(), share.settings || {});
+    this.setData({
+      shared: {
+        id,
+        term: share.settings && share.settings.timetableName ? share.settings.timetableName : '分享的课表',
+        count: this.courses.length
+      },
+      hasCourses: this.courses.length > 0,
+      settings: this.settings
+    });
+    this.buildView();
+  },
+
+  /** 把分享的课表存成自己的 */
+  saveShared() {
+    if (!this.data.shared) return;
+    wx.showModal({
+      title: '保存到我的课表',
+      content: `会用这 ${this.courses.length} 门课覆盖当前课表，确定吗？`,
+      confirmText: '保存',
+      success: (res) => {
+        if (!res.confirm) return;
+        saveCourses(this.courses.map((course) => {
+          const copy = Object.assign({}, course);
+          delete copy.id;
+          return copy;
+        }));
+        saveSettings(this.settings);
+        this.setData({ shared: null });
+        wx.showToast({ title: '已保存', icon: 'success' });
+        this.reload(false);
+      }
+    });
+  },
+
+  loadCanvasImage(canvas, path) {
+    return new Promise((resolve) => {
+      const image = canvas.createImage();
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = path;
+    });
+  },
+
+  /** 分享课表：先存云端拿分享码 → 生成小程序码 → 画成一张海报 */
   /**
    * 分享课表：画一张本周课表图，走微信的「分享图片」面板。
    * 真·让对方在小程序里看课表需要云端存一份，现在没有后端，图片是最接近的形态。
    */
-  shareTimetable() {
+  async shareTimetable() {
     if (!this.data.hasCourses) {
       wx.showToast({ title: '还没有课程可以分享', icon: 'none' });
       return;
     }
+
+    wx.showLoading({ title: '正在生成', mask: true });
+
+    // 1) 先把课表存到云端换一个分享码；云开发没配好就走纯图片
+    let shareId = '';
+    let qrPath = '';
+    const saved = await this.callShare('save', {
+      courses: this.courses,
+      settings: this.settings,
+      term: (this.data.settings && this.data.settings.timetableName) || ''
+    });
+    if (saved && saved.ok && saved.id) {
+      shareId = saved.id;
+      let code = await this.callShare('qrcode', { id: shareId });
+      // 还没发布正式版时 release 会失败，退回体验版再试一次
+      if (!(code && code.ok)) {
+        const trial = await this.callShare('qrcode', { id: shareId, envVersion: 'trial' });
+        if (trial && trial.ok) code = trial;
+      }
+      if (code && code.ok && code.fileID) {
+        const path = await this.downloadCloudFile(code.fileID);
+        if (path) qrPath = path;
+      }
+    }
+
+    // 2) 画图
     const model = layoutWeek(this.data.dayColumns, {
       week: this.data.week,
       range: this.data.weekTitle,
       term: this.data.settings.timetableName,
       name: '我的课表'
-    });
+    }, { withQr: Boolean(qrPath) });
 
-    wx.showLoading({ title: '正在生成', mask: true });
-    wx.createSelectorQuery().select('#shareCanvas').fields({ node: true }).exec((res) => {
+    wx.createSelectorQuery().select('#shareCanvas').fields({ node: true }).exec(async (res) => {
       const canvas = res && res[0] && res[0].node;
       if (!canvas) {
         wx.hideLoading();
@@ -477,7 +604,11 @@ Page({
       }
       canvas.width = model.width;
       canvas.height = model.height;
-      drawWeek(canvas.getContext('2d'), model);
+      const ctx = canvas.getContext('2d');
+      if (qrPath && model.qr) {
+        model.qr.image = await this.loadCanvasImage(canvas, qrPath);
+      }
+      drawWeek(ctx, model);
 
       wx.canvasToTempFilePath({
         canvas,
@@ -489,6 +620,9 @@ Page({
         destHeight: model.height,
         success: (file) => {
           wx.hideLoading();
+          if (!shareId) {
+            wx.showToast({ title: '云开发未启用，只生成了图片', icon: 'none' });
+          }
           if (wx.showShareImageMenu) {
             wx.showShareImageMenu({
               path: file.tempFilePath,
@@ -500,13 +634,26 @@ Page({
             });
           } else {
             wx.previewImage({ urls: [file.tempFilePath], current: file.tempFilePath });
-            wx.showToast({ title: '长按图片可保存/转发', icon: 'none' });
           }
         },
         fail: () => {
           wx.hideLoading();
           wx.showToast({ title: '生成失败，重试一次', icon: 'none' });
         }
+      });
+    });
+  },
+
+  downloadCloudFile(fileID) {
+    return new Promise((resolve) => {
+      if (!wx.cloud || !wx.cloud.downloadFile) {
+        resolve('');
+        return;
+      }
+      wx.cloud.downloadFile({
+        fileID,
+        success: (res) => resolve(res.tempFilePath || ''),
+        fail: () => resolve('')
       });
     });
   },
