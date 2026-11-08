@@ -19,7 +19,7 @@
   <view class="view-viewport">
   <view class="view-track" style="transform:translateX({{view === 'notes' ? '-50%' : '0%'}})">
     <view class="view-page">
-  <view class="week-card {{weekAnim}}">
+  <view class="week-card">
     <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
     <view
       class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
