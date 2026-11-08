@@ -1,52 +1,57 @@
 /* 减掉自定义 tabBar 的高度，否则输入区会被底部导航压住 */
-.uni-page { display: flex; flex-direction: column; height: 100%; background: #f2f2f7; }
+.uni-page { display: flex; flex-direction: column; height: 100%; background: var(--surface-17); }
 
 .uni-head { display: flex; align-items: center; justify-content: space-between; padding: 20rpx 28rpx 12rpx; }
 .uni-brand { display: flex; align-items: center; gap: 14rpx; min-width: 0; }
 .brand-logo { width: 60rpx; height: 60rpx; flex: none; display: block; border-radius: 18rpx; background: var(--brand-light); }
 .brand-text { display: flex; flex-direction: column; min-width: 0; }
-.brand-name { font-size: 34rpx; font-weight: 700; line-height: 1.2; }
-.uni-copy { color: var(--muted); font-size: 20rpx; }
-.history-button { flex: 0 0 auto; padding: 12rpx 26rpx; border-radius: 18rpx; background: #fff; color: var(--brand); font-size: 23rpx; }
-.history-button:active { background: #eef2f7; }
+.brand-name { font-size: calc(34rpx * var(--fs, 1)); font-weight: 700; line-height: 1.2; }
+.uni-copy { color: var(--muted); font-size: calc(20rpx * var(--fs, 1)); }
+.history-button { flex: 0 0 auto; padding: 12rpx 26rpx; border-radius: 18rpx; background: var(--surface-1); color: var(--brand); font-size: calc(23rpx * var(--fs, 1)); }
+.history-button:active { background: var(--surface-22); }
 
 .messages { flex: 1; min-height: 0; box-sizing: border-box; padding: 8rpx 24rpx 20rpx; }
 
 .welcome { margin: 56rpx 20rpx 0; text-align: center; }
 .welcome-logo { display: block; width: 180rpx; height: 180rpx; margin: 0 auto 12rpx; }
-.welcome-title { font-size: 34rpx; font-weight: 700; }
-.welcome-copy { margin-top: 10rpx; color: var(--muted); font-size: 23rpx; }
+.welcome-title { font-size: calc(34rpx * var(--fs, 1)); font-weight: 700; }
+.welcome-copy { margin-top: 10rpx; color: var(--muted); font-size: calc(23rpx * var(--fs, 1)); }
 .suggestions { display: flex; flex-direction: column; gap: 14rpx; margin-top: 36rpx; }
-.chip { padding: 20rpx 24rpx; border-radius: 18rpx; background: #fff; color: var(--text); font-size: 25rpx; text-align: left; }
-.chip:active { background: #eef2f7; }
+.chip { padding: 20rpx 24rpx; border-radius: 18rpx; background: var(--surface-1); color: var(--text); font-size: calc(25rpx * var(--fs, 1)); text-align: left; }
+.chip:active { background: var(--surface-22); }
 
 .message { display: flex; align-items: flex-start; gap: 14rpx; margin: 22rpx 0; }
 .message.user { justify-content: flex-end; }
 .msg-avatar { display: block; flex: none; width: 64rpx; height: 64rpx; }
-.bubble { max-width: 76%; padding: 18rpx 22rpx; border-radius: 20rpx; background: #fff; color: var(--text); font-size: 27rpx; line-height: 1.55; word-break: break-word; }
+.bubble { max-width: 76%; padding: 18rpx 22rpx; border-radius: 20rpx; background: var(--surface-1); color: var(--text); font-size: calc(27rpx * var(--fs, 1)); line-height: 1.55; word-break: break-word; }
 .user .bubble { border-radius: 20rpx 20rpx 6rpx 20rpx; background: var(--brand); color: #fff; }
 
-.voice-hint { margin: 0 24rpx 8rpx; padding: 14rpx 18rpx; border-radius: 16rpx; background: #fff7e6; color: #8a5a00; font-size: 22rpx; }
+.voice-hint { margin: 0 24rpx 8rpx; padding: 14rpx 18rpx; border-radius: 16rpx; background: #fff7e6; color: #8a5a00; font-size: calc(22rpx * var(--fs, 1)); }
 
 /* 输入区全部用 view：button 在 flex 里会被拉伸，曾把输入框挤成一个空壳 */
-.composer { display: flex; align-items: center; gap: 14rpx; padding: 14rpx 22rpx calc(14rpx + env(safe-area-inset-bottom)); background: #fff; border-top: 1rpx solid var(--line); }
-.composer-icon { display: flex; flex: 0 0 72rpx; align-items: center; justify-content: center; width: 72rpx; min-width: 72rpx; max-width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--brand-light); color: var(--brand); font-size: 30rpx; }
-.composer-field { display: flex; flex: 1; min-width: 0; align-items: center; height: 72rpx; padding: 0 22rpx; border-radius: 36rpx; background: #f2f2f7; }
-.composer-input { flex: 1; min-width: 0; height: 72rpx; font-size: 27rpx; }
-.composer-placeholder { color: #b6bcc6; }
-.send { flex: 0 0 104rpx; width: 104rpx; min-width: 104rpx; max-width: 104rpx; height: 72rpx; border-radius: 24rpx; background: #c8d2e0; color: #fff; font-size: 26rpx; line-height: 72rpx; text-align: center; }
+.composer { display: flex; align-items: center; gap: 14rpx; padding: 14rpx 22rpx calc(14rpx + env(safe-area-inset-bottom)); background: var(--surface-1); border-top: 1rpx solid var(--line); }
+.composer-icon { display: flex; flex: 0 0 72rpx; align-items: center; justify-content: center; width: 72rpx; min-width: 72rpx; max-width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--brand-light); color: var(--brand); font-size: calc(30rpx * var(--fs, 1)); }
+.composer-field { display: flex; flex: 1; min-width: 0; align-items: center; height: 72rpx; padding: 0 22rpx; border-radius: 36rpx; background: var(--surface-17); }
+.composer-input { flex: 1; min-width: 0; height: 72rpx; font-size: calc(27rpx * var(--fs, 1)); }
+.composer-placeholder { color: var(--ink-3); }
+.send { flex: 0 0 104rpx; width: 104rpx; min-width: 104rpx; max-width: 104rpx; height: 72rpx; border-radius: 24rpx; background: var(--surface-30); color: #fff; font-size: calc(26rpx * var(--fs, 1)); line-height: 72rpx; text-align: center; }
 .send.ready { background: var(--brand); }
 .send.ready:active { opacity: .85; }
 
 .mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; display: flex; align-items: flex-end; background: rgba(13, 19, 29, .48); }
-.history-sheet { width: 100%; box-sizing: border-box; max-height: 78vh; padding: 28rpx 24rpx calc(28rpx + env(safe-area-inset-bottom)); border-radius: 32rpx 32rpx 0 0; background: #f7f7fa; }
-.sheet-head { display: flex; justify-content: space-between; padding: 4rpx 6rpx 22rpx; font-size: 32rpx; font-weight: 700; }
-.close { color: var(--brand); font-size: 25rpx; font-weight: 400; }
-.history-list { max-height: 52vh; border-radius: 22rpx; background: #fff; }
-.history-row { display: flex; gap: 18rpx; padding: 20rpx 22rpx; border-bottom: 1rpx solid var(--line); font-size: 26rpx; }
+.history-sheet { width: 100%; box-sizing: border-box; max-height: 78vh; padding: 28rpx 24rpx calc(28rpx + env(safe-area-inset-bottom)); border-radius: 32rpx 32rpx 0 0; background: var(--surface-10); }
+.sheet-head { display: flex; justify-content: space-between; padding: 4rpx 6rpx 22rpx; font-size: calc(32rpx * var(--fs, 1)); font-weight: 700; }
+.close { color: var(--brand); font-size: calc(25rpx * var(--fs, 1)); font-weight: 400; }
+.history-list { max-height: 52vh; border-radius: 22rpx; background: var(--surface-1); }
+.history-row { display: flex; gap: 18rpx; padding: 20rpx 22rpx; border-bottom: 1rpx solid var(--line); font-size: calc(26rpx * var(--fs, 1)); }
 .history-row:last-child { border-bottom: 0; }
-.history-role { flex: none; width: 64rpx; color: var(--brand); font-size: 23rpx; }
+.history-role { flex: none; width: 64rpx; color: var(--brand); font-size: calc(23rpx * var(--fs, 1)); }
 .history-text { flex: 1; min-width: 0; line-height: 1.45; word-break: break-all; }
-.history-empty { padding: 46rpx 40rpx 56rpx; color: var(--muted); font-size: 24rpx; text-align: center; }
+.history-empty { padding: 46rpx 40rpx 56rpx; color: var(--muted); font-size: calc(24rpx * var(--fs, 1)); text-align: center; }
 .history-owl { display: block; width: 150rpx; height: 150rpx; margin: 0 auto 8rpx; }
-.history-clear { margin-top: 20rpx; padding: 22rpx; border-radius: 20rpx; background: #fff; color: var(--danger); font-size: 26rpx; text-align: center; }
+.history-clear { margin-top: 20rpx; padding: 22rpx; border-radius: 20rpx; background: var(--surface-1); color: var(--danger); font-size: calc(26rpx * var(--fs, 1)); text-align: center; }
+
+/* 暗色：彩色标签的底色被压暗后，文字要跟着提亮（脚本生成） */
+@media (prefers-color-scheme: dark) {
+  .voice-hint { color: #edcd92; }
+}

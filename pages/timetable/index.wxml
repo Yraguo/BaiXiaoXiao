@@ -66,8 +66,11 @@
     <button class="secondary-button empty-button" bindtap="openImport">导入课表</button>
   </view>
 
-  <!-- 左右滑动换周只在课表方框内生效；catch 阻止冒泡，容器页因此收不到这次手势 -->
-  <view wx:else class="timetable-card {{weekAnim}}" catchtouchstart="rememberTouch" catchtouchend="finishTouch">
+  <!-- 左右滑动换周只在课表方框内生效。
+       touchstart 用 bind 不用 catch：catch 会把这次触摸从 scroll-view 的手势
+       识别里摘出去，表现为「能左右切周、但上下拖不动」（踩过）。
+       只 catch 住 touchend，容器页就收不到这次手势，不会误切 tab。 -->
+  <view wx:else class="timetable-card {{weekAnim}}" bindtouchstart="rememberTouch" catchtouchend="finishTouch">
     <view class="table-head">
       <view class="period-head">
         <text class="period-month">{{headMonth}}</text>
@@ -131,8 +134,8 @@
 
     <view class="view-page">
     <view class="notes-layer">
-    <!-- 日历方框内左右滑动换月，同样 catch 住 -->
-    <view class="calendar" catchtouchstart="rememberTouch" catchtouchend="finishTouch">
+    <!-- 日历方框内左右滑动换月，同样只 catch touchend -->
+    <view class="calendar" bindtouchstart="rememberTouch" catchtouchend="finishTouch">
       <view class="calendar-head">
         <view class="month-nav" bindtap="previousMonth" aria-role="button" aria-label="上个月">‹</view>
         <view class="month-title" bindtap="goToday">

@@ -2,10 +2,10 @@
 .tab-scroll .page-shell { min-height: 0; }
 
 .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; }
-.service-card { min-height: 214rpx; padding: 26rpx 14rpx 22rpx; border-radius: 24rpx; background: #fff; text-align: center; transition: transform .12s ease; }
-.service-card:active { transform: scale(.97); background: #f8f8fa; }
+.service-card { min-height: 214rpx; padding: 26rpx 14rpx 22rpx; border-radius: 24rpx; background: var(--surface-1); text-align: center; transition: transform .12s ease; }
+.service-card:active { transform: scale(.97); background: var(--surface-7); }
 .service-icon-wrap { display: flex; align-items: center; justify-content: center; width: 78rpx; height: 78rpx; margin: 0 auto 16rpx; border-radius: 24rpx; background: var(--brand-light); }
 .service-icon { display: block; width: 46rpx; height: 46rpx; }
-.service-name { font-size: 27rpx; font-weight: 600; }
-.service-copy { margin-top: 8rpx; color: var(--muted); font-size: 20rpx; line-height: 1.35; }
-.campus-note { margin: 24rpx 10rpx; color: var(--muted); font-size: 22rpx; line-height: 1.55; }
+.service-name { font-size: calc(27rpx * var(--fs, 1)); font-weight: 600; }
+.service-copy { margin-top: 8rpx; color: var(--muted); font-size: calc(20rpx * var(--fs, 1)); line-height: 1.35; }
+.campus-note { margin: 24rpx 10rpx; color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); line-height: 1.55; }

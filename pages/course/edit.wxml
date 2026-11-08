@@ -1,3 +1,4 @@
+<page-meta page-style="{{pageStyle}}"></page-meta>
 <view class="form-page safe-bottom">
   <view class="form-card">
     <view class="field">

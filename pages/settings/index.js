@@ -6,15 +6,18 @@ const {
   saveSettings
 } = require('../../utils/storage');
 const { confirmDelete } = require('../../utils/confirm');
+const display = require('../../utils/display');
 
 Page({
   data: {
+    pageStyle: '',
     settings: {},
     totalWeekOptions: Array.from({ length: 30 }, (_, index) => index + 1),
     totalWeekIndex: 17
   },
 
   onLoad() {
+    this.setData({ pageStyle: display.pageStyle() });
     const settings = loadSettings();
     this.setData({
       settings,

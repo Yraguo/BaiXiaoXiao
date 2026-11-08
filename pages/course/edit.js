@@ -3,10 +3,12 @@ const { DAY_NAMES } = require('../../utils/constants');
 const { formatWeeks } = require('../../utils/weeks');
 const { loadCourses, loadSettings, saveCourses } = require('../../utils/storage');
 const { confirmDelete } = require('../../utils/confirm');
+const display = require('../../utils/display');
 
 
 Page({
   data: {
+    pageStyle: '',
     isEditing: false,
     draft: {},
     dayNames: DAY_NAMES,
@@ -19,6 +21,7 @@ Page({
   },
 
   onLoad(options) {
+    this.setData({ pageStyle: display.pageStyle() });
     this.settings = loadSettings();
     this.courses = loadCourses();
     const existing = options.id ? this.courses.find((course) => course.id === options.id) : null;

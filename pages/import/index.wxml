@@ -1,3 +1,4 @@
+<page-meta page-style="{{pageStyle}}"></page-meta>
 <view class="import-page">
   <view class="mode-switch">
     <view class="mode-item active">云端导入</view>

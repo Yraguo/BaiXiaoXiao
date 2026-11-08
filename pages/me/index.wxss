@@ -1,44 +1,66 @@
 .tab-scroll { width: 100%; height: 100%; }
 .tab-scroll .page-shell { min-height: 0; }
 
-.profile-card { display: flex; align-items: center; gap: 22rpx; padding: 28rpx; border-radius: 26rpx; background: #fff; }
-.profile-card:active { background: #fafafc; }
+.profile-card { display: flex; align-items: center; gap: 22rpx; padding: 28rpx; border-radius: 26rpx; background: var(--surface-1); }
+.profile-card:active { background: var(--surface-3); }
 .profile-main { flex: 1; min-width: 0; }
 .avatar { width: 92rpx; height: 92rpx; flex: none; display: block; border-radius: 26rpx; background: var(--brand-light); }
-.profile-name { overflow: hidden; font-size: 34rpx; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.profile-copy { margin-top: 7rpx; color: var(--muted); font-size: 23rpx; }
+.profile-name { overflow: hidden; font-size: calc(34rpx * var(--fs, 1)); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.profile-copy { margin-top: 7rpx; color: var(--muted); font-size: calc(23rpx * var(--fs, 1)); }
 
-.stats { display: flex; margin-top: 18rpx; padding: 22rpx 0; border-radius: 24rpx; background: #fff; }
+.stats { display: flex; margin-top: 18rpx; padding: 22rpx 0; border-radius: 24rpx; background: var(--surface-1); }
 .stats > view { flex: 1; border-right: 1rpx solid var(--line); text-align: center; }
 .stats > view:last-child { border-right: 0; }
 .stats text, .stats label { display: block; }
-.stats text { font-size: 34rpx; font-weight: 700; }
-.stats label { margin-top: 3rpx; color: var(--muted); font-size: 21rpx; }
+.stats text { font-size: calc(34rpx * var(--fs, 1)); font-weight: 700; }
+.stats label { margin-top: 3rpx; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); }
 
 .danger-row .row-title { color: var(--danger); }
-.privacy { padding: 24rpx 12rpx; color: var(--muted); font-size: 22rpx; line-height: 1.55; }
+.privacy { padding: 24rpx 12rpx; color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); line-height: 1.55; }
 
 .mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; display: flex; align-items: flex-end; background: rgba(13, 19, 29, .48); }
-.sheet { width: 100%; box-sizing: border-box; padding: 32rpx 28rpx calc(34rpx + env(safe-area-inset-bottom)); border-radius: 34rpx 34rpx 0 0; background: #f7f7fa; }
-.sheet-title { margin-bottom: 20rpx; font-size: 34rpx; font-weight: 700; }
+.sheet { width: 100%; box-sizing: border-box; padding: 32rpx 28rpx calc(34rpx + env(safe-area-inset-bottom)); border-radius: 34rpx 34rpx 0 0; background: var(--surface-10); }
+.sheet-title { margin-bottom: 20rpx; font-size: calc(34rpx * var(--fs, 1)); font-weight: 700; }
 
 .avatar-editor { display: flex; flex-direction: column; align-items: center; padding: 10rpx 0 28rpx; }
 /* chooseAvatar 必须是 button，这里把尺寸锁死，避免被默认样式撑变形 */
 .avatar-button { width: 152rpx; min-width: 152rpx; max-width: 152rpx; height: 152rpx; min-height: 152rpx; max-height: 152rpx; margin: 0; padding: 0; border-radius: 50%; background: transparent; line-height: 1; overflow: hidden; }
 .avatar-button::after { border: 0; }
 .avatar-preview { display: block; width: 152rpx; height: 152rpx; border-radius: 50%; background: var(--brand-light); }
-.avatar-hint { margin-top: 16rpx; color: var(--brand); font-size: 23rpx; }
+.avatar-hint { margin-top: 16rpx; color: var(--brand); font-size: calc(23rpx * var(--fs, 1)); }
 
-.editor-field { display: flex; align-items: center; gap: 20rpx; padding: 20rpx 24rpx; border-radius: 20rpx; background: #fff; }
-.editor-label { flex: none; color: var(--muted); font-size: 24rpx; }
-.editor-input { flex: 1; min-width: 0; height: 64rpx; font-size: 28rpx; }
+.editor-field { display: flex; align-items: center; gap: 20rpx; padding: 20rpx 24rpx; border-radius: 20rpx; background: var(--surface-1); }
+.editor-label { flex: none; color: var(--muted); font-size: calc(24rpx * var(--fs, 1)); }
+.editor-input { flex: 1; min-width: 0; height: 64rpx; font-size: calc(28rpx * var(--fs, 1)); }
 .editor-save { margin-top: 26rpx; }
-.editor-note { margin-top: 16rpx; color: var(--muted); font-size: 21rpx; text-align: center; }
+.editor-note { margin-top: 16rpx; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); text-align: center; }
 
 /* 第二课堂累计自评 */
 .second-card { margin-top: 20rpx; padding: 26rpx 24rpx; }
 .second-top { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
-.second-num { flex: none; color: var(--brand); font-size: 40rpx; font-weight: 800; letter-spacing: -.5rpx; }
-.second-full { color: #b3bac5; font-size: 22rpx; font-weight: 500; }
-.second-bar { margin-top: 18rpx; height: 8rpx; border-radius: 999rpx; background: #eef1f6; overflow: hidden; }
+.second-num { flex: none; color: var(--brand); font-size: calc(40rpx * var(--fs, 1)); font-weight: 800; letter-spacing: -.5rpx; }
+.second-full { color: var(--ink-4); font-size: calc(22rpx * var(--fs, 1)); font-weight: 500; }
+.second-bar { margin-top: 18rpx; height: 8rpx; border-radius: 999rpx; background: var(--surface-24); overflow: hidden; }
 .second-bar-fill { height: 100%; border-radius: 999rpx; background: linear-gradient(90deg, #4d9dff, #007aff); }
+
+/* ---------------- 字号 ---------------- */
+
+.row-value { flex: none; color: var(--muted); font-size: calc(25rpx * var(--fs, 1)); }
+
+.font-list { display: flex; flex-direction: column; gap: 16rpx; }
+.font-item {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 24rpx 22rpx;
+  border: 2rpx solid transparent;
+  border-radius: 20rpx;
+  background: var(--surface-14);
+}
+.font-item.active { border-color: var(--brand); background: var(--brand-light); }
+.font-main { flex: 1; min-width: 0; }
+.font-name { font-size: calc(28rpx * var(--fs, 1)); font-weight: 600; color: var(--text); }
+.font-desc { margin-top: 4rpx; font-size: calc(21rpx * var(--fs, 1)); color: var(--muted); }
+.font-demo { flex: none; color: var(--text); font-weight: 700; line-height: 1; }
+.font-check { flex: none; color: var(--brand); font-size: calc(30rpx * var(--fs, 1)); font-weight: 700; }
+.font-note { margin-top: 24rpx; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); line-height: 1.5; }

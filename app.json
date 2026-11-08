@@ -15,6 +15,8 @@
     "backgroundColor": "#f2f2f7",
     "backgroundTextStyle": "light"
   },
+  "darkmode": true,
+  "themeLocation": "theme.json",
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "permission": {

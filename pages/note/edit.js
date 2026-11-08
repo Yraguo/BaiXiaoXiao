@@ -1,9 +1,12 @@
 const { loadNotes, saveNotes } = require('../../utils/appStore');
 const { dateStamp } = require('../../utils/date');
+const display = require('../../utils/display');
 
 Page({
-  data: { draft: { title: '', content: '', date: '', remindAt: '', done: false } },
+  data: {
+    pageStyle: '', draft: { title: '', content: '', date: '', remindAt: '', done: false } },
   onLoad(options) {
+    this.setData({ pageStyle: display.pageStyle() });
     this.id = options.id || '';
     const existing = loadNotes().find((item) => item.id === this.id);
     if (existing) {

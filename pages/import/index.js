@@ -8,6 +8,7 @@ const { loadCourses, loadSettings, saveCourses, saveSettings } = require('../../
 const { refreshTimetable } = require('../../utils/nav');
 const { currentWeek } = require('../../utils/date');
 const { formatWeeks } = require('../../utils/weeks');
+const display = require('../../utils/display');
 
 const DEFAULT_ADDRESS = 'https://jwglxt.buct.edu.cn/jwglxt/xtgl/login_slogin.html';
 
@@ -23,6 +24,7 @@ const CREDENTIAL_ERRORS = [
 
 Page({
   data: {
+    pageStyle: '',
     address: DEFAULT_ADDRESS,
     showAdvanced: false,
     username: '',
@@ -51,6 +53,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ pageStyle: display.pageStyle() });
     const term = currentTerm();
     // 学年可选前后各一年：补导上一学年、或开学前先导下一学年都走得通
     const base = Number(term.xnm);

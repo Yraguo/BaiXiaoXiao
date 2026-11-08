@@ -1,6 +1,7 @@
 .main-page {
   height: 100vh;
-  background: #f2f2f7;
+  /* 暗色下页面底要比卡片更暗，所以用 --background 而不是表面色阶 */
+  background: var(--background);
 }
 
 /* 底部导航是浮层，视口要把它的高度让出来，否则内容会被压在导航栏下面 */

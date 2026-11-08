@@ -1,3 +1,4 @@
+<page-meta page-style="{{pageStyle}}"></page-meta>
 <view class="page-shell">
   <view class="card form-card">
     <view class="field"><text>标题</text><input value="{{draft.title}}" data-field="title" bindinput="update" maxlength="40" placeholder="例如：完成高数作业" /></view>

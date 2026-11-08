@@ -25,6 +25,7 @@ const {
 } = require('../../utils/secondclass');
 const { buildFullBackup, photoNameFor } = require('../../utils/backup');
 const { buildZip, readText, readZip } = require('../../utils/zip');
+const display = require('../../utils/display');
 
 const pageLogic = {
   data: {
@@ -36,11 +37,17 @@ const pageLogic = {
     secondLine: '德 0 · 智 0 · 体 0 · 美 0 · 劳 0',
     profile: { avatarUrl: DEFAULT_AVATAR, nickName: '同学' },
     editing: false,
-    draft: { avatarUrl: DEFAULT_AVATAR, nickName: '' }
+    draft: { avatarUrl: DEFAULT_AVATAR, nickName: '' },
+    // 字号：深色模式跟随系统，这里只让用户调字号
+    fontLevels: display.LEVELS,
+    fontLevel: 'normal',
+    fontName: '标准',
+    fontOpen: false
   },
 
   onShow() {
     this.refresh();
+    this.refreshFont();
   },
 
   refresh() {
@@ -57,6 +64,24 @@ const pageLogic = {
   },
 
   openSettings() { wx.navigateTo({ url: '/pages/settings/index' }); },
+
+  /* ---------------- 字号 ---------------- */
+
+  refreshFont() {
+    const pref = display.load();
+    this.setData({ fontLevel: pref.font, fontName: display.levelOf(pref.font).name });
+  },
+
+  openFont() { this.setData({ fontOpen: true }); },
+  closeFont() { this.setData({ fontOpen: false }); },
+
+  chooseFont(event) {
+    const key = event.currentTarget.dataset.key;
+    display.save({ font: key });
+    this.setData({ fontLevel: key, fontName: display.levelOf(key).name, fontOpen: false });
+    // 真正改 --fs 的是容器页（页面根节点在它手上）
+    this.triggerEvent('fontchange', { font: key });
+  },
 
   // 五个 tab 同一个页面，跳转改成请容器页切 swiper
   openSecondClass() { this.triggerEvent('tabrequest', { index: 1 }); },

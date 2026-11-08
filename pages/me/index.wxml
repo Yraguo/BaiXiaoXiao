@@ -38,6 +38,14 @@
       <view class="row-main"><view class="row-title">课表设置</view><view class="row-copy">学期、周数与节次时间</view></view>
       <text class="chevron">›</text>
     </view>
+    <view class="row" bindtap="openFont">
+      <view class="row-main">
+        <view class="row-title">字号</view>
+        <view class="row-copy">深色模式跟随手机系统，无需单独开关</view>
+      </view>
+      <text class="row-value">{{fontName}}</text>
+      <text class="chevron">›</text>
+    </view>
     <view class="row" bindtap="exportBackup">
       <view class="row-main"><view class="row-title">备份到微信</view><view class="row-copy">课表 + 二课 + 照片打成一个 zip，发给文件传输助手</view></view>
       <text class="chevron">›</text>
@@ -81,5 +89,31 @@
 
     <button class="primary-button editor-save" bindtap="saveProfileEdits">保存</button>
     <view class="editor-note">头像和昵称只写在本机缓存，不上传服务器。</view>
+  </view>
+</view>
+
+<!-- 字号选择 -->
+<view wx:if="{{fontOpen}}" class="mask" bindtap="closeFont">
+  <view class="sheet safe-bottom" catchtap="noop">
+    <view class="sheet-title">选择字号</view>
+    <view class="font-list">
+      <view
+        wx:for="{{fontLevels}}"
+        wx:key="key"
+        class="font-item {{fontLevel === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="chooseFont"
+        aria-role="button"
+        aria-selected="{{fontLevel === item.key}}"
+      >
+        <view class="font-main">
+          <view class="font-name">{{item.name}}</view>
+          <view class="font-desc">{{item.desc}}</view>
+        </view>
+        <view class="font-demo" style="font-size: calc(30rpx * {{item.scale}} * var(--fs, 1))">Aa</view>
+        <text wx:if="{{fontLevel === item.key}}" class="font-check">✓</text>
+      </view>
+    </view>
+    <view class="font-note">深色 / 浅色跟随手机的「外观」设置自动切换，不需要在这里选。</view>
   </view>
 </view>

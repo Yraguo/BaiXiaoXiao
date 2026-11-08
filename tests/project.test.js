@@ -391,3 +391,50 @@ test('仓库里的 AppID 只能是占位符，真实的留在 project.private.co
   walk(root);
   assert.deepEqual(hits, [], `真实 AppID 应该只存在 project.private.config.json（已 gitignore）：\n${hits.join('\n')}`);
 });
+
+test('深色模式跟随系统：app.json 开了 darkmode，theme.json 两套都在', () => {
+  const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
+  assert.equal(app.darkmode, true, '不开 darkmode，wxss 里的 prefers-color-scheme 不生效');
+  assert.equal(app.themeLocation, 'theme.json');
+
+  const theme = JSON.parse(fs.readFileSync(path.join(root, 'theme.json'), 'utf8'));
+  ['light', 'dark'].forEach((scheme) => {
+    assert.ok(theme[scheme], `theme.json 缺少 ${scheme}`);
+    assert.ok(theme[scheme].navigationBarBackgroundColor, `${scheme} 缺少导航栏底色`);
+  });
+
+  const appWxss = fs.readFileSync(path.join(root, 'app.wxss'), 'utf8');
+  assert.match(appWxss, /@media \(prefers-color-scheme: dark\)/, '要有暗色媒体查询');
+  assert.match(appWxss, /--background:\s*#0f0f11/, '暗色页面底色要落到变量里');
+});
+
+test('字号可缩放：字号都乘了 --fs，且页面挂了 page-meta', () => {
+  const appWxss = fs.readFileSync(path.join(root, 'app.wxss'), 'utf8');
+  assert.match(appWxss, /--fs:\s*1;/, '默认缩放系数要是 1，视觉与改动前一致');
+
+  const wxssFiles = [];
+  (function walk(dir) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+      if (entry.name === '.git' || entry.name === 'node_modules') return;
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(file);
+      else if (entry.name.endsWith('.wxss')) wxssFiles.push(file);
+    });
+  })(root);
+
+  const fixed = [];
+  wxssFiles.forEach((file) => {
+    const css = fs.readFileSync(file, 'utf8');
+    (css.match(/font-size:\s*\d+(?:\.\d+)?rpx/g) || []).forEach((hit) => {
+      fixed.push(`${path.relative(root, file)}: ${hit}`);
+    });
+  });
+  assert.deepEqual(fixed, [], `这些字号没接 --fs，调字号时不会跟着变：\n${fixed.join('\n')}`);
+
+  // 每个页面都要有 page-meta，否则页面根的 --fs 设不进去
+  const pages = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8')).pages;
+  pages.forEach((page) => {
+    const wxml = fs.readFileSync(path.join(root, `${page}.wxml`), 'utf8');
+    assert.match(wxml, /<page-meta page-style="\{\{pageStyle\}\}">/, `${page} 缺少 page-meta`);
+  });
+});

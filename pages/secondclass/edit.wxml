@@ -1,3 +1,4 @@
+<page-meta page-style="{{pageStyle}}"></page-meta>
 <view class="page-shell">
 
   <!-- 顶部回显：这条记录会加到哪一栏、还剩多少分 -->

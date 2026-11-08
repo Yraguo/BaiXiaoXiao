@@ -1,9 +1,9 @@
 .form-card { padding: 0 24rpx; }
 .field { padding: 24rpx 0; border-bottom: 1rpx solid var(--line); }
 .field:last-child { border-bottom: 0; }
-.field > text { display: block; margin-bottom: 14rpx; color: var(--muted); font-size: 23rpx; }
-input, textarea { width: 100%; min-height: 72rpx; padding: 16rpx 18rpx; border-radius: 16rpx; background: #f7f7f9; font-size: 28rpx; }
+.field > text { display: block; margin-bottom: 14rpx; color: var(--muted); font-size: calc(23rpx * var(--fs, 1)); }
+input, textarea { width: 100%; min-height: 72rpx; padding: 16rpx 18rpx; border-radius: 16rpx; background: var(--surface-11); font-size: calc(28rpx * var(--fs, 1)); }
 textarea { min-height: 180rpx; }
-.picker-value { display: flex; align-items: center; justify-content: space-between; height: 76rpx; padding: 0 18rpx; border-radius: 16rpx; background: #f7f7f9; font-size: 28rpx; }
-.picker-value .chevron { color: #c7c7cc; font-size: 30rpx; }
-.footnote { padding: 20rpx 12rpx; color: var(--muted); font-size: 22rpx; line-height: 1.5; }
+.picker-value { display: flex; align-items: center; justify-content: space-between; height: 76rpx; padding: 0 18rpx; border-radius: 16rpx; background: var(--surface-11); font-size: calc(28rpx * var(--fs, 1)); }
+.picker-value .chevron { color: var(--ink-1); font-size: calc(30rpx * var(--fs, 1)); }
+.footnote { padding: 20rpx 12rpx; color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); line-height: 1.5; }

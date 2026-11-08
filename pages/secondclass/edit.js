@@ -8,6 +8,7 @@ const {
   usageOf
 } = require('../../utils/secondclass');
 const { confirmDelete } = require('../../utils/confirm');
+const display = require('../../utils/display');
 
 // 一张就够用：主要是证明参加过，多了反而占空间（旧记录里的多张照片不会删）
 const MAX_PHOTOS = 1;
@@ -57,6 +58,7 @@ function blankDraft(plateKey) {
 
 Page({
   data: {
+    pageStyle: '',
     isEditing: false,
     plates: PLATES,
     plateIndex: 0,
@@ -82,6 +84,7 @@ Page({
   },
 
   onLoad(options) {
+    this.setData({ pageStyle: display.pageStyle() });
     const list = loadClasses().map(normalizeRecord);
     const existing = options && options.id ? list.find((record) => record.id === options.id) : null;
 
@@ -337,9 +340,15 @@ Page({
     });
   },
 
-  /** 五个板块各自的累计分，挂到 plate 上给 WXML 直接用 */
+  /**
+   * 五个板块各自的累计分，挂到 plate 上给 WXML 直接用。
+   *
+   * 这里**不能**排除正在编辑的那条记录：用户在列表里点开刚加的那条德育，
+   * 板块条会瞬间从 10 掉回 0，看着像分数丢了。额度回显（usageOf）才需要
+   * 扣掉自己，因为算的是「还能再加多少」。
+   */
   platesWithTotals() {
-    const totals = plateTotals(this.records || loadClasses(), this.data.draft.id);
+    const totals = plateTotals(loadClasses());
     return PLATES.map((plate) => Object.assign({}, plate, { usageText: totals[plate.key] }));
   },
 

@@ -1,5 +1,7 @@
 const TITLES = ['我的课表', '第二课堂', '小鸮', '校园服务', '我的'];
 
+const display = require('../../utils/display');
+
 /**
  * 五个 tab 现在住在同一个页面的 swiper 里。
  *
@@ -13,12 +15,14 @@ Page({
   data: {
     current: 0,
     // 页面参数原样传给课表组件，分享链接里的 share 参数要靠它
-    pageQuery: {}
+    pageQuery: {},
+    // 字号：写成 page-style 挂到页面根节点，五个 tab 一起缩放
+    pageStyle: ''
   },
 
   onLoad(options) {
     const query = options || {};
-    this.setData({ pageQuery: query });
+    this.setData({ pageQuery: query, pageStyle: display.pageStyle() });
 
     // 从分享卡片进来时直接落在课表，用户扫一眼就能看到内容
     if (query.share || query.shareId) {
@@ -79,6 +83,11 @@ Page({
   onTabRequest(event) {
     // 页面之间的互跳（比如「我的」里点第二课堂）
     this.applyTab(event.detail.index);
+  },
+
+  // 「我的」里改了字号：组件自己存好，这里只负责把页面根的 --fs 换掉
+  onFontChange(event) {
+    this.setData({ pageStyle: display.pageStyle(event.detail.font) });
   },
 
   applyTab(index) {
