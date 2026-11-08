@@ -8,12 +8,17 @@ const {
   saveProfile
 } = require('../../utils/profile');
 const { confirmDelete } = require('../../utils/confirm');
+const { summarize, TOTAL_FULL } = require('../../utils/secondclass');
+const { loadClasses } = require('../../utils/appStore');
 
 Page({
   data: {
     courseCount: 0,
     noteCount: 0,
     historyCount: 0,
+    secondTotal: '0',
+    secondFull: TOTAL_FULL,
+    secondLine: '德 0 · 智 0 · 体 0 · 美 0 · 劳 0',
     profile: { avatarUrl: DEFAULT_AVATAR, nickName: '同学' },
     editing: false,
     draft: { avatarUrl: DEFAULT_AVATAR, nickName: '' }
@@ -24,15 +29,37 @@ Page({
   },
 
   refresh() {
+    const summary = summarize(loadClasses());
     this.setData({
       courseCount: loadCourses().length,
       noteCount: loadNotes().filter((item) => !item.deletedAt).length,
       historyCount: loadHistory().length,
+      secondTotal: summary.totalText,
+      secondPercent: Math.min(100, Math.round(summary.total / TOTAL_FULL * 100)),
+      secondLine: summary.plates.map((plate) => `${plate.short} ${plate.score}`).join(' · '),
       profile: loadProfile()
     });
   },
 
   openSettings() { wx.navigateTo({ url: '/pages/settings/index' }); },
+
+  // 第二课堂是 tabBar 页面，只能用 switchTab
+  openSecondClass() { wx.switchTab({ url: '/pages/secondclass/index' }); },
+
+  /** 本机数据导出成 JSON 文本，方便换手机时手动搬 */
+  copyMyData() {
+    const snapshot = {
+      exportedAt: new Date().toISOString(),
+      courses: loadCourses(),
+      notes: loadNotes(),
+      secondClass: loadClasses(),
+      profile: loadProfile()
+    };
+    wx.setClipboardData({
+      data: JSON.stringify(snapshot),
+      success: () => wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
+    });
+  },
 
   showAbout() {
     wx.showModal({

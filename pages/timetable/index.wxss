@@ -48,11 +48,6 @@
 .back-current:active { background: rgba(0, 122, 255, .16); }
 
 /* 导入入口下沉到课表下方：这是低频操作，不该占着首屏 */
-.import-entry { display: flex; align-items: center; gap: 16rpx; margin-top: 14rpx; padding: 22rpx 20rpx; border-radius: 20rpx; background: #fff; box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .05); }
-.import-entry:active { background: #f8f8fa; }
-.import-entry-main { flex: 1; min-width: 0; }
-.import-entry-title { font-size: 26rpx; font-weight: 600; }
-.import-entry-copy { margin-top: 5rpx; color: var(--muted); font-size: 21rpx; }
 
 .next-card {
   display: flex;
@@ -147,11 +142,6 @@
 .back-current:active { background: rgba(0, 122, 255, .16); }
 
 /* 导入入口下沉到课表下方：这是低频操作，不该占着首屏 */
-.import-entry { display: flex; align-items: center; gap: 16rpx; margin-top: 14rpx; padding: 22rpx 20rpx; border-radius: 20rpx; background: #fff; box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .05); }
-.import-entry:active { background: #f8f8fa; }
-.import-entry-main { flex: 1; min-width: 0; }
-.import-entry-title { font-size: 26rpx; font-weight: 600; }
-.import-entry-copy { margin-top: 5rpx; color: var(--muted); font-size: 21rpx; }
 
 .next-card {
   display: flex;
@@ -270,43 +260,31 @@
 
 
 /*
- * 悬浮操作按钮。
- * 【真机坑】原先用 <button> 且容器只给了 right 没给 left，iOS 上按钮会被拉成
- * 长胶囊（宽约 320rpx），并因为叠加了 .safe-bottom 的安全区 padding 而浮到
- * 课表中间。改为 view + 显式锁定宽高（flex: 0 0 92rpx）后与平台无关。
+ * 百宝箱浮动球。
+ * 【为什么用 px 不用 rpx】position: fixed 的 left/top 是逻辑像素，
+ * 拖动时用 rpx 换算会差一个 dpr 的倍数，手感会飘；这里统一 px，
+ * JS 侧拿到的 clientX/clientY 也是 px，不需要任何换算。
  */
-.floating-actions {
+.tool-fab {
   position: fixed;
-  right: 28rpx;
-  left: auto;
-  bottom: calc(36rpx + env(safe-area-inset-bottom));
-  z-index: 20;
+  z-index: 40;
   display: flex;
-  align-items: center;
-  gap: 18rpx;
-}
-
-.circle-button {
-  display: flex;
-  flex: 0 0 92rpx;
   align-items: center;
   justify-content: center;
-  width: 92rpx;
-  min-width: 92rpx;
-  max-width: 92rpx;
-  height: 92rpx;
-  min-height: 92rpx;
-  max-height: 92rpx;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 12rpx 28rpx rgba(32, 49, 78, .22);
+  background: linear-gradient(140deg, #3d95ff 0%, #007aff 62%, #0062d6 100%);
+  box-shadow: 0 10rpx 26rpx rgba(0, 106, 220, .38), inset 0 1rpx 0 rgba(255, 255, 255, .4);
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
 }
-
-.settings-button { background: #fff; color: #42506a; font-size: 34rpx; }
-.add-button { background: var(--brand); color: #fff; font-size: 48rpx; }
+.tool-fab.is-dragging {
+  transform: scale(1.08);
+  opacity: .92;
+  box-shadow: 0 16rpx 34rpx rgba(0, 106, 220, .5);
+  transition: none;
+}
+.tool-fab-icon { width: 26px; height: 26px; }
 
 .empty-state { padding: 90rpx 50rpx 110rpx; border-radius: 24rpx; background: #fff; text-align: center; }
 .empty-owl { display: block; width: 220rpx; height: 220rpx; margin: 0 auto 18rpx; }
@@ -439,3 +417,53 @@
   white-space: nowrap;
 }
 .today-chip:active { background: rgba(0, 122, 255, .18); }
+
+
+/* ---------------- 百宝箱弹层 ---------------- */
+
+.toolbox-sheet { padding-bottom: calc(30rpx + env(safe-area-inset-bottom)); }
+.toolbox-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20rpx; margin-bottom: 26rpx; }
+.toolbox-title { margin-bottom: 8rpx; }
+.toolbox-copy { color: var(--muted); font-size: 22rpx; }
+.toolbox-close {
+  flex: none;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: #f2f4f8;
+  color: var(--muted);
+  font-size: 22rpx;
+}
+.toolbox-close:active { background: #e8ebf1; }
+
+.tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; }
+.tool-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  padding: 22rpx 10rpx 18rpx;
+  border-radius: 22rpx;
+  background: #f7f9fc;
+  text-align: center;
+}
+.tool-item:active { background: #eef2f8; }
+.tool-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+  letter-spacing: .5rpx;
+}
+.tone-blue { background: linear-gradient(140deg, #4d9dff, #007aff); }
+.tone-green { background: linear-gradient(140deg, #45c48b, #16a163); }
+.tone-indigo { background: linear-gradient(140deg, #7f8dff, #4b57d8); font-size: 34rpx; }
+.tone-gray { background: linear-gradient(140deg, #a6b0c0, #7d8899); font-size: 34rpx; }
+.tone-orange { background: linear-gradient(140deg, #ffb057, #f0810f); }
+.tone-teal { background: linear-gradient(140deg, #4dc9c4, #12938e); }
+.tool-name { color: var(--text); font-size: 24rpx; font-weight: 600; }
+.tool-desc { color: #b3bac5; font-size: 19rpx; line-height: 1.3; }

@@ -108,13 +108,6 @@
     <text class="chevron">›</text>
   </view>
 
-  <view wx:if="{{hasCourses}}" class="import-entry" bindtap="openImport" aria-role="button" aria-label="导入课表">
-    <view class="import-entry-main">
-      <view class="import-entry-title">导入课表</view>
-      <view class="import-entry-copy">从课表 PDF 导入，可替换或追加</view>
-    </view>
-    <text class="chevron">›</text>
-  </view>
     </view>
 
     <view class="view-page">
@@ -176,9 +169,64 @@
   </view>
   </view>
 
-  <view wx:if="{{view === 'timetable'}}" class="floating-actions">
-    <view class="circle-button settings-button" bindtap="openSettings" aria-role="button" aria-label="课表设置">⚙</view>
-    <view class="circle-button add-button" bindtap="addCourse" aria-role="button" aria-label="添加课程">＋</view>
+</view>
+
+<!-- 百宝箱：可自由拖动的小球，位置限制在页面可视区内并持久化 -->
+<view
+  wx:if="{{ballReady}}"
+  class="tool-fab {{ballDragging ? 'is-dragging' : ''}}"
+  style="left:{{ballX}}px; top:{{ballY}}px;"
+  catchtouchstart="onBallTouchStart"
+  catchtouchmove="onBallTouchMove"
+  catchtouchend="onBallTouchEnd"
+  catchtouchcancel="onBallTouchEnd"
+  aria-role="button"
+  aria-label="百宝箱"
+>
+  <image class="tool-fab-icon" src="/assets/icons/toolbox.png" mode="aspectFit"></image>
+</view>
+
+<view wx:if="{{toolboxOpen}}" class="mask" bindtap="closeToolbox">
+  <view class="sheet safe-bottom toolbox-sheet" catchtap="stopPropagation">
+    <view class="toolbox-head">
+      <view>
+        <view class="sheet-title toolbox-title">百宝箱</view>
+        <view class="toolbox-copy">导入、设置和随手记都在这里</view>
+      </view>
+      <view class="toolbox-close" bindtap="closeToolbox">关闭</view>
+    </view>
+    <view class="tool-grid">
+      <view class="tool-item" data-key="pdf" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-blue">PDF</view>
+        <view class="tool-name">导入课表</view>
+        <view class="tool-desc">解析教务导出的 PDF</view>
+      </view>
+      <view class="tool-item" data-key="jw" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-green">教</view>
+        <view class="tool-name">教务直连</view>
+        <view class="tool-desc">登录教务抓取课表</view>
+      </view>
+      <view class="tool-item" data-key="course" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-indigo">＋</view>
+        <view class="tool-name">添加课程</view>
+        <view class="tool-desc">手动填一门课</view>
+      </view>
+      <view class="tool-item" data-key="settings" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-gray">⚙</view>
+        <view class="tool-name">课表设置</view>
+        <view class="tool-desc">作息、学期与周数</view>
+      </view>
+      <view class="tool-item" data-key="note" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-orange">记</view>
+        <view class="tool-name">记一件事</view>
+        <view class="tool-desc">打开记事本新建</view>
+      </view>
+      <view class="tool-item" data-key="week" bindtap="toolboxAction" aria-role="button">
+        <view class="tool-ico tone-teal">今</view>
+        <view class="tool-name">回到本周</view>
+        <view class="tool-desc">第 {{currentWeek}} 周</view>
+      </view>
+    </view>
   </view>
 </view>
 

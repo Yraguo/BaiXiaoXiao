@@ -24,6 +24,12 @@ function monthTitle(year, monthIndex) {
 
 const ROW_HEIGHT = 96;
 
+/* ---------------- 百宝箱浮动球 ---------------- */
+const BALL_SIZE = 52;          // px，与 wxss 里的 .tool-fab 宽高一致
+const BALL_MARGIN = 6;         // 离屏幕边缘至少留这么多，避免贴死或半出屏
+const BALL_SNAP = 26;          // 松手时离边缘小于这个距离就吸过去
+const BALL_KEY = 'baixiaoxiao.toolbox.ball.v1';
+
 function minutes(value) {
   const [hour, minute] = String(value || '00:00').split(':').map(Number);
   return hour * 60 + minute;
@@ -61,13 +67,20 @@ Page({
     detail: null,
     nextCourse: null,
     hasCourses: true,
-    touchStartX: 0
+    touchStartX: 0,
+    // 百宝箱：ballX/ballY 是 px（position:fixed 用 px 才准），ballReady 之前不渲染避免闪一下
+    ballX: 0,
+    ballY: 0,
+    ballReady: false,
+    ballDragging: false,
+    toolboxOpen: false
   },
 
   onLoad() {
     this.reload(true);
     const now = new Date();
     this.openMonth(now.getFullYear(), now.getMonth(), dateStamp(now));
+    this.initBall();
   },
 
   onShow() {
@@ -327,6 +340,131 @@ Page({
 
   closeDetail() {
     this.setData({ detail: null });
+  },
+
+  /* ---------------- 百宝箱（可拖动的浮动球） ---------------- */
+
+  /** 可用窗口尺寸：优先 getWindowInfo，老基础库退回 getSystemInfoSync */
+  windowSize() {
+    try {
+      if (wx.getWindowInfo) {
+        const info = wx.getWindowInfo();
+        if (info && info.windowWidth) return { width: info.windowWidth, height: info.windowHeight };
+      }
+      const info = wx.getSystemInfoSync();
+      return { width: info.windowWidth, height: info.windowHeight };
+    } catch (error) {
+      return { width: 375, height: 667 };
+    }
+  },
+
+  /** 把球限制在可视区内：拖动、旋转屏、改字号之后都能兜住 */
+  clampBall(x, y) {
+    const { width, height } = this.windowSize();
+    const maxX = Math.max(BALL_MARGIN, width - BALL_SIZE - BALL_MARGIN);
+    const maxY = Math.max(BALL_MARGIN, height - BALL_SIZE - BALL_MARGIN);
+    return {
+      x: Math.min(Math.max(Number(x) || 0, BALL_MARGIN), maxX),
+      y: Math.min(Math.max(Number(y) || 0, BALL_MARGIN), maxY)
+    };
+  },
+
+  initBall() {
+    const { width, height } = this.windowSize();
+    // 默认停在右下角、主按钮上方一点，不挡课表也不挡 tabBar
+    let x = width - BALL_SIZE - 12;
+    let y = height - BALL_SIZE - 96;
+    try {
+      const saved = wx.getStorageSync(BALL_KEY);
+      if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) {
+        x = saved.x;
+        y = saved.y;
+      }
+    } catch (error) {
+      // 读不到就用默认位置
+    }
+    const spot = this.clampBall(x, y);
+    this.setData({ ballX: spot.x, ballY: spot.y, ballReady: true });
+  },
+
+  saveBall() {
+    try {
+      wx.setStorageSync(BALL_KEY, { x: this.data.ballX, y: this.data.ballY });
+    } catch (error) {
+      // 存不下就算了，不影响使用
+    }
+  },
+
+  onBallTouchStart(event) {
+    const touch = event.touches[0];
+    this.ballDrag = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      originX: this.data.ballX,
+      originY: this.data.ballY,
+      moved: false,
+      at: Date.now()
+    };
+  },
+
+  onBallTouchMove(event) {
+    const drag = this.ballDrag;
+    if (!drag) return;
+    const touch = event.touches[0];
+    const dx = touch.clientX - drag.startX;
+    const dy = touch.clientY - drag.startY;
+    // 4px 以内算点击，避免手抖把点按识别成拖动
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      this.setData({ ballDragging: true });
+    }
+    const spot = this.clampBall(drag.originX + dx, drag.originY + dy);
+    this.setData({ ballX: spot.x, ballY: spot.y });
+  },
+
+  onBallTouchEnd() {
+    const drag = this.ballDrag;
+    this.ballDrag = null;
+    if (!drag) return;
+    if (!drag.moved) {
+      if (Date.now() - drag.at < 600) this.openToolbox();
+      return;
+    }
+    // 松手轻吸附：靠边就贴边，靠中间就留在原地，位置记到本机
+    const { width } = this.windowSize();
+    const maxX = width - BALL_SIZE - BALL_MARGIN;
+    let x = this.data.ballX;
+    if (x - BALL_MARGIN < BALL_SNAP) x = BALL_MARGIN;
+    else if (maxX - x < BALL_SNAP) x = maxX;
+    const spot = this.clampBall(x, this.data.ballY);
+    this.setData({ ballX: spot.x, ballY: spot.y, ballDragging: false });
+    this.saveBall();
+  },
+
+  openToolbox() {
+    this.setData({ toolboxOpen: true });
+  },
+
+  closeToolbox() {
+    this.setData({ toolboxOpen: false });
+  },
+
+  toolboxAction(event) {
+    const key = event.currentTarget.dataset.key;
+    this.setData({ toolboxOpen: false });
+    if (key === 'pdf') wx.navigateTo({ url: '/pages/pdfimport/index' });
+    else if (key === 'jw') wx.navigateTo({ url: '/pages/import/index' });
+    else if (key === 'course') this.addCourse();
+    else if (key === 'settings') this.openSettings();
+    else if (key === 'week') this.goCurrentWeek();
+    else if (key === 'note') {
+      // 先切到记事本并落在今天，再开新建
+      this.setData({ view: 'notes' });
+      this.goToday();
+      this.renderNotes();
+      setTimeout(() => this.addNote(), 80);
+    }
   },
 
   addCourse() {

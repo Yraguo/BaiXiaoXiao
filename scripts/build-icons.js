@@ -56,6 +56,12 @@ const TAB_ICONS = {
   secondclass: '<circle cx="12" cy="9.2" r="5"/><path d="M8.8 13.2 7.2 20.8l4.8-2.5 4.8 2.5-1.6-7.6"/>'
 };
 
+/** 界面内使用的单色图标：白描边，直接放在彩色底上 */
+const UI_ICONS = {
+  // 百宝箱：带提手的工具箱
+  toolbox: '<rect x="3.2" y="8.4" width="17.6" height="11.4" rx="2.4"/><path d="M8.6 8.4V6.6A1.8 1.8 0 0 1 10.4 4.8h3.2a1.8 1.8 0 0 1 1.8 1.8v1.8"/><path d="M3.2 13.6h17.6"/><path d="M10.4 13.6v2h3.2v-2"/>'
+};
+
 function svgDocument(body, color, size, stroke) {
   const safe = body.replace(/currentColor/g, color);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"`
@@ -81,6 +87,11 @@ function main() {
 
   Object.keys(SERVICE_ICONS).forEach((key) => {
     made.push(render(SERVICE_ICONS[key], BRAND, 192, 1.8, iconDir, `${key}.png`));
+  });
+
+  const uiDir = path.join(ROOT, 'assets', 'icons');
+  Object.keys(UI_ICONS).forEach((key) => {
+    made.push(render(UI_ICONS[key], '#FFFFFF', 144, 1.7, uiDir, `${key}.png`));
   });
 
   Object.keys(TAB_ICONS).forEach((key) => {

@@ -62,19 +62,22 @@ test('记录按日期倒序，没有名称的不计入', () => {
   assert.deepEqual(list.map((item) => item.id), ['1', '2', '3', '4', '5']);
 });
 
-test('脏数据收敛：未知板块归德、负分归零、非法日期清空、照片最多 6 张', () => {
+test('脏数据收敛：未知板块归德、负分归零、非法日期清空、照片最多 9 张', () => {
   const record = normalizeRecord({
     plate: 'unknown',
     title: '  活动  ',
     date: '昨天',
     score: -5,
-    photos: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    photos: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
   });
   assert.equal(record.plate, 'de');
   assert.equal(record.title, '活动');
   assert.equal(record.score, 0);
   assert.equal(record.date, '');
-  assert.equal(record.photos.length, 6);
+  assert.equal(record.photos.length, 9, '照片上限对齐安卓版的 9 张');
+  assert.equal(record.level, 'base', '没写评定类型时归入基础');
+  assert.equal(record.hours, 0);
+  assert.equal(record.address, '');
 });
 
 test('时长按学期分组，并单独统计今年', () => {

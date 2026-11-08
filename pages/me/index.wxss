@@ -31,3 +31,11 @@
 .editor-input { flex: 1; min-width: 0; height: 64rpx; font-size: 28rpx; }
 .editor-save { margin-top: 26rpx; }
 .editor-note { margin-top: 16rpx; color: var(--muted); font-size: 21rpx; text-align: center; }
+
+/* 第二课堂累计自评 */
+.second-card { margin-top: 20rpx; padding: 26rpx 24rpx; }
+.second-top { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.second-num { flex: none; color: var(--brand); font-size: 40rpx; font-weight: 800; letter-spacing: -.5rpx; }
+.second-full { color: #b3bac5; font-size: 22rpx; font-weight: 500; }
+.second-bar { margin-top: 18rpx; height: 8rpx; border-radius: 999rpx; background: #eef1f6; overflow: hidden; }
+.second-bar-fill { height: 100%; border-radius: 999rpx; background: linear-gradient(90deg, #4d9dff, #007aff); }

@@ -1,17 +1,20 @@
 <view class="page-shell">
   <view class="card form-card">
-    <view class="field field-block">
+    <view class="field-block plate-block">
       <text class="field-label">选择板块</text>
-      <view class="plate-chips">
+      <view class="plate-grid">
         <view
           wx:for="{{plates}}"
           wx:key="key"
-          class="plate-chip {{plateIndex === index ? 'active' : ''}}"
+          class="plate-tile {{plateIndex === index ? 'active' : ''}}"
           data-index="{{index}}"
           bindtap="changePlate"
-        >{{item.short}}·{{item.name}}</view>
-<canvas type="2d" id="wm" class="wm-canvas"></canvas>
+        >
+          <text class="plate-key">{{item.short}}</text>
+          <text class="plate-name">{{item.name}}</text>
+        </view>
       </view>
+      <view class="field-hint">未指定条款时记作自由填报，仍计入所选板块合计。</view>
     </view>
 
     <view class="field">
@@ -19,21 +22,64 @@
       <input
         class="field-input"
         value="{{draft.title}}"
-        placeholder="如：社区志愿服务"
+        placeholder="必填，如：社区志愿服务"
         maxlength="40"
         data-field="title"
         bindinput="updateField"
       />
     </view>
 
+    <view class="field field-last">
+      <text class="field-label">描述</text>
+      <textarea
+        class="field-textarea"
+        value="{{draft.note}}"
+        placeholder="选填，写清做了什么、担任什么角色"
+        maxlength="120"
+        auto-height
+        data-field="note"
+        bindinput="updateField"
+      />
+    </view>
+  </view>
+
+  <view class="card form-card">
     <view class="field">
-      <text class="field-label">日期</text>
+      <text class="field-label">活动时间</text>
       <picker mode="date" value="{{draft.date}}" bindchange="changeDate">
         <view class="field-picker"><text>{{draft.date || '选择日期'}}</text><text class="chevron">›</text></view>
       </picker>
     </view>
 
-    <view class="field field-block">
+    <view class="field">
+      <text class="field-label">评定类型</text>
+      <picker mode="selector" range="{{levels}}" range-key="name" value="{{levelIndex}}" bindchange="changeLevel">
+        <view class="field-picker"><text>{{levels[levelIndex].name}}</text><text class="chevron">›</text></view>
+      </picker>
+    </view>
+
+    <view class="field-block">
+      <text class="field-label">志愿 / 活动时长（小时，选填）</text>
+      <view class="hour-chips">
+        <view
+          wx:for="{{hourChips}}"
+          wx:key="*this"
+          class="hour-chip {{draft.hours == item ? 'active' : ''}}"
+          data-hour="{{item}}"
+          bindtap="setHours"
+        >{{item}} 小时</view>
+      </view>
+      <input
+        class="field-input"
+        type="digit"
+        value="{{draft.hours}}"
+        placeholder="也可以直接填，如 3.5"
+        data-field="hours"
+        bindinput="updateField"
+      />
+    </view>
+
+    <view class="field-block field-last">
       <text class="field-label">自评分数</text>
       <view class="score-chips">
         <view
@@ -45,54 +91,74 @@
         >{{item}} 分</view>
       </view>
       <input
-        class="field-input score-input"
+        class="field-input"
         type="digit"
         value="{{draft.score}}"
-        placeholder="0 ~ 板块满分，可填 0.5 步进"
+        placeholder="0 ~ {{levels[levelIndex].cap}} 分，0.5 步进"
         data-field="score"
         bindinput="updateField"
       />
+      <view class="field-hint">{{plate.name}} · {{levels[levelIndex].name}}上限 {{levels[levelIndex].cap}} 分，超出按满分计。</view>
     </view>
+  </view>
 
-    <view class="field field-block">
-      <text class="field-label">照片（最多 6 张）</text>
+  <view class="card form-card">
+    <view class="field-block">
+      <text class="field-label">照片（最多 {{maxPhotos}} 张）</text>
+      <view class="photo-actions">
+        <view class="photo-btn" bindtap="takePhoto">拍照</view>
+        <view class="photo-btn" bindtap="choosePhotos">相册</view>
+        <text class="photo-count">{{draft.photos.length}} / {{maxPhotos}}</text>
+      </view>
       <view class="photo-grid">
         <view wx:for="{{draft.photos}}" wx:key="*this" class="photo-item">
-          <image class="photo-img" src="{{item}}" mode="aspectFill"></image>
+          <image class="photo-img" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="previewPhoto"></image>
           <view class="photo-remove" data-index="{{index}}" catchtap="removePhoto">×</view>
         </view>
-        <view wx:if="{{draft.photos.length < 6}}" class="photo-add" bindtap="choosePhotos">＋</view>
-      </view>
-    </view>
-
-    <view class="field">
-      <text class="field-label">添加水印</text>
-      <view class="field-picker">
-        <text class="field-hint">默认关闭，开启后照片带时间地点</text>
-        <switch checked="{{draft.watermark}}" color="#007aff" bindchange="toggleWatermark" />
-      </view>
-      <view class="loc-row">
-        <view class="loc-btn" bindtap="getLocation">{{draft.location ? '重新定位' : '获取定位'}}</view>
-        <text wx:if="{{draft.location}}" class="loc-text">{{draft.location.longitude}}, {{draft.location.latitude}} · {{draft.location.at}}</text>
-        <text wx:else class="loc-text">开启水印后可读取当前位置</text>
       </view>
     </view>
 
     <view class="field field-last">
-      <text class="field-label">备注</text>
+      <text class="field-label">拍照水印</text>
+      <view class="field-picker">
+        <text class="field-hint">开启后照片带时间与地点</text>
+        <switch checked="{{draft.watermark}}" color="#007aff" bindchange="toggleWatermark" />
+      </view>
+    </view>
+  </view>
+
+  <view class="card form-card">
+    <view class="field-block field-last">
+      <text class="field-label">位置（用于水印）</text>
+      <view class="loc-row">
+        <view class="loc-btn" bindtap="getLocation">{{draft.latitude ? '重新定位' : '获取定位'}}</view>
+        <text class="field-hint">只取经纬度，不做逆地理编码</text>
+      </view>
+      <view class="coord-row">
+        <view class="coord-item">
+          <text class="coord-label">纬度</text>
+          <input class="coord-input" type="digit" value="{{draft.latitude}}" placeholder="39.94128" data-field="latitude" bindinput="updateField" />
+        </view>
+        <view class="coord-item">
+          <text class="coord-label">经度</text>
+          <input class="coord-input" type="digit" value="{{draft.longitude}}" placeholder="116.30123" data-field="longitude" bindinput="updateField" />
+        </view>
+      </view>
       <input
-        class="field-input"
-        value="{{draft.note}}"
-        placeholder="选填，如：校团委组织"
-        maxlength="60"
-        data-field="note"
+        class="field-input address-input"
+        value="{{draft.address}}"
+        placeholder="地址（选填，本机手写，不上传）"
+        maxlength="40"
+        data-field="address"
         bindinput="updateField"
       />
     </view>
   </view>
 
-  <button class="primary-button form-save" bindtap="save">保存</button>
-  <button wx:if="{{isEditing}}" class="danger-button form-delete" bindtap="remove">删除这条填报</button>
+  <view class="primary-button form-save" bindtap="save">保存</view>
+  <view wx:if="{{isEditing}}" class="danger-button form-delete" bindtap="remove">删除这条填报</view>
 
-  <view class="form-tip">分数为自己填报与自评，最终认定以学校审核为准。记录只保存在本机。</view>
+  <view class="form-tip">分数为自己填报与自评，最终认定以学校审核为准。照片、位置和文字都只保存在本机。</view>
 </view>
+
+<canvas type="2d" id="wm" class="wm-canvas"></canvas>

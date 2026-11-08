@@ -2,6 +2,10 @@ const { loadClasses, saveClasses } = require('../../utils/appStore');
 const { PLATES, normalizeRecord } = require('../../utils/secondclass');
 const { confirmDelete } = require('../../utils/confirm');
 
+const MAX_PHOTOS = 9;
+const HOUR_CHIPS = [1, 2, 4, 6, 8, 10, 12, 20];
+const SCORE_CHIPS = ['2', '4', '5', '8', '10', '15', '20', '25', '30'];
+
 function today() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -9,51 +13,90 @@ function today() {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+function stampNow() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+/** 基础 / 拓展两档，上限随板块走（德 144/36、智 96/24…） */
+function levelsOf(plate) {
+  return [
+    { key: 'base', name: '基础评定', cap: plate.base },
+    { key: 'extra', name: '拓展评定', cap: plate.extra }
+  ];
+}
+
+function blankDraft(plateKey) {
+  const plate = PLATES.find((item) => item.key === plateKey) || PLATES[0];
+  return {
+    id: `sc-${Date.now()}`,
+    plate: plate.key,
+    title: '',
+    date: today(),
+    level: 'base',
+    hours: 0,
+    score: 0,
+    photos: [],
+    note: '',
+    address: '',
+    latitude: '',
+    longitude: '',
+    pinAt: '',
+    watermark: false
+  };
+}
+
 Page({
   data: {
     isEditing: false,
     plates: PLATES,
     plateIndex: 0,
-    scoreChips: ['2', '4', '5', '8', '10', '15', '20', '25', '30'],
-    draft: {
-      id: '',
-      plate: 'de',
-      title: '',
-      date: '',
-      score: 0,
-      photos: [],
-      note: '',
-      watermark: false,
-      location: null
-    }
+    plate: PLATES[0],
+    levels: levelsOf(PLATES[0]),
+    levelIndex: 0,
+    scoreChips: SCORE_CHIPS,
+    hourChips: HOUR_CHIPS,
+    maxPhotos: MAX_PHOTOS,
+    draft: blankDraft('de')
   },
 
   onLoad(options) {
     const list = loadClasses().map(normalizeRecord);
     const existing = options && options.id ? list.find((record) => record.id === options.id) : null;
-    const fallbackPlate = options && options.plate ? options.plate : 'de';
-    const draft = existing || {
-      id: `sc-${Date.now()}`,
-      plate: PLATES.some((plate) => plate.key === fallbackPlate) ? fallbackPlate : 'de',
-      title: '',
-      date: today(),
-      score: 0,
-      photos: [],
-      note: '',
-      watermark: false,
-      location: null
-    };
+    const draft = existing || blankDraft(options && options.plate);
+    const plateIndex = Math.max(0, PLATES.findIndex((plate) => plate.key === draft.plate));
+    const plate = PLATES[plateIndex];
+    const levels = levelsOf(plate);
+    const levelIndex = Math.max(0, levels.findIndex((level) => level.key === draft.level));
     this.setData({
       isEditing: Boolean(existing),
-      draft: Object.assign({}, draft),
-      plateIndex: Math.max(0, PLATES.findIndex((plate) => plate.key === draft.plate))
+      draft: Object.assign({}, draft, { level: levels[levelIndex].key }),
+      plateIndex,
+      plate,
+      levels,
+      levelIndex
     });
-    wx.setNavigationBarTitle({ title: existing ? '编辑填报' : '填报活动' });
+    wx.setNavigationBarTitle({ title: existing ? '编辑填报' : '第二课堂填报' });
   },
 
   changePlate(event) {
     const index = Number(event.currentTarget.dataset.index);
-    this.setData({ plateIndex: index, 'draft.plate': PLATES[index].key });
+    const plate = PLATES[index];
+    const levels = levelsOf(plate);
+    const levelIndex = Math.max(0, levels.findIndex((level) => level.key === this.data.draft.level));
+    this.setData({
+      plateIndex: index,
+      plate,
+      levels,
+      levelIndex,
+      'draft.plate': plate.key
+    });
+  },
+
+  changeLevel(event) {
+    const levelIndex = Number(event.detail.value);
+    this.setData({ levelIndex, 'draft.level': this.data.levels[levelIndex].key });
   },
 
   updateField(event) {
@@ -68,6 +111,10 @@ Page({
     this.setData({ 'draft.score': Number(event.currentTarget.dataset.score) });
   },
 
+  setHours(event) {
+    this.setData({ 'draft.hours': Number(event.currentTarget.dataset.hour) });
+  },
+
   toggleWatermark(event) {
     this.setData({ 'draft.watermark': Boolean(event.detail.value) });
   },
@@ -76,24 +123,20 @@ Page({
     wx.getLocation({
       type: 'gcj02',
       success: (res) => {
-        const now = new Date();
-        const pad = (v) => String(v).padStart(2, '0');
         this.setData({
-          'draft.location': {
-            longitude: res.longitude.toFixed(5),
-            latitude: res.latitude.toFixed(5),
-            at: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
-          }
+          'draft.latitude': res.latitude.toFixed(5),
+          'draft.longitude': res.longitude.toFixed(5),
+          'draft.pinAt': stampNow()
         });
-        wx.showToast({ title: '已获取位置', icon: 'success' });
+        wx.showToast({ title: '已获取坐标', icon: 'success' });
       },
       fail: () => wx.showToast({ title: '定位失败，请在设置里允许位置权限', icon: 'none' })
     });
   },
 
-  /** 把文字水印画到照片右下角，返回新图片路径 */
+  /** 把文字水印画到照片底部，返回新图片路径 */
   stamp(photos, text) {
-    if (!photos.length) return Promise.resolve(photos);
+    if (!photos.length || !text) return Promise.resolve(photos);
     return new Promise((resolve) => {
       wx.createSelectorQuery().select('#wm').fields({ node: true }).exec((res) => {
         const canvas = res && res[0] && res[0].node;
@@ -134,31 +177,45 @@ Page({
     });
   },
 
-  choosePhotos() {
-    const left = 6 - this.data.draft.photos.length;
+  pickPhotos(source) {
+    const left = MAX_PHOTOS - this.data.draft.photos.length;
     if (left <= 0) {
-      wx.showToast({ title: '最多 6 张', icon: 'none' });
+      wx.showToast({ title: `最多 ${MAX_PHOTOS} 张`, icon: 'none' });
       return;
     }
     wx.chooseMedia({
       count: left,
       mediaType: ['image'],
-      sourceType: ['album', 'camera'],
+      sourceType: [source],
+      sizeType: ['compressed'],
       success: (res) => {
         const manager = wx.getFileSystemManager();
         const saved = (res.tempFiles || []).map((file) => {
           // temp 路径会过期，存到小程序用户目录里才留得住
           try {
             return manager.saveFileSync(file.tempFilePath);
-          } catch (_) {
+          } catch (error) {
             return file.tempFilePath;
           }
         });
         this.setData({
-          'draft.photos': this.data.draft.photos.concat(saved).slice(0, 6)
+          'draft.photos': this.data.draft.photos.concat(saved).slice(0, MAX_PHOTOS)
         });
       }
     });
+  },
+
+  choosePhotos() {
+    this.pickPhotos('album');
+  },
+
+  takePhoto() {
+    this.pickPhotos('camera');
+  },
+
+  previewPhoto(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    wx.previewImage({ current: this.data.draft.photos[index], urls: this.data.draft.photos });
   },
 
   removePhoto(event) {
@@ -175,17 +232,22 @@ Page({
       wx.showToast({ title: '先写活动名称', icon: 'none' });
       return;
     }
+
     let photos = draft.photos;
-    if (draft.watermark && draft.location && photos.length) {
+    const place = draft.address
+      || (draft.latitude && draft.longitude ? `${draft.latitude}, ${draft.longitude}` : '');
+    const watermarkText = [draft.pinAt || stampNow(), place].filter(Boolean).join('  ');
+    if (draft.watermark && place && photos.length) {
       wx.showLoading({ title: '正在加水印', mask: true });
-      photos = await this.stamp(photos, `${draft.location.at}  ${draft.location.longitude}, ${draft.location.latitude}`);
+      photos = await this.stamp(photos, watermarkText);
       wx.hideLoading();
     }
 
     const record = normalizeRecord(Object.assign({}, draft, {
       title,
       photos,
-      score: Number(draft.score) || 0
+      score: Number(draft.score) || 0,
+      hours: Number(draft.hours) || 0
     }));
 
     const list = loadClasses().map(normalizeRecord);
@@ -194,8 +256,12 @@ Page({
     else list.unshift(record);
     saveClasses(list);
 
-    wx.showToast({ title: '已保存', icon: 'success' });
-    setTimeout(() => wx.navigateBack(), 320);
+    const plate = PLATES.find((item) => item.key === record.plate) || PLATES[0];
+    wx.showToast({
+      title: `已保存：${plate.short} +${record.score} 分`,
+      icon: 'none'
+    });
+    setTimeout(() => wx.navigateBack(), 340);
   },
 
   async remove() {

@@ -94,6 +94,9 @@ Page({
           plateShort: plate.short,
           plateName: plate.name,
           scoreText: formatScore(record.score),
+          // 基础 / 拓展 + 时长，对齐安卓版记录卡的副标题信息量
+          levelText: record.level === 'extra' ? '拓展' : '基础',
+          hoursText: record.hours ? `${record.hours} 小时` : '',
           photoText: record.photos.length ? `${record.photos.length} 张照片` : '无照片',
           dateText: record.date || '未填日期',
           color: plate.color,

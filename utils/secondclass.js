@@ -119,15 +119,21 @@ function formatScore(value) {
 function normalizeRecord(raw) {
   const source = raw || {};
   const date = String(source.date || '');
-  const photos = Array.isArray(source.photos) ? source.photos.filter(Boolean).slice(0, 6) : [];
+  const photos = Array.isArray(source.photos) ? source.photos.filter(Boolean).slice(0, 9) : [];
   return {
     id: String(source.id || ''),
     plate: PLATES.some((plate) => plate.key === source.plate) ? source.plate : 'de',
     title: String(source.title || '').trim(),
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '',
+    // 基础 / 拓展两档，上限不同（德 144/36、智 96/24…）
+    level: source.level === 'extra' ? 'extra' : 'base',
+    hours: Math.max(0, roundScore(source.hours)),
     score: Math.max(0, roundScore(source.score)),
     photos,
     note: String(source.note || '').trim(),
+    address: String(source.address || '').trim(),
+    latitude: String(source.latitude || '').trim(),
+    longitude: String(source.longitude || '').trim(),
     watermark: Boolean(source.watermark)
   };
 }
@@ -144,11 +150,21 @@ function summarize(records) {
     const items = list.filter((record) => record.plate === plate.key);
     const raw = roundScore(items.reduce((sum, record) => sum + record.score, 0));
     const capped = Math.min(raw, plate.full);
+    // 基础 / 拓展分开统计：手册里这两档各有上限，合计不能超过板块满分
+    const baseRaw = roundScore(items.filter((item) => item.level !== 'extra')
+      .reduce((sum, record) => sum + record.score, 0));
+    const extraRaw = roundScore(raw - baseRaw);
     return {
       key: plate.key,
       short: plate.short,
       name: plate.name,
       full: plate.full,
+      base: Math.min(baseRaw, plate.base),
+      extra: Math.min(extraRaw, plate.extra),
+      baseRaw,
+      extraRaw,
+      fullBase: plate.base,
+      fullExtra: plate.extra,
       score: capped,
       raw,
       count: items.length,

@@ -114,3 +114,41 @@ test('时长页签不依赖 wx:else，表单保存按钮可点（回归：志愿
   assert.match(wxml, /class="hour-save" bindtap="saveHour"/, '保存绑在普通 view 上，避开 button 的默认行为');
   assert.match(wxml, /class="sc-add-hour" data-kind="\{\{tab\}\}" bindtap="openHour"/, '记一条按钮也要是 view');
 });
+
+test('百宝箱浮球：只在可视区内拖动，且不会顺手把课表滑走', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+  // 页面根节点绑了 touchstart/touchend 用来切周，浮球必须用 catch 阻止冒泡，
+  // 否则拖一下浮球就会被识别成"左右滑换周"
+  assert.match(wxml, /catchtouchstart="onBallTouchStart"/, '浮球要 catchtouchstart');
+  assert.match(wxml, /catchtouchmove="onBallTouchMove"/, '浮球要 catchtouchmove');
+  assert.match(wxml, /catchtouchend="onBallTouchEnd"/, '浮球要 catchtouchend');
+  assert.match(js, /clampBall\(/, '拖动位置要夹到可视区内');
+  assert.match(js, /windowWidth|windowHeight/, '要按窗口尺寸算边界');
+  assert.match(js, /setStorageSync\(BALL_KEY/, '位置要记住，下次进来还在原处');
+});
+
+test('导入课表移进百宝箱，课表页不再有独立入口', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  assert.doesNotMatch(wxml, /import-entry/, '表尾的导入卡片已移除');
+  assert.doesNotMatch(wxml, /floating-actions/, '原来两个浮动按钮已移除');
+  assert.match(wxml, /class="tool-fab/, '只保留百宝箱一个浮球');
+  const toolbox = wxml.slice(wxml.indexOf('tool-grid'));
+  assert.match(toolbox, /导入课表/, '百宝箱里要有导入课表');
+  assert.match(toolbox, /教务直连/, '百宝箱里要有教务直连');
+  assert.match(toolbox, /课表设置/, '百宝箱里要有课表设置');
+});
+
+test('二课填报表单对齐安卓版：9 张照片、基础/拓展、手写地址', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/edit.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  assert.match(js, /MAX_PHOTOS = 9/, '照片上限 9 张');
+  assert.match(wxml, /takePhoto/, '要有拍照按钮');
+  assert.match(wxml, /choosePhotos/, '要有相册按钮');
+  assert.match(js, /基础评定/, '要有基础档');
+  assert.match(js, /拓展评定/, '要有拓展档');
+  assert.match(wxml, /data-field="address"/, '地址要能手工填（不做逆地理编码）');
+  assert.match(wxml, /data-field="latitude"/, '纬度可手改');
+  // 离屏 canvas 必须在页面最外层，不能夹在板块 chips 中间
+  assert.match(wxml.trim(), /<\/canvas>$/, 'canvas 放在页面末尾');
+});

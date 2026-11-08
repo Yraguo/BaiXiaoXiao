@@ -52,7 +52,7 @@
         <view class="sc-badge" style="background:{{item.tint}};color:{{item.color}}">{{item.plateShort}}</view>
         <view class="sc-item-main">
           <view class="sc-item-title">{{item.title}}</view>
-          <view class="sc-item-meta">{{item.dateText}} · {{item.photoText}}{{item.watermark ? ' · 全部有水印' : ''}}</view>
+          <view class="sc-item-meta">{{item.dateText}} · {{item.levelText}}{{item.hoursText ? ' · ' + item.hoursText : ''}} · {{item.photoText}}{{item.watermark ? ' · 水印' : ''}}</view>
         </view>
         <text class="sc-item-score" style="color:{{item.color}}">+{{item.scoreText}}</text>
       </view>
