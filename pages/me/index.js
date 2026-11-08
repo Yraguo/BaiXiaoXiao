@@ -34,8 +34,6 @@ Page({
 
   openSettings() { wx.navigateTo({ url: '/pages/settings/index' }); },
 
-  openSecondClass() { wx.navigateTo({ url: '/pages/secondclass/index' }); },
-
   showAbout() {
     wx.showModal({
       title: '关于百小鸮',

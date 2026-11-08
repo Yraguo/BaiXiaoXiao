@@ -1,7 +1,7 @@
 {
   "pages": [
     "pages/timetable/index",
-    "pages/notes/index",
+    "pages/secondclass/index",
     "pages/uni/index",
     "pages/campus/index",
     "pages/me/index",
@@ -10,7 +10,6 @@
     "pages/settings/index",
     "pages/import/index",
     "pages/pdfimport/index",
-    "pages/secondclass/index",
     "pages/secondclass/edit"
   ],
   "window": {
@@ -33,10 +32,10 @@
         "selectedIconPath": "assets/tabbar/timetable-active.png"
       },
       {
-        "pagePath": "pages/notes/index",
-        "text": "记事",
-        "iconPath": "assets/tabbar/notes.png",
-        "selectedIconPath": "assets/tabbar/notes-active.png"
+        "pagePath": "pages/secondclass/index",
+        "text": "第二课堂",
+        "iconPath": "assets/tabbar/secondclass.png",
+        "selectedIconPath": "assets/tabbar/secondclass-active.png"
       },
       {
         "pagePath": "pages/uni/index",

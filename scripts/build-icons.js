@@ -51,7 +51,9 @@ const TAB_ICONS = {
   // 校园：教学楼
   campus: '<path d="M3.6 20.4h16.8"/><path d="M5.8 20.4v-8.6M9.6 20.4v-8.6M14.4 20.4v-8.6M18.2 20.4v-8.6"/><path d="M2.8 11.2 12 5.6l9.2 5.6z"/>',
   // 我的：人像
-  me: '<circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20.2c.5-3.7 3.5-5.8 7.2-5.8s6.7 2.1 7.2 5.8"/>'
+  me: '<circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20.2c.5-3.7 3.5-5.8 7.2-5.8s6.7 2.1 7.2 5.8"/>',
+  // 第二课堂：奖章 + 绶带
+  secondclass: '<circle cx="12" cy="9.2" r="5"/><path d="M8.8 13.2 7.2 20.8l4.8-2.5 4.8 2.5-1.6-7.6"/>'
 };
 
 function svgDocument(body, color, size, stroke) {
