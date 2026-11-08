@@ -8,13 +8,32 @@
  * 这里只做学生自己的账本，最终认定以学校审核为准。
  */
 
+/**
+ * 板块配色。
+ *
+ * 之前列表页在页面里按下标去课表色板取色、表单页完全不用色，
+ * 结果「德」在两页里长得不一样 —— 颜色属于板块本身，不是页面的装饰，
+ * 所以这里收进数据层，两页共用同一份。
+ *
+ * 色值与课表色板同色系，但每个墨色都校过三重 WCAG AA 对比度：
+ *   墨色压浅底 ≥ 4.5:1 · 白字压墨色 ≥ 4.5:1 · 墨色压白底 ≥ 4.5:1
+ * （课表色板里的 #2F8F63 / #A9701C 直接拿来用只有 3.5~4.2:1，不达标）
+ */
+const PLATE_PALETTE = {
+  de: { ink: '#2E5AAC', bg: '#E9EEFB' },
+  zhi: { ink: '#B8462D', bg: '#FDE8E4' },
+  ti: { ink: '#297C56', bg: '#E3F5EC' },
+  mei: { ink: '#6E4BB0', bg: '#EFE8FA' },
+  lao: { ink: '#966419', bg: '#FCF1DC' }
+};
+
 const PLATES = [
   { key: 'de', short: '德', name: '道德与思想素质', full: 180, base: 144, extra: 36 },
   { key: 'zhi', short: '智', name: '学术与科技创新', full: 120, base: 96, extra: 24 },
   { key: 'ti', short: '体', name: '体育与身心健康', full: 100, base: 80, extra: 20 },
   { key: 'mei', short: '美', name: '美学与人文素养', full: 100, base: 80, extra: 20 },
   { key: 'lao', short: '劳', name: '劳动与社会实践', full: 100, base: 80, extra: 20 }
-];
+].map((plate) => Object.assign({}, plate, PLATE_PALETTE[plate.key]));
 
 const TOTAL_FULL = PLATES.reduce((sum, plate) => sum + plate.full, 0);
 
@@ -71,39 +90,79 @@ const ART_TABLE = {
 
 /** 手册分值表 · 计分条款（可搜索） */
 const CLAUSES = [
-  { plate: 'de', text: '参加校/院/班级德育类活动，一次 10 分，上限 50 分' },
-  { plate: 'de', text: '青年大学习当期全部完成计 35 分，缺一次扣 3 分' },
-  { plate: 'de', text: '践行学生行为准则满分 40 分，夜不归宿、违禁电器、实验违规等每次扣 20 分' },
-  { plate: 'de', text: '德育类荣誉或先进典型：国家级 30、市级 24、校级 16、院级 10，上限 30 分' },
-  { plate: 'de', text: '学生组织、社团、班级服务：优秀 20 分、称职 10 分，上限 20 分' },
-  { plate: 'de', text: '见义勇为、好人好事或在重大突发事件中表现突出，计 20 分' },
-  { plate: 'zhi', text: '在公开刊物或校级以上媒体发表德育类文章/作品，计 10 分' },
-  { plate: 'zhi', text: '参与校内外科技创新、创业竞赛并提交作品，或大创项目完成结题，计 25 分' },
-  { plate: 'zhi', text: '参加学科科技、创新创业竞赛，一次 15 分，上限 30 分' },
-  { plate: 'zhi', text: '参加学科科技、创新创业专题讲座或报告，一次 6 分，上限 30 分' },
-  { plate: 'zhi', text: '学习态度满分 30 分，无故不参加教育教学活动每满 1 学时扣 5 分' },
-  { plate: 'zhi', text: '取得教务处认定的学术论文、专利等成果，计 20 分' },
-  { plate: 'ti', text: '作为校队或普通生参加校级/院级体育竞赛，一次 10 分；观众一次 2 分，上限 20 分' },
-  { plate: 'ti', text: '参加体育、心理健康类活动，一次 10 分，上限 20 分' },
-  { plate: 'ti', text: '“奔跑在北化”打卡完成学期计划，计 30 分' },
-  { plate: 'ti', text: '国家大学生体质测试合格及免测计 20 分，不合格计 0 分' },
-  { plate: 'ti', text: '全民健身运动等级自主认定，分两档计 15 分、10 分' },
-  { plate: 'mei', text: '美育活动：演员、展览作者、参赛者一次 10 分，观众一次 5 分，上限 30 分' },
-  { plate: 'mei', text: '美育类专题讲座或报告，一次 10 分，上限 30 分' },
-  { plate: 'mei', text: '在慕课等平台学习音乐、美术、书法、舞蹈、戏剧等，每学时 5 分，上限 30 分' },
-  { plate: 'mei', text: '举办面向校内外个人艺术作品展览或公演，经认定计 20 分' },
-  { plate: 'mei', text: '参观美育类展馆、基地或参加实践活动，一次 4 分，上限 20 分' },
-  { plate: 'lao', text: '参加劳动实践活动（含劳动类课程实践环节），每学期满 10 学时计 20 分，不足不计' },
-  { plate: 'lao', text: '参加志愿服务，每学期满 10 小时计 20 分，不足不计' },
-  { plate: 'lao', text: '利用寒暑假在校外开展社会实践并完成当期任务，计 15 分' },
-  { plate: 'lao', text: '宿舍卫生：优 20、良 16、中 12、合格 10、不合格 0 分（每人计）' },
-  { plate: 'lao', text: '志愿服务、劳动实践获国家/省/市/校/院荣誉：10/8/6/4/2 分，只取最高项，上限 10 分' },
-  { plate: 'lao', text: '超出 10 小时部分，每服务或劳动 1 小时计 0.5 分，上限 5 分' },
-  { plate: 'lao', text: '获“十佳宿舍”“温馨之家”等称号，每人 5/3/2 分，上限 5 分' }
+  { plate: 'de', score: 10, tiered: false, text: '参加校/院/班级德育类活动，一次 10 分，上限 50 分' },
+  { plate: 'de', score: 35, tiered: false, text: '青年大学习当期全部完成计 35 分，缺一次扣 3 分' },
+  { plate: 'de', score: 40, tiered: true, text: '践行学生行为准则满分 40 分，夜不归宿、违禁电器、实验违规等每次扣 20 分' },
+  { plate: 'de', score: 30, tiered: true, text: '德育类荣誉或先进典型：国家级 30、市级 24、校级 16、院级 10，上限 30 分' },
+  { plate: 'de', score: 20, tiered: true, text: '学生组织、社团、班级服务：优秀 20 分、称职 10 分，上限 20 分' },
+  { plate: 'de', score: 20, tiered: false, text: '见义勇为、好人好事或在重大突发事件中表现突出，计 20 分' },
+  { plate: 'zhi', score: 10, tiered: false, text: '在公开刊物或校级以上媒体发表德育类文章/作品，计 10 分' },
+  { plate: 'zhi', score: 25, tiered: false, text: '参与校内外科技创新、创业竞赛并提交作品，或大创项目完成结题，计 25 分' },
+  { plate: 'zhi', score: 15, tiered: false, text: '参加学科科技、创新创业竞赛，一次 15 分，上限 30 分' },
+  { plate: 'zhi', score: 6, tiered: false, text: '参加学科科技、创新创业专题讲座或报告，一次 6 分，上限 30 分' },
+  { plate: 'zhi', score: 30, tiered: true, text: '学习态度满分 30 分，无故不参加教育教学活动每满 1 学时扣 5 分' },
+  { plate: 'zhi', score: 20, tiered: false, text: '取得教务处认定的学术论文、专利等成果，计 20 分' },
+  { plate: 'ti', score: 10, tiered: true, text: '作为校队或普通生参加校级/院级体育竞赛，一次 10 分；观众一次 2 分，上限 20 分' },
+  { plate: 'ti', score: 10, tiered: false, text: '参加体育、心理健康类活动，一次 10 分，上限 20 分' },
+  { plate: 'ti', score: 30, tiered: false, text: '“奔跑在北化”打卡完成学期计划，计 30 分' },
+  { plate: 'ti', score: 20, tiered: false, text: '国家大学生体质测试合格及免测计 20 分，不合格计 0 分' },
+  { plate: 'ti', score: 15, tiered: true, text: '全民健身运动等级自主认定，分两档计 15 分、10 分' },
+  { plate: 'mei', score: 10, tiered: true, text: '美育活动：演员、展览作者、参赛者一次 10 分，观众一次 5 分，上限 30 分' },
+  { plate: 'mei', score: 10, tiered: false, text: '美育类专题讲座或报告，一次 10 分，上限 30 分' },
+  { plate: 'mei', score: 5, tiered: false, text: '在慕课等平台学习音乐、美术、书法、舞蹈、戏剧等，每学时 5 分，上限 30 分' },
+  { plate: 'mei', score: 20, tiered: false, text: '举办面向校内外个人艺术作品展览或公演，经认定计 20 分' },
+  { plate: 'mei', score: 4, tiered: false, text: '参观美育类展馆、基地或参加实践活动，一次 4 分，上限 20 分' },
+  { plate: 'lao', score: 20, tiered: false, text: '参加劳动实践活动（含劳动类课程实践环节），每学期满 10 学时计 20 分，不足不计' },
+  { plate: 'lao', score: 20, tiered: false, text: '参加志愿服务，每学期满 10 小时计 20 分，不足不计' },
+  { plate: 'lao', score: 15, tiered: false, text: '利用寒暑假在校外开展社会实践并完成当期任务，计 15 分' },
+  { plate: 'lao', score: 20, tiered: true, text: '宿舍卫生：优 20、良 16、中 12、合格 10、不合格 0 分（每人计）' },
+  { plate: 'lao', score: 10, tiered: true, text: '志愿服务、劳动实践获国家/省/市/校/院荣誉：10/8/6/4/2 分，只取最高项，上限 10 分' },
+  { plate: 'lao', score: 5, tiered: false, text: '超出 10 小时部分，每服务或劳动 1 小时计 0.5 分，上限 5 分' },
+  { plate: 'lao', score: 5, tiered: true, text: '获“十佳宿舍”“温馨之家”等称号，每人 5/3/2 分，上限 5 分' }
 ];
 
 function plateOf(key) {
   return PLATES.find((plate) => plate.key === key) || PLATES[0];
+}
+
+/**
+ * 基础 / 拓展两档，各有独立上限（德 144/36、智 96/24…）。
+ * 上限是手册口径，放在数据层，页面不再自己算。
+ */
+function levelsOf(plate) {
+  const target = plate && plate.key ? plate : plateOf(plate && plate.key);
+  return [
+    { key: 'base', name: '基础评定', cap: target.base, hint: '常规活动计入，上限 ' + target.base + ' 分' },
+    { key: 'extra', name: '拓展评定', cap: target.extra, hint: '额外加分项，上限 ' + target.extra + ' 分' }
+  ];
+}
+
+/** 某一档的上限：level 取 'base' / 'extra' */
+function capOf(plateKey, level) {
+  const plate = plateOf(plateKey);
+  return level === 'extra' ? plate.extra : plate.base;
+}
+
+/**
+ * 某一板块某一档已经用掉多少、还剩多少。
+ * excludeId 用于编辑已有记录时把自己排除，否则会把自己算进「已用」。
+ */
+function usageOf(records, plateKey, level, excludeId) {
+  const cap = capOf(plateKey, level);
+  const list = (Array.isArray(records) ? records : [])
+    .map(normalizeRecord)
+    .filter((record) => record.plate === plateKey
+      && (record.level === 'extra') === (level === 'extra')
+      && record.id !== excludeId);
+  const raw = roundScore(list.reduce((sum, record) => sum + record.score, 0));
+  const used = Math.min(raw, cap);
+  return {
+    cap,
+    used,
+    raw,
+    remain: Math.max(0, roundScore(cap - used)),
+    count: list.length
+  };
 }
 
 function roundScore(value) {
@@ -128,8 +187,17 @@ function normalizeRecord(raw) {
     // 基础 / 拓展两档，上限不同（德 144/36、智 96/24…）
     level: source.level === 'extra' ? 'extra' : 'base',
     hours: Math.max(0, roundScore(source.hours)),
-    score: Math.max(0, roundScore(source.score)),
+    // 按手册口径封顶：超出该档上限按满分计。
+    // 以前不封顶，用户填 999 会原样存下并在列表里显示成 +999，
+    // 直到汇总时才被静默截断，看着像 App 算错了。
+    score: Math.min(
+      capOf(PLATES.some((plate) => plate.key === source.plate) ? source.plate : 'de',
+        source.level === 'extra' ? 'extra' : 'base'),
+      Math.max(0, roundScore(source.score))
+    ),
     photos,
+    // 用了哪条手册条款（存条款原文，方便回看依据）
+    clause: String(source.clause || '').trim(),
     note: String(source.note || '').trim(),
     address: String(source.address || '').trim(),
     latitude: String(source.latitude || '').trim(),
@@ -239,11 +307,14 @@ module.exports = {
   SPORT_TABLE,
   TERMS,
   TOTAL_FULL,
+  capOf,
   formatScore,
+  levelsOf,
   normalizeHour,
   normalizeRecord,
   plateOf,
   roundScore,
   summarize,
-  summarizeHours
+  summarizeHours,
+  usageOf
 };

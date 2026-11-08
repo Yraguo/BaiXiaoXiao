@@ -1,20 +1,50 @@
 <view class="page-shell">
+
+  <!-- 顶部回显：这条记录会加到哪一栏、还剩多少分 -->
+  <view class="echo" style="background:{{plate.bg}};border-left-color:{{plate.ink}}">
+    <view class="echo-head">
+      <text class="echo-badge" style="background:{{plate.ink}}">{{plate.short}}</text>
+      <text class="echo-name">{{plate.name}}</text>
+      <text class="echo-level">{{levels[levelIndex].name}}</text>
+    </view>
+    <view class="echo-line">
+      本档已用 {{usage.used}} / {{usage.cap}} 分
+      <text class="echo-remain" wx:if="{{usage.remain > 0}}">，还能加 {{usage.remain}} 分</text>
+      <text class="echo-full" wx:else>，已满</text>
+    </view>
+    <view class="echo-bar">
+      <view class="echo-bar-fill" style="width:{{usage.percent}}%;background:{{plate.ink}}"></view>
+    </view>
+  </view>
+
+  <!-- 恢复了上次没保存的填报 -->
+  <view wx:if="{{restored}}" class="restore">
+    <text class="restore-text">上次有没保存完的填报，已经帮你接上了</text>
+    <text class="restore-clear" bindtap="discardRestored">丢弃</text>
+  </view>
+
   <view class="card form-card">
+    <!-- 板块：五段色带，一个决策面看完五个板块 -->
     <view class="field-block plate-block">
-      <text class="field-label">选择板块</text>
-      <view class="plate-grid">
+      <text class="field-label">这条记录算在哪个板块</text>
+      <view class="plate-strip">
         <view
           wx:for="{{plates}}"
           wx:key="key"
-          class="plate-tile {{plateIndex === index ? 'active' : ''}}"
+          class="plate-seg {{plateIndex === index ? 'active' : ''}}"
+          style="background:{{plateIndex === index ? item.ink : item.bg}};color:{{plateIndex === index ? '#ffffff' : item.ink}}"
           data-index="{{index}}"
           bindtap="changePlate"
+          aria-role="button"
+          aria-label="{{item.short}} {{item.name}}"
         >
-          <text class="plate-key">{{item.short}}</text>
-          <text class="plate-name">{{item.name}}</text>
+          <text class="seg-key">{{item.short}}</text>
+          <text class="seg-cap">基 {{item.base}}</text>
         </view>
       </view>
-      <view class="field-hint">未指定条款时记作自由填报，仍计入所选板块合计。</view>
+      <view class="plate-note">
+        {{plate.name}} · 基础评定上限 {{plate.base}} 分，拓展评定上限 {{plate.extra}} 分
+      </view>
     </view>
 
     <view class="field">
@@ -51,84 +81,139 @@
       </picker>
     </view>
 
-    <view class="field">
+    <view class="field field-last">
       <text class="field-label">评定类型</text>
-      <picker mode="selector" range="{{levels}}" range-key="name" value="{{levelIndex}}" bindchange="changeLevel">
-        <view class="field-picker"><text>{{levels[levelIndex].name}}</text><text class="chevron">›</text></view>
-      </picker>
-    </view>
-
-    <view class="field-block">
-      <text class="field-label">志愿 / 活动时长（小时，选填）</text>
-      <view class="hour-chips">
-        <view
-          wx:for="{{hourChips}}"
-          wx:key="*this"
-          class="hour-chip {{draft.hours == item ? 'active' : ''}}"
-          data-hour="{{item}}"
-          bindtap="setHours"
-        >{{item}} 小时</view>
+      <view class="level-wrap">
+        <picker mode="selector" range="{{levels}}" range-key="name" value="{{levelIndex}}" bindchange="changeLevel">
+          <view class="field-picker"><text>{{levels[levelIndex].name}}</text><text class="chevron">›</text></view>
+        </picker>
+        <view class="level-hint">{{levels[levelIndex].hint}}</view>
       </view>
-      <view class="num-row">
-        <text class="num-label">自定义</text>
-        <input class="num-input" type="digit" value="{{draft.hours}}" placeholder="0" data-field="hours" bindinput="updateField" />
-        <text class="num-unit">小时</text>
-      </view>
-    </view>
-
-    <view class="field-block field-last">
-      <text class="field-label">自评分数</text>
-      <view class="score-chips">
-        <view
-          wx:for="{{scoreChips}}"
-          wx:key="*this"
-          class="score-chip {{draft.score == item ? 'active' : ''}}"
-          data-score="{{item}}"
-          bindtap="setScore"
-        >{{item}} 分</view>
-      </view>
-      <view class="num-row">
-        <text class="num-label">自定义</text>
-        <input class="num-input" type="digit" value="{{draft.score}}" placeholder="0" data-field="score" bindinput="updateField" />
-        <text class="num-unit">分</text>
-      </view>
-      <view class="field-hint">{{plate.name}} · {{levels[levelIndex].name}}上限 {{levels[levelIndex].cap}} 分，超出按满分计。</view>
     </view>
   </view>
 
+  <!-- 按手册条款打分：先知道规则能得几分，再填自己的分 -->
+  <view class="card form-card">
+    <view class="field-block clause-block">
+      <view class="clause-head">
+        <text class="field-label">依据手册条款</text>
+        <text class="clause-count">{{clauses.length}} 条</text>
+      </view>
+
+      <view class="clause-search">
+        <input
+          class="clause-search-input"
+          value="{{clauseQuery}}"
+          placeholder="搜条款，如 志愿服务 / 竞赛 / 宿舍"
+          data-field="clauseQuery"
+          bindinput="onClauseQuery"
+        />
+        <text wx:if="{{clauseQuery}}" class="clause-search-clear" bindtap="clearClauseQuery">×</text>
+      </view>
+
+      <view wx:if="{{draft.clause}}" class="clause-picked">
+        <text class="clause-picked-tag">依据</text>
+        <text class="clause-picked-text">{{draft.clause}}</text>
+        <text class="clause-picked-clear" bindtap="clearClause">取消</text>
+      </view>
+
+      <view wx:if="{{clauseOther}}" class="clause-other-hint">
+        有 {{clauseOther}} 条属于别的板块，点一下就切过去
+      </view>
+
+      <view wx:if="{{clauses.length}}" class="clause-list">
+        <view
+          wx:for="{{clauses}}"
+          wx:key="text"
+          class="clause-item {{item.picked ? 'active' : ''}}"
+          style="{{item.picked ? 'border-left-color:' + plate.ink + ';background:' + plate.bg : ''}}"
+          data-text="{{item.text}}"
+          data-score="{{item.score}}"
+          data-plate="{{item.plateKey}}"
+          bindtap="pickClause"
+        >
+          <view class="clause-body">
+            <view class="clause-tick-row">
+              <text wx:if="{{item.picked}}" class="clause-tick">✓</text>
+              <text wx:if="{{item.other}}" class="clause-other" style="background:{{item.plateInk}}">{{item.plateShort}}</text>
+              <text wx:if="{{item.tiered}}" class="clause-tier">{{item.tieredText}}</text>
+            </view>
+            <text class="clause-text">{{item.text}}</text>
+          </view>
+          <text class="clause-score" style="{{item.picked ? 'background:' + plate.ink : ''}}">{{item.scoreText}}</text>
+        </view>
+      </view>
+
+      <view wx:else class="clause-empty">
+        {{clauseQuery ? '没有匹配的条款，换个词试试' : '这个板块的条款都列在这儿了'}}
+      </view>
+    </view>
+
+    <!-- 自由填报：默认收起，避免一进来先看见一堆假选项 -->
+    <view class="field-block free-block">
+      <view class="free-toggle" bindtap="toggleFree" aria-role="button">
+        <text class="free-toggle-text">没有对应条款？自己填分</text>
+        <text class="chevron">{{showFree ? '⌃' : '⌄'}}</text>
+      </view>
+      <view wx:if="{{showFree}}" class="free-body">
+        <view class="free-chips">
+          <view
+            wx:for="{{freeChips}}"
+            wx:key="*this"
+            class="free-chip {{draft.score == item && !draft.clause ? 'active' : ''}}"
+            style="{{draft.score == item && !draft.clause ? 'background:' + plate.ink + ';color:#ffffff' : ''}}"
+            data-score="{{item}}"
+            bindtap="setScore"
+          >{{item}} 分</view>
+        </view>
+        <view class="num-row">
+          <text class="num-label">自定义</text>
+          <input class="num-input" type="digit" value="{{draft.score}}" placeholder="0" data-field="score" bindinput="updateField" />
+          <text class="num-unit">分</text>
+        </view>
+        <view class="free-hint">
+          自评分按你实际获得的认定分填，上限 {{levels[levelIndex].cap}} 分（本档还能加 {{usage.remain}} 分）。
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 证明：照片、水印、位置合在一块，它们本来就是一件事 -->
   <view class="card form-card">
     <view class="field-block">
-      <text class="field-label">照片</text>
+      <text class="field-label">证明照片</text>
       <view wx:if="{{draft.photos.length < maxPhotos}}" class="photo-actions">
-        <view class="photo-btn" bindtap="takePhoto">拍照</view>
-        <view class="photo-btn" bindtap="choosePhotos">从相册选</view>
+        <view class="photo-btn" bindtap="takePhoto" aria-role="button">拍照</view>
+        <view class="photo-btn" bindtap="choosePhotos" aria-role="button">从相册选</view>
       </view>
       <view wx:else class="field-hint">点照片右上角的 × 可以换一张</view>
       <view class="photo-grid">
         <view wx:for="{{draft.photos}}" wx:key="*this" class="photo-item">
           <image class="photo-img" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="previewPhoto"></image>
-          <view class="photo-remove" data-index="{{index}}" catchtap="removePhoto">×</view>
+          <view class="photo-remove" data-index="{{index}}" catchtap="removePhoto" aria-role="button" aria-label="删除照片">
+            <text class="photo-remove-dot">×</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <view class="field field-last">
+    <view class="field">
       <text class="field-label">拍照水印</text>
       <view class="field-picker">
         <text class="field-hint">开启后照片带时间与地点</text>
         <switch checked="{{draft.watermark}}" color="#007aff" bindchange="toggleWatermark" />
       </view>
     </view>
-  </view>
 
-  <view class="card form-card">
-    <view class="place-row">
+    <view class="field field-last">
       <text class="field-label">位置</text>
-      <view class="place-main {{draft.useLocation ? '' : 'is-off'}}" bindtap="choosePlace">
-        <view class="place-name {{draft.address ? '' : 'is-empty'}}">{{draft.address || '点击选择位置'}}</view>
-        <view class="place-sub">{{draft.useLocation ? (draft.address ? '微信地图选点 · 会写进水印' : '会打开微信地图，选一个地点') : '已关闭，照片只写时间'}}</view>
+      <view class="place-wrap">
+        <view class="place-main {{draft.useLocation ? '' : 'is-off'}}" bindtap="choosePlace">
+          <view class="place-name {{draft.address ? '' : 'is-empty'}}">{{draft.address || '点击选择位置'}}</view>
+          <view class="place-sub">{{draft.useLocation ? (draft.address ? '微信地图选点 · 会写进水印' : '会打开微信地图，选一个地点') : '已关闭，照片只写时间，位置也不记录'}}</view>
+        </view>
+        <switch class="place-switch" checked="{{draft.useLocation}}" color="#007aff" bindchange="toggleUseLocation" />
       </view>
-      <switch class="place-switch" checked="{{draft.useLocation}}" color="#007aff" bindchange="toggleUseLocation" />
     </view>
   </view>
 

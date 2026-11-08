@@ -1,4 +1,3 @@
-const { COURSE_COLORS, courseTint } = require('../../utils/colors');
 const { loadClasses, loadHours, saveHours } = require('../../utils/appStore');
 const { loadSettings } = require('../../utils/storage');
 const { currentWeek, dateStamp, todayDayIndex } = require('../../utils/date');
@@ -83,11 +82,12 @@ Page({
 
   reload() {
     const summary = summarize(loadClasses());
-    const plates = summary.plates.map((plate, index) => ({
+    // 颜色直接取数据层里的板块色，不再在页面里按下标另算一套
+    const plates = summary.plates.map((plate) => ({
       ...plate,
       scoreText: formatScore(plate.score),
-      color: COURSE_COLORS[index % COURSE_COLORS.length],
-      tint: courseTint(index)
+      color: plate.ink,
+      tint: plate.bg
     }));
 
     const filter = this.data.filter;

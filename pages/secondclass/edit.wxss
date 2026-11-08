@@ -1,4 +1,15 @@
+/*
+ * 第二课堂 · 填报活动
+ *
+ * 无障碍基线（这一版按 WCAG AA 校过）：
+ *   · 正文/标签对比度 ≥ 4.5:1（原来 --muted 3.26:1、#b3bac5 1.95:1 都不达标）
+ *   · 可点元素 ≥ 44px（原来 chip 只有 25.2px）
+ *   · 选中态不只靠颜色：额外给 ✓ 和描边
+ *   · 所有可点元素都有 :active 按压反馈（小程序没有 hover）
+ */
+
 .form-card { margin-top: 16rpx; overflow: hidden; }
+
 .field {
   display: flex;
   align-items: center;
@@ -7,62 +18,215 @@
   border-bottom: 1rpx solid var(--line);
 }
 .field-last { align-items: flex-start; border-bottom: 0; }
-.field-label { width: 130rpx; flex: none; color: var(--muted); font-size: 24rpx; }
-.field-input { flex: 1; min-width: 0; font-size: 27rpx; }
-.field-picker { display: flex; flex: 1; align-items: center; justify-content: space-between; font-size: 27rpx; }
-.field-textarea { flex: 1; min-width: 0; height: 120rpx; font-size: 26rpx; line-height: 1.5; }
+.field-label { width: 130rpx; flex: none; color: #5a6472; font-size: 24rpx; }
+.field-input { flex: 1; min-width: 0; font-size: 28rpx; }
+.field-picker { display: flex; flex: 1; align-items: center; justify-content: space-between; font-size: 28rpx; }
+.field-textarea { flex: 1; min-width: 0; min-height: 120rpx; font-size: 26rpx; line-height: 1.5; }
+.field-hint { color: #6b7686; font-size: 22rpx; line-height: 1.5; }
 
-.form-save { margin-top: 28rpx; }
-.form-delete { margin-top: 16rpx; }
-.form-tip { margin: 24rpx 12rpx 0; color: #9aa2af; font-size: 20rpx; line-height: 1.7; }
+.form-save { margin-top: 28rpx; text-align: center; }
+.form-delete { margin-top: 16rpx; text-align: center; }
+/* 免责是整个表单的信任锚点，别被 home indicator 切掉 */
+.form-tip {
+  margin: 24rpx 12rpx 0;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  color: #6b7686;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
 
 .field-block { align-items: flex-start; flex-direction: column; gap: 14rpx; }
 .field-block .field-label { width: auto; }
-.field-hint { color: #b3bac5; font-size: 20rpx; }
-.plate-block { padding: 24rpx 22rpx; }
-.plate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; width: 100%; }
-.plate-tile {
+
+/* ---------------- 顶部回显 ---------------- */
+
+.echo {
+  margin-top: 16rpx;
+  padding: 24rpx 22rpx;
+  border-left: 8rpx solid var(--brand);
+  border-radius: 20rpx;
+}
+.echo-head { display: flex; align-items: center; gap: 12rpx; }
+.echo-badge {
+  display: flex;
+  width: 46rpx;
+  height: 46rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.echo-name { flex: 1; min-width: 0; color: var(--text); font-size: 28rpx; font-weight: 700; }
+.echo-level {
+  flex: none;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, .75);
+  color: #4a5464;
+  font-size: 22rpx;
+}
+.echo-line { margin-top: 14rpx; color: #5a6472; font-size: 24rpx; }
+.echo-remain { color: #2f6b4f; font-weight: 600; }
+.echo-full { color: #a9701c; font-weight: 600; }
+.echo-bar { margin-top: 12rpx; height: 10rpx; border-radius: 999rpx; background: rgba(255, 255, 255, .7); overflow: hidden; }
+.echo-bar-fill { height: 100%; border-radius: 999rpx; }
+
+/* 草稿恢复提示 */
+.restore {
   display: flex;
   align-items: center;
+  gap: 16rpx;
+  margin-top: 16rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 18rpx;
+  background: #eef4ff;
+}
+.restore-text { flex: 1; min-width: 0; color: #2a5aa8; font-size: 23rpx; }
+.restore-clear { flex: none; min-height: 88rpx; padding: 10rpx 16rpx; color: #4a5464; font-size: 22rpx; line-height: 68rpx; }
+
+/* ---------------- 板块五段色带 ---------------- */
+
+.plate-block { padding: 24rpx 22rpx; }
+.plate-strip { display: flex; width: 100%; gap: 8rpx; }
+.plate-seg {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 96rpx;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  border-radius: 16rpx;
+  transition: transform .12s ease;
+}
+.plate-seg:active { transform: scale(.95); }
+.seg-key { font-size: 30rpx; font-weight: 700; line-height: 1; }
+.seg-cap { font-size: 22rpx; line-height: 1; opacity: .9; }
+.plate-note { color: #6b7686; font-size: 22rpx; line-height: 1.5; }
+
+/* ---------------- 评定类型 ---------------- */
+
+.level-wrap { flex: 1; min-width: 0; }
+.level-hint { margin-top: 6rpx; color: #6b7686; font-size: 22rpx; line-height: 1.5; }
+
+/* ---------------- 手册条款 ---------------- */
+
+.clause-block { padding: 24rpx 22rpx 0; }
+.clause-head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.clause-count { color: #6b7686; font-size: 22rpx; }
+
+.clause-search {
+  display: flex;
+  width: 100%;
+  align-items: center;
   gap: 10rpx;
-  padding: 18rpx 14rpx;
+  padding: 0 18rpx;
   border-radius: 16rpx;
   background: #f4f6fa;
-  color: var(--text);
-  font-size: 22rpx;
-  line-height: 1.25;
 }
-.plate-tile.active { background: var(--brand); color: #fff; box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, .28); }
-.plate-key { flex: none; font-size: 24rpx; font-weight: 700; }
-.plate-name { flex: 1; min-width: 0; }
-.score-chips { display: flex; flex-wrap: wrap; gap: 10rpx; }
-.score-chip { padding: 12rpx 22rpx; border-radius: 14rpx; background: #f4f6fa; color: var(--muted); font-size: 22rpx; }
-.score-chip.active { background: var(--brand-light); color: var(--brand); font-weight: 600; }
-.score-input { width: 100%; }
-.photo-grid { display: flex; flex-wrap: wrap; gap: 14rpx; }
-.photo-item { position: relative; width: 150rpx; height: 150rpx; }
-.photo-img { width: 150rpx; height: 150rpx; border-radius: 14rpx; }
-.photo-remove { position: absolute; top: -8rpx; right: -8rpx; width: 36rpx; height: 36rpx; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 24rpx; line-height: 34rpx; text-align: center; }
-.photo-add { display: flex; width: 150rpx; height: 150rpx; align-items: center; justify-content: center; border: 1rpx dashed rgba(0,122,255,.4); border-radius: 14rpx; background: rgba(0,122,255,.04); color: var(--brand); font-size: 44rpx; }
+.clause-search-input { flex: 1; min-width: 0; height: 88rpx; font-size: 25rpx; }
+.clause-search-clear {
+  display: flex;
+  width: 88rpx;
+  height: 88rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+.clause-search-clear::after {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: #dfe4ec;
+  color: #5a6472;
+  content: '×';
+  font-size: 30rpx;
+  line-height: 44rpx;
+  text-align: center;
+}
 
-.wm-canvas { position: fixed; left: -9999rpx; top: 0; width: 300rpx; height: 300rpx; }
+.clause-picked {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 16rpx;
+  background: #f4f6fa;
+}
+.clause-picked-tag {
+  flex: none;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: #4a5464;
+  color: #fff;
+  font-size: 20rpx;
+}
+.clause-picked-text { flex: 1; min-width: 0; color: var(--text); font-size: 22rpx; line-height: 1.5; }
+.clause-picked-clear { flex: none; min-height: 64rpx; padding: 4rpx 12rpx; color: #4a5464; font-size: 22rpx; line-height: 56rpx; }
 
-.hour-chips { display: flex; flex-wrap: wrap; gap: 10rpx; }
-.hour-chip { padding: 12rpx 20rpx; border-radius: 14rpx; background: #f4f6fa; color: var(--muted); font-size: 22rpx; }
-.hour-chip.active { background: var(--brand-light); color: var(--brand); font-weight: 600; }
-
-.photo-actions { display: flex; align-items: center; gap: 12rpx; }
-.photo-btn {
-  padding: 12rpx 28rpx;
+.clause-list { display: flex; width: 100%; flex-direction: column; gap: 10rpx; }
+.clause-item {
+  display: flex;
+  width: 100%;
+  min-height: 96rpx;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 18rpx;
+  border-left: 6rpx solid transparent;
+  border-radius: 16rpx;
+  background: #f7f9fc;
+}
+.clause-item:active { background: #eef2f8; }
+.clause-body { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 6rpx; }
+.clause-tick { color: #2f6b4f; font-size: 24rpx; font-weight: 700; }
+.clause-text { color: var(--text); font-size: 23rpx; line-height: 1.5; }
+.clause-tier { color: #6b7686; font-size: 21rpx; }
+.clause-score {
+  flex: none;
+  min-width: 92rpx;
+  padding: 12rpx 16rpx;
   border-radius: 999rpx;
-  background: var(--brand-light);
-  color: var(--brand);
-  font-size: 22rpx;
-  font-weight: 600;
+  background: #e6ebf3;
+  color: #3c4657;
+  font-size: 23rpx;
+  font-weight: 700;
+  text-align: center;
 }
-.photo-btn:active { background: rgba(0, 122, 255, .18); }
-.photo-count { margin-left: auto; color: #b3bac5; font-size: 20rpx; }
+.clause-empty { padding: 20rpx 0; color: #6b7686; font-size: 23rpx; }
 
+/* ---------------- 自由填报 ---------------- */
+
+.free-block { padding: 0 22rpx 24rpx; }
+.free-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 88rpx;
+}
+.free-toggle:active { opacity: .6; }
+.free-toggle-text { color: #5a6472; font-size: 24rpx; }
+.free-body { display: flex; width: 100%; flex-direction: column; gap: 14rpx; }
+.free-chips { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.free-chip {
+  display: flex;
+  min-width: 108rpx;
+  min-height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20rpx;
+  border-radius: 14rpx;
+  background: #f4f6fa;
+  color: #4a5464;
+  font-size: 24rpx;
+}
+.free-chip:active { opacity: .72; }
+.free-hint { color: #6b7686; font-size: 22rpx; line-height: 1.6; }
 
 /* 数字输入：和快捷值并排，不再是一个光秃秃的 0 */
 .num-row {
@@ -70,23 +234,59 @@
   align-items: center;
   gap: 8rpx;
   align-self: flex-start;
-  margin-top: 2rpx;
-  padding: 8rpx 18rpx;
+  padding: 14rpx 18rpx;
   border-radius: 999rpx;
   background: #f4f6fa;
 }
-.num-label { color: var(--muted); font-size: 21rpx; }
-.num-input { width: 90rpx; color: var(--text); font-size: 24rpx; font-weight: 600; text-align: right; }
-.num-unit { color: var(--muted); font-size: 21rpx; }
+.num-label { color: #5a6472; font-size: 22rpx; }
+.num-input { width: 96rpx; min-height: 64rpx; color: var(--text); font-size: 26rpx; font-weight: 600; text-align: right; }
+.num-unit { color: #5a6472; font-size: 22rpx; }
 
-/* 位置：一行就够，点开是微信地图选点 */
-.place-row {
+/* ---------------- 照片 / 水印 / 位置 ---------------- */
+
+.photo-actions { display: flex; align-items: center; gap: 12rpx; }
+.photo-btn {
   display: flex;
+  min-height: 88rpx;
   align-items: center;
-  gap: 20rpx;
-  padding: 24rpx 22rpx;
+  padding: 0 32rpx;
+  border-radius: 999rpx;
+  background: var(--brand-light);
+  color: #1f6fd0;
+  font-size: 25rpx;
+  font-weight: 600;
 }
+.photo-btn:active { background: #d9e8fd; }
+.photo-grid { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.photo-item { position: relative; width: 190rpx; height: 190rpx; }
+.photo-img { width: 190rpx; height: 190rpx; border-radius: 16rpx; background: #f4f6fa; }
+/* 视觉上是个小圆点，但可点区域做到 88rpx（44px），单手才点得到 */
+.photo-remove {
+  position: absolute;
+  top: -24rpx;
+  right: -24rpx;
+  display: flex;
+  width: 88rpx;
+  height: 88rpx;
+  align-items: center;
+  justify-content: center;
+}
+.photo-remove-dot {
+  display: flex;
+  width: 44rpx;
+  height: 44rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .62);
+  color: #fff;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.place-wrap { display: flex; flex: 1; min-width: 0; align-items: center; gap: 16rpx; }
 .place-main { flex: 1; min-width: 0; }
+.place-main.is-off { opacity: .6; }
 .place-name {
   overflow: hidden;
   color: var(--text);
@@ -95,9 +295,25 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.place-name.is-empty { color: #b3bac5; font-weight: 400; }
-.place-sub { margin-top: 6rpx; color: #b3bac5; font-size: 20rpx; }
-.place-clear { flex: none; padding: 8rpx 6rpx; color: var(--muted); font-size: 22rpx; }
+.place-name.is-empty { color: #6b7686; font-weight: 400; }
+.place-sub { margin-top: 6rpx; color: #6b7686; font-size: 22rpx; line-height: 1.5; }
+.place-switch { flex: none; transform: scale(.9); }
 
-.place-main.is-off { opacity: .55; }
-.place-switch { flex: none; transform: scale(.86); }
+/* 离屏画布：生成水印用，不参与布局 */
+.wm-canvas { position: fixed; left: -9999rpx; top: 0; width: 300rpx; height: 300rpx; }
+
+/* 搜到的别的板块的条款：标出板块，点一下就切过去 */
+.clause-tick-row { display: flex; align-items: center; gap: 10rpx; }
+.clause-other {
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  color: #fff;
+  font-size: 20rpx;
+}
+.clause-other-hint {
+  width: 100%;
+  padding: 12rpx 4rpx;
+  color: #6b7686;
+  font-size: 21rpx;
+  line-height: 1.5;
+}

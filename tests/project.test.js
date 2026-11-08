@@ -162,12 +162,122 @@ test('二课填报表单对齐安卓版：单张照片、基础/拓展、微信�
   assert.match(js, /MAX_PHOTOS = 1/, '照片只要一张');
   assert.match(wxml, /takePhoto/, '要有拍照按钮');
   assert.match(wxml, /choosePhotos/, '要有相册按钮');
-  assert.match(js, /基础评定/, '要有基础档');
-  assert.match(js, /拓展评定/, '要有拓展档');
+  // 基础 / 拓展两档的文案与上限都收到数据层了，页面只负责显示
+  const sc = fs.readFileSync(path.join(root, 'utils/secondclass.js'), 'utf8');
+  assert.match(sc, /基础评定/, '数据层要有基础档');
+  assert.match(sc, /拓展评定/, '数据层要有拓展档');
+  assert.match(js, /levelsOf/, '页面上限从数据层取，不自己算');
   // 位置只用微信地图选点：不再让用户手填经纬度
   assert.match(js, /wx\.chooseLocation/, '位置用 wx.chooseLocation 取地点名');
   assert.doesNotMatch(wxml, /data-field="latitude"/, '表单里不再出现纬度输入框');
   assert.ok(app.requiredPrivateInfos.includes('chooseLocation'), 'app.json 要声明 chooseLocation');
   // 离屏 canvas 必须在页面最外层，不能夹在板块 chips 中间
   assert.match(wxml.trim(), /<\/canvas>$/, 'canvas 放在页面末尾');
+});
+
+
+test('二课表单按手册条款打分，不再堆一排假分值', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/edit.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  const sc = fs.readFileSync(path.join(root, 'utils/secondclass.js'), 'utf8');
+
+  // 条款表要带建议分值，否则「选中即填分」无从谈起
+  const clauses = sc.slice(sc.indexOf('const CLAUSES'), sc.indexOf('function plateOf'));
+  const count = (clauses.match(/score: \d+/g) || []).length;
+  assert.equal(count, 29, '29 条条款都要有建议分值');
+  assert.match(clauses, /tiered: true/, '分档条款要标出来');
+
+  assert.match(wxml, /clause-item/, '要渲染条款列表');
+  assert.match(wxml, /pickClause/, '条款可选中');
+  assert.match(js, /pickClause\(event\)/, '选中条款要自动填分');
+  assert.match(js, /'draft\.clause': clause\.text/, '要把条款原文存进记录');
+  assert.match(wxml, /clause-search/, '要能搜条款');
+
+  // 原来的 9 个分值 chip 是认知噪声，换成 4 个常见值 + 自定义
+  assert.doesNotMatch(js, /SCORE_CHIPS/, '不再有 9 个分值快捷值');
+  assert.match(js, /FREE_CHIPS = \[5, 10, 20, 35\]/, '自由填报只留 4 个常见值');
+  assert.match(wxml, /free-chip/, '自由填报区要存在');
+  assert.match(wxml, /toggleFree/, '自由填报默认收起');
+});
+
+test('分数按手册上限封顶，换板块/换档位都会重新校验', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  const sc = fs.readFileSync(path.join(root, 'utils/secondclass.js'), 'utf8');
+
+  // 数据层封顶：德基础 144、德拓展 36、体基础 80
+  assert.match(sc, /score: Math\.min\(/, 'normalizeRecord 要按上限封顶');
+  assert.match(sc, /function capOf/, '要有 capOf');
+  assert.match(sc, /function usageOf/, '要有额度计算');
+  assert.match(js, /Math\.min\(Number\(this\.data\.draft\.score\) \|\| 0, cap\)/, '换板块要把分数收进新上限');
+  assert.match(js, /Math\.min\(Number\(this\.data\.draft\.score\) \|\| 0, level\.cap\)/, '换档位也要收上限');
+  assert.match(js, /usageOf\(/, '要显示已用/还剩');
+});
+
+test('板块色从数据层统一取，表单和列表是同一套色', () => {
+  const sc = fs.readFileSync(path.join(root, 'utils/secondclass.js'), 'utf8');
+  const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/edit.wxml'), 'utf8');
+  const indexJs = fs.readFileSync(path.join(root, 'pages/secondclass/index.js'), 'utf8');
+  assert.match(sc, /PLATE_PALETTE/, '板块色要定义在数据层');
+  assert.match(sc, /ink: '#/, '每个板块要有墨色');
+  assert.match(sc, /bg: '#/, '每个板块要有浅底');
+  assert.match(wxml, /plate-seg/, '表单要用五段色带');
+  assert.match(wxml, /item\.ink/, '色带颜色取自数据层的板块');
+  // 列表页不能再自己按下标另算一套，否则两页又对不上了
+  assert.doesNotMatch(indexJs, /COURSE_COLORS/, '列表页不再从课表色板取色');
+  assert.match(indexJs, /color: plate\.ink/, '列表页直接用数据层的板块色');
+});
+
+test('板块色与正文对比度全部达到 WCAG AA', () => {
+  const { PLATES } = require('../utils/secondclass');
+  const hex = (color) => {
+    let value = String(color).replace('#', '');
+    if (value.length === 3) value = value.split('').map((c) => c + c).join('');
+    return [0, 2, 4].map((i) => parseInt(value.substr(i, 2), 16));
+  };
+  const lum = (rgb) => {
+    const [r, g, b] = rgb.map((v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (fg, bg) => {
+    const a = lum(hex(fg));
+    const b = lum(hex(bg));
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  };
+
+  PLATES.forEach((plate) => {
+    // 三种用法都要达标：浅底上的墨色、墨色上的白字、白底上的墨色
+    assert.ok(ratio(plate.ink, plate.bg) >= 4.5, `${plate.short} 墨色压浅底要 ≥4.5:1`);
+    assert.ok(ratio('#ffffff', plate.ink) >= 4.5, `${plate.short} 白字压墨色要 ≥4.5:1`);
+    assert.ok(ratio(plate.ink, '#ffffff') >= 4.5, `${plate.short} 墨色压白底要 ≥4.5:1`);
+  });
+});
+
+test('草稿落盘 + 定位开关真的清地址 + 权限被拒给出去设置的出路', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  assert.match(js, /DRAFT_KEY/, '要有草稿键');
+  assert.match(js, /writeDraft\(\)/, '要写草稿');
+  assert.match(js, /onUnload/, '离开时落盘');
+  assert.match(js, /restored/, '要提示恢复了草稿');
+  // 关掉定位必须把已存的地址一起清掉
+  assert.match(js, /if \(!on\) \{[\s\S]*?'draft\.address': ''/, '关掉定位要清地址');
+  // 权限被拒不能只 toast，得给「去设置」
+  assert.match(js, /wx\.openSetting/, '权限被拒要给去设置的入口');
+  assert.match(js, /已按上限计入/, '超上限保存要说清楚');
+});
+
+test('搜条款能搜到别的板块，点了会自动切过去', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  const wxml = fs.readFileSync(path.join(root, 'pages/secondclass/edit.wxml'), 'utf8');
+  // 不搜只看当前板块，一搜就搜全部
+  assert.match(js, /query\s*\n\s*\? CLAUSES\.filter/, '搜索要跨全部板块');
+  assert.match(js, /other: clause\.plate !== current/, '要标出属于别的板块的');
+  assert.match(js, /clauseOther/, '要统计别的板块命中数');
+  // 点到别的板块的条款 → 自动切板块
+  assert.match(js, /plateKey && plateKey !== this\.data\.plate\.key/, '要能识别跨板块点击');
+  assert.match(js, /已切到/, '切换板块要给反馈');
+  assert.match(wxml, /data-plate="\{\{item\.plateKey\}\}"/, '要带上板块 key');
+  assert.match(wxml, /clause-other/, '别的板块要标出来');
 });
