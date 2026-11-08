@@ -139,6 +139,7 @@ Page({
       return { ...period, active: week === shownCurrentWeek && period.period === activePeriod };
     });
 
+    const monthOfWeek = dateForDay(settings.semesterStartMonday, week, 0).getMonth() + 1;
     const dayColumns = Array.from({ length: visibleDays }, (_, dayIndex) => {
       const date = dateForDay(settings.semesterStartMonday, week, dayIndex);
       const isToday = week === shownCurrentWeek && dayIndex === todayIndex;
@@ -170,6 +171,8 @@ Page({
       return {
         dayIndex,
         label: DAY_NAMES[dayIndex],
+        weekChar: DAY_NAMES[dayIndex].slice(1),
+        dayNum: date.getDate(),
         date: monthDay(date),
         isToday,
         blocks

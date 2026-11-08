@@ -51,14 +51,17 @@
 
   <view wx:else class="timetable-card {{weekAnim}}" style="transform:translateX({{dragX}}rpx);transition:{{dragTransition}}">
     <view class="table-head">
-      <view class="period-head">节次</view>
+      <view class="period-head">
+        <text class="period-month">{{headMonth}}</text>
+        <text class="period-month-unit">月</text>
+      </view>
       <view
         wx:for="{{dayColumns}}"
         wx:key="dayIndex"
         class="day-head {{item.isToday ? 'today' : ''}}"
       >
-        <view>{{item.label}}</view>
-        <text>{{item.date}}</text>
+        <view class="day-week">{{item.weekChar}}</view>
+        <text class="day-date">{{item.dayNum}}</text>
       </view>
     </view>
     <view class="table-body">
