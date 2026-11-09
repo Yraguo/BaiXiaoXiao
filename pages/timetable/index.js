@@ -899,10 +899,11 @@ const pageLogic = {
     apply();
     this.setData({ monthAnim: 'month-in' });
     clearTimeout(this.weekAnimTimer);
+    // 影子淡出 110ms + 新月延迟 50ms 再淡入 170ms ≈ 220ms，多留一点余量
     this.weekAnimTimer = setTimeout(() => {
       this.setData({ ghostCells: [], monthAnim: '' });
       this.switching = false;
-    }, 220);
+    }, 240);
   },
 
   goToday() {

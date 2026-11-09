@@ -314,11 +314,17 @@
 .weekdays { display: flex; padding: 4rpx 0 6rpx; }
 .weekday { flex: 1; color: var(--muted); font-size: calc(20rpx * var(--fs, 1)); text-align: center; }
 
-/* 换月：旧月份这层是「影子」，原地淡出；新月份在它上面淡入，中间不会空白 */
+/*
+ * 换月：旧月份这层是「影子」，原地淡出；新月份在它上面淡入。
+ *
+ * 两者错开 50ms——完全重叠的话中间会出现 50% 的「双层数字」，错开之后
+ * 只是一次很轻的闪烁，看着像刷新，不像重影。全程没有位移，
+ * 所以最边上那列日期永远不会被卡片边缘切掉半截。
+ */
 .month-body { position: relative; }
 .grid { display: flex; flex-wrap: wrap; }
-.grid-ghost { position: absolute; top: 0; right: 0; left: 0; animation: month-ghost-out .16s ease-in forwards; pointer-events: none; }
-.grid.month-in { animation: month-in .18s ease-out; }
+.grid-ghost { position: absolute; top: 0; right: 0; left: 0; animation: month-ghost-out .11s ease-out forwards; pointer-events: none; }
+.grid.month-in { animation: month-in .17s ease-out .05s both; }
 .cell { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 14.2857%; height: 94rpx; border-radius: 18rpx; }
 .cell.dim .day-number { color: var(--ink-1); }
 .day-number { font-size: calc(30rpx * var(--fs, 1)); line-height: 1.1; }
