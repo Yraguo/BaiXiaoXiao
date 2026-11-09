@@ -155,7 +155,7 @@
         淡入淡出没有位移，永远不会切到数字。
       -->
       <view class="month-body">
-        <view wx:if="{{ghostCells.length}}" class="grid grid-ghost">
+        <view wx:if="{{ghostCells.length}}" class="grid grid-ghost {{ghostDir}}">
           <view
             wx:for="{{ghostCells}}"
             wx:key="date"

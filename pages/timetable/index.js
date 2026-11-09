@@ -64,8 +64,9 @@ const pageLogic = {
     monthText: '',
     weekdays: ['日', '一', '二', '三', '四', '五', '六'],
     cells: [],
-    // 换月淡出用的旧月份格子（只是影子，不接手势），和 monthAnim 配合
+    // 换月淡出用的旧月份格子（只是影子，不接手势），配合 monthAnim / ghostDir
     ghostCells: [],
+    ghostDir: '',
     monthAnim: '',
     selectedDate: '',
     selectedLabel: '',
@@ -892,18 +893,20 @@ const pageLogic = {
       apply();
       return;
     }
-    // 与切周同一套节奏：先淡出旧月份，换数据后再淡入新月份
+    // 与切周同一套节奏：旧月份先飘出淡掉，新月份再从反方向飘回来
     this.switching = true;
+    // 往后翻（delta > 0）内容向上走，往前翻向下走，和切周的方向感一致
+    const dir = delta > 0 ? 'up' : 'down';
     // 旧格子留一层影子垫在下面，新月份在它上面淡入 —— 中间不会出现空白帧
-    this.setData({ ghostCells: this.data.cells, monthAnim: '' });
+    this.setData({ ghostCells: this.data.cells, ghostDir: dir, monthAnim: '' });
     apply();
-    this.setData({ monthAnim: 'month-in' });
+    this.setData({ monthAnim: `month-in ${dir}` });
     clearTimeout(this.weekAnimTimer);
-    // 影子淡出 110ms + 新月延迟 50ms 再淡入 170ms ≈ 220ms，多留一点余量
+    // 影子 160ms + 新月延迟 60ms 再淡入 220ms ≈ 280ms，和 switchTab 的切周同档
     this.weekAnimTimer = setTimeout(() => {
       this.setData({ ghostCells: [], monthAnim: '' });
       this.switching = false;
-    }, 240);
+    }, 300);
   },
 
   goToday() {

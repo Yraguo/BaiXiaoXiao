@@ -520,16 +520,19 @@ test('课表行高：JS 的 ROW_HEIGHT 与 wxss 的格子高度必须一致', ()
   assert.equal(periodCell, rowHeight, '.period-cell 的高度要等于 ROW_HEIGHT');
 });
 
-test('换月只做交叉淡入淡出，不做横向位移（位移会把边缘日期切掉半截）', () => {
+test('换月只飘纵向，绝不做横向位移（横向会把边缘日期切掉半截）', () => {
   const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
 
   const grab = (name) => (wxss.match(new RegExp(`@keyframes ${name} \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
-  ['month-in', 'month-ghost-out'].forEach((name) => {
+  ['month-in-up', 'month-in-down', 'month-ghost-up', 'month-ghost-down'].forEach((name) => {
     const block = grab(name);
     assert.ok(block, `缺少 @keyframes ${name}`);
-    // 位移哪怕只有 8%（约 48px），最左/最右那列日期也会被卡片边切掉半截，
+    // 横向位移哪怕只有 8%（约 48px），最左/最右那列日期也会被卡片边切掉半截，
     // 看起来就是「屏幕左边多了一条边」——这个坑踩过两次
-    assert.doesNotMatch(block, /translate|scale|rotate/, `${name} 里不能有位移，会把边缘日期切掉`);
+    assert.doesNotMatch(block, /translateX/, `${name} 里不能有横向位移，会把边缘日期切掉`);
+    // 纵向也别飘太远：格子高 94rpx，飘出 24rpx 以上就会切到数字
+    const drift = Number((block.match(/translateY\((-?\d+)rpx\)/) || [])[1] || 0);
+    assert.ok(Math.abs(drift) <= 24, `${name} 纵向漂移 ${drift}rpx 太大，会顶到格子边缘`);
   });
 
   // 旧的两套横向位移关键帧已经删掉，别又被人加回来
@@ -537,13 +540,34 @@ test('换月只做交叉淡入淡出，不做横向位移（位移会把边缘�
   assert.doesNotMatch(wxss, /@keyframes grid-enter-right/, '别再给日历网格加横向位移');
 });
 
+test('换月节奏要和切周同一档，不能快到像闪一下', () => {
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+
+  const ms = (selector, prop) => {
+    const block = (wxss.match(new RegExp(`${selector.replace('.', '\\.')} \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
+    const hit = block.match(new RegExp(`${prop}:\\s*\\.(\\d+)s`));
+    return hit ? Number(hit[1]) * 1000 : 0;
+  };
+  const out = ms('.grid-ghost', 'animation-duration');
+  const inn = ms('.grid.month-in', 'animation-duration');
+  const delay = ms('.grid.month-in', 'animation-delay');
+
+  // 切周是 120ms 出 + 200ms 进，日历不能比它快太多
+  assert.ok(out >= 140, `旧月份淡出只有 ${out}ms，太快，看着像闪一下`);
+  assert.ok(inn >= 200, `新月份淡入只有 ${inn}ms，太快`);
+  assert.ok(delay >= 40, '两层完全不重叠会出现 50% 的双层数字');
+  assert.ok(out + delay + inn >= 280, `换月总时长 ${out + delay + inn}ms 偏短，和切周（320ms）差太多`);
+});
+
 test('换月时旧月份留一层影子垫在下面，中间不会闪白', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
   const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
 
-  assert.match(wxml, /class="grid grid-ghost"/, '影子层要把月份格子原样渲染出来');
+  assert.match(wxml, /class="grid grid-ghost \{\{ghostDir\}\}"/, '影子层要把月份格子原样渲染出来，还要带方向');
   assert.match(wxml, /wx:for="\{\{ghostCells\}\}"/);
   assert.match(js, /ghostCells: this\.data\.cells/, '换数据前先把旧格子拷一份给影子层');
+  assert.match(js, /ghostDir: dir/, '方向要跟着切月方向走');
   // 影子只是视觉残留，不能接手势
   assert.match(wxml, /wx:if="\{\{ghostCells\.length\}\}"/, '影子用 wx:if 控制，结束后要能移除');
 });

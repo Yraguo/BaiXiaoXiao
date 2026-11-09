@@ -116,12 +116,16 @@
 @keyframes wk-enter-left { from { transform: translateX(-26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /*
- * 换月：只有透明度，没有位移。
- * 位移哪怕只给 8%（约 48px），最左/最右那列日期也会被卡片边缘切掉半截，
- * 看起来就像屏幕左边多出一条边——这个坑踩过两次了。
+ * 换月：只做纵向漂移 + 淡化，节奏对齐切周（160ms 出 / 220ms 进）。
+ *
+ * 横向位移绝对不能用：日历比课表卡窄得多，哪怕只滑 8%（约 48px），
+ * 最左/最右那列日期也会被卡片边缘切掉半截，看起来就像屏幕左边多出一条边。
+ * 纵向只飘 16rpx（8px），格子高 94rpx，切不到数字。
  */
-@keyframes month-ghost-out { from { opacity: 1; } to { opacity: 0; } }
-@keyframes month-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes month-ghost-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-16rpx); } }
+@keyframes month-ghost-down { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(16rpx); } }
+@keyframes month-in-up { from { opacity: 0; transform: translateY(16rpx); } to { opacity: 1; transform: translateY(0); } }
+@keyframes month-in-down { from { opacity: 0; transform: translateY(-16rpx); } to { opacity: 1; transform: translateY(0); } }
 
 
 .table-head,
@@ -317,14 +321,33 @@
 /*
  * 换月：旧月份这层是「影子」，原地淡出；新月份在它上面淡入。
  *
- * 两者错开 50ms——完全重叠的话中间会出现 50% 的「双层数字」，错开之后
- * 只是一次很轻的闪烁，看着像刷新，不像重影。全程没有位移，
- * 所以最边上那列日期永远不会被卡片边缘切掉半截。
+ * 节奏和切周一样（出 160ms、进 220ms），比之前 110/170 慢一档——
+ * 之前快到像「闪一下」，用户反馈看着难受。
+ * 两层错开 60ms：完全重叠的中点是两层各 50% 的双层数字，看着像重影。
  */
 .month-body { position: relative; }
 .grid { display: flex; flex-wrap: wrap; }
-.grid-ghost { position: absolute; top: 0; right: 0; left: 0; animation: month-ghost-out .11s ease-out forwards; pointer-events: none; }
-.grid.month-in { animation: month-in .17s ease-out .05s both; }
+.grid-ghost {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  pointer-events: none;
+  animation-duration: .16s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+.grid-ghost.up { animation-name: month-ghost-up; }
+.grid-ghost.down { animation-name: month-ghost-down; }
+
+.grid.month-in {
+  animation-duration: .22s;
+  animation-timing-function: ease-out;
+  animation-delay: .06s;
+  animation-fill-mode: both;
+}
+.grid.month-in.up { animation-name: month-in-up; }
+.grid.month-in.down { animation-name: month-in-down; }
 .cell { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 14.2857%; height: 94rpx; border-radius: 18rpx; }
 .cell.dim .day-number { color: var(--ink-1); }
 .day-number { font-size: calc(30rpx * var(--fs, 1)); line-height: 1.1; }
