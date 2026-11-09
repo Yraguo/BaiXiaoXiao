@@ -100,32 +100,28 @@
  * 只动 transform 和 opacity，不触发重排。
  */
 /*
- * 只有课表网格 / 日历数字区动，其它卡片保持不动。
+ * 课表换周：整块滑出。
  *
- * 课表卡用 26% 的整块滑出，观感是「翻到下一周」。
- * 日历不能这么干：它比课表卡窄，26% 有 170rpx，滑到一半会在卡片左边缘
- * 露出半截日期数字，看着像屏幕边上多了一条边。所以日历单独一套——
- * 位移只给 8%，靠快速淡出来完成转场。
+ * 日历换月不在这里——它不能位移（哪怕 8% 也会把最边上的日期切掉半截），
+ * 走的是下面 .month-body 的交叉淡入淡出。
  */
 .timetable-card.wk-leave-left { animation: wk-leave-left .12s ease-in forwards; }
 .timetable-card.wk-leave-right { animation: wk-leave-right .12s ease-in forwards; }
 .timetable-card.wk-enter-right { animation: wk-enter-right .2s ease-out; }
 .timetable-card.wk-enter-left { animation: wk-enter-left .2s ease-out; }
 
-.grid.wk-leave-left { animation: grid-leave-left .12s ease-out forwards; }
-.grid.wk-leave-right { animation: grid-leave-right .12s ease-out forwards; }
-.grid.wk-enter-right { animation: grid-enter-right .2s ease-out; }
-.grid.wk-enter-left { animation: grid-enter-left .2s ease-out; }
-
 @keyframes wk-leave-left { to { transform: translateX(-26%); opacity: 0; } }
 @keyframes wk-leave-right { to { transform: translateX(26%); opacity: 0; } }
 @keyframes wk-enter-right { from { transform: translateX(26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes wk-enter-left { from { transform: translateX(-26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-@keyframes grid-leave-left { from { opacity: 1; } to { transform: translateX(-8%); opacity: 0; } }
-@keyframes grid-leave-right { from { opacity: 1; } to { transform: translateX(8%); opacity: 0; } }
-@keyframes grid-enter-right { from { transform: translateX(8%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes grid-enter-left { from { transform: translateX(-8%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/*
+ * 换月：只有透明度，没有位移。
+ * 位移哪怕只给 8%（约 48px），最左/最右那列日期也会被卡片边缘切掉半截，
+ * 看起来就像屏幕左边多出一条边——这个坑踩过两次了。
+ */
+@keyframes month-ghost-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes month-in { from { opacity: 0; } to { opacity: 1; } }
 
 
 .table-head,
@@ -304,9 +300,8 @@
   background: var(--surface-1);
   box-shadow: 0 6rpx 24rpx rgba(38, 57, 88, .05);
   /*
-   * 换月时网格会整体平移 26%（约 170rpx），比卡片自己的左右 padding 宽得多。
-   * 不裁的话那截日期格子会溢出到卡片外面，在屏幕最左边露出一条边——
-   * 课表卡一直有 overflow: hidden，所以只有日历出现过这个现象。
+   * 换月不再做位移，这条只是兜底：万一以后又有人给网格加动画，
+   * 溢出的部分也不会跑到卡片外面去。
    */
   overflow: hidden;
 }
@@ -319,7 +314,11 @@
 .weekdays { display: flex; padding: 4rpx 0 6rpx; }
 .weekday { flex: 1; color: var(--muted); font-size: calc(20rpx * var(--fs, 1)); text-align: center; }
 
+/* 换月：旧月份这层是「影子」，原地淡出；新月份在它上面淡入，中间不会空白 */
+.month-body { position: relative; }
 .grid { display: flex; flex-wrap: wrap; }
+.grid-ghost { position: absolute; top: 0; right: 0; left: 0; animation: month-ghost-out .16s ease-in forwards; pointer-events: none; }
+.grid.month-in { animation: month-in .18s ease-out; }
 .cell { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 14.2857%; height: 94rpx; border-radius: 18rpx; }
 .cell.dim .day-number { color: var(--ink-1); }
 .day-number { font-size: calc(30rpx * var(--fs, 1)); line-height: 1.1; }

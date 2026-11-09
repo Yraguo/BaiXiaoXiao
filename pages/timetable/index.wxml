@@ -149,16 +149,33 @@
         <text wx:for="{{weekdays}}" wx:key="*this" class="weekday">{{item}}</text>
       </view>
 
-      <view class="grid {{weekAnim}}">
-        <view
-          wx:for="{{cells}}"
-          wx:key="date"
-          class="cell {{item.inMonth ? '' : 'dim'}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
-          data-date="{{item.date}}"
-          bindtap="selectDay"
-        >
-          <text class="day-number">{{item.day}}</text>
-          <view class="dot {{item.hasNote ? 'show' : ''}}"></view>
+      <!--
+        换月用交叉淡入淡出：旧月份留一层影子在下面淡出，新月份在上面淡入。
+        之前是横向滑 8%，日期数字会被卡片边缘切掉半截，看着像屏幕左侧多了一条边。
+        淡入淡出没有位移，永远不会切到数字。
+      -->
+      <view class="month-body">
+        <view wx:if="{{ghostCells.length}}" class="grid grid-ghost">
+          <view
+            wx:for="{{ghostCells}}"
+            wx:key="date"
+            class="cell {{item.inMonth ? '' : 'dim'}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
+          >
+            <text class="day-number">{{item.day}}</text>
+            <view class="dot {{item.hasNote ? 'show' : ''}}"></view>
+          </view>
+        </view>
+        <view class="grid {{monthAnim}}">
+          <view
+            wx:for="{{cells}}"
+            wx:key="date"
+            class="cell {{item.inMonth ? '' : 'dim'}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
+            data-date="{{item.date}}"
+            bindtap="selectDay"
+          >
+            <text class="day-number">{{item.day}}</text>
+            <view class="dot {{item.hasNote ? 'show' : ''}}"></view>
+          </view>
         </view>
       </view>
     </view>

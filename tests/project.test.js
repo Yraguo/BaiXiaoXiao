@@ -520,10 +520,42 @@ test('课表行高：JS 的 ROW_HEIGHT 与 wxss 的格子高度必须一致', ()
   assert.equal(periodCell, rowHeight, '.period-cell 的高度要等于 ROW_HEIGHT');
 });
 
-test('日历卡裁掉换月动画的越界，不再在左侧露一条边', () => {
+test('换月只做交叉淡入淡出，不做横向位移（位移会把边缘日期切掉半截）', () => {
   const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
-  const block = (wxss.match(/\.calendar \{[\s\S]*?\n\}/) || [''])[0];
-  assert.match(block, /overflow:\s*hidden/, '.calendar 不裁剪的话，网格平移 26% 会溢出到卡片外');
+
+  const grab = (name) => (wxss.match(new RegExp(`@keyframes ${name} \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
+  ['month-in', 'month-ghost-out'].forEach((name) => {
+    const block = grab(name);
+    assert.ok(block, `缺少 @keyframes ${name}`);
+    // 位移哪怕只有 8%（约 48px），最左/最右那列日期也会被卡片边切掉半截，
+    // 看起来就是「屏幕左边多了一条边」——这个坑踩过两次
+    assert.doesNotMatch(block, /translate|scale|rotate/, `${name} 里不能有位移，会把边缘日期切掉`);
+  });
+
+  // 旧的两套横向位移关键帧已经删掉，别又被人加回来
+  assert.doesNotMatch(wxss, /@keyframes grid-leave-left/, '别再给日历网格加横向位移');
+  assert.doesNotMatch(wxss, /@keyframes grid-enter-right/, '别再给日历网格加横向位移');
+});
+
+test('换月时旧月份留一层影子垫在下面，中间不会闪白', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+
+  assert.match(wxml, /class="grid grid-ghost"/, '影子层要把月份格子原样渲染出来');
+  assert.match(wxml, /wx:for="\{\{ghostCells\}\}"/);
+  assert.match(js, /ghostCells: this\.data\.cells/, '换数据前先把旧格子拷一份给影子层');
+  // 影子只是视觉残留，不能接手势
+  assert.match(wxml, /wx:if="\{\{ghostCells\.length\}\}"/, '影子用 wx:if 控制，结束后要能移除');
+});
+
+test('课表表头左上角要显示月份数字，不能只剩一个「月」', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+
+  assert.match(wxml, /class="period-month">\{\{headMonth\}\}</, '格子第一行是月份数字');
+  assert.match(wxml, /class="period-month-unit">月</, '第二行才是「月」字');
+  // 之前 headMonth 从来没赋过值，格子里只剩一个孤零零的「月」
+  assert.match(js, /headMonth: monthOfWeek/, '月份数字要跟着当前周算出来的月份走');
 });
 
 test('二课板块条的颜色走主题，不被 platesWithTotals 刷回浅色', () => {

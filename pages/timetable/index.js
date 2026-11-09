@@ -53,6 +53,8 @@ const pageLogic = {
     week: 1,
     currentWeek: 1,
     weekTitle: '',
+    // 表头左上角的月份数字（下面一行固定是「月」）
+    headMonth: 0,
     // 切换周次时的入场动画类名，'week-in-right' / 'week-in-left'
     weekAnim: '',
     // 顶部两个视图：'timetable' 课表 / 'notes' 记事本
@@ -62,6 +64,9 @@ const pageLogic = {
     monthText: '',
     weekdays: ['日', '一', '二', '三', '四', '五', '六'],
     cells: [],
+    // 换月淡出用的旧月份格子（只是影子，不接手势），和 monthAnim 配合
+    ghostCells: [],
+    monthAnim: '',
     selectedDate: '',
     selectedLabel: '',
     dayNotes: [],
@@ -254,6 +259,9 @@ const pageLogic = {
     this.setData({
       periodRows,
       dayColumns,
+      // 表头左上角那个格子：上面是月份数字，下面是「月」。
+      // 之前只渲染了「月」，headMonth 从来没赋过值，格子里就剩一个孤零零的月字。
+      headMonth: monthOfWeek,
       weekTitle: weekRange(settings.semesterStartMonday, week),
       weekOptions: Array.from({ length: settings.totalWeeks }, (_, index) => ({
         value: index + 1,
@@ -884,18 +892,17 @@ const pageLogic = {
       apply();
       return;
     }
-    // 与切周同一套两段式：日历先按方向滑出，换月份后再从反方向进入
+    // 与切周同一套节奏：先淡出旧月份，换数据后再淡入新月份
     this.switching = true;
-    this.setData({ weekAnim: delta > 0 ? 'wk-leave-left' : 'wk-leave-right' });
+    // 旧格子留一层影子垫在下面，新月份在它上面淡入 —— 中间不会出现空白帧
+    this.setData({ ghostCells: this.data.cells, monthAnim: '' });
+    apply();
+    this.setData({ monthAnim: 'month-in' });
     clearTimeout(this.weekAnimTimer);
     this.weekAnimTimer = setTimeout(() => {
-      apply();
-      this.setData({ weekAnim: delta > 0 ? 'wk-enter-right' : 'wk-enter-left' });
-      this.weekAnimTimer = setTimeout(() => {
-        this.setData({ weekAnim: '' });
-        this.switching = false;
-      }, 200);
-    }, 120);
+      this.setData({ ghostCells: [], monthAnim: '' });
+      this.switching = false;
+    }, 220);
   },
 
   goToday() {
