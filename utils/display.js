@@ -27,8 +27,9 @@ const LEVELS = [
 ];
 
 const THEMES = [
-  { key: 'light', name: '浅色', desc: '白底深字' },
-  { key: 'dark', name: '深色', desc: '深底浅字，夜里不刺眼' }
+  { key: 'auto', name: '跟随手机', desc: '手机开深色，小程序也跟着深' },
+  { key: 'light', name: '浅色', desc: '一直用白底，不管系统怎么设' },
+  { key: 'dark', name: '深色', desc: '一直用深底，夜里看着不刺眼' }
 ];
 
 /**
@@ -119,7 +120,7 @@ const NATIVE = {
 const DARK_STYLE = Object.keys(DARK).map((key) => `${key}: ${DARK[key]}`).join(';');
 
 function load() {
-  const fallback = { font: 'normal', theme: 'light' };
+  const fallback = { font: 'normal', theme: 'auto' };
   try {
     const saved = wx.getStorageSync(KEY);
     if (saved && typeof saved === 'object') {
@@ -154,6 +155,25 @@ function themeOf(key) {
   return THEMES.find((item) => item.key === key) || THEMES[0];
 }
 
+/** 手机当前是不是深色。基础库 2.20+ 用 getAppBaseInfo，老的退回 getSystemInfoSync */
+function systemTheme() {
+  try {
+    const info = wx.getAppBaseInfo ? wx.getAppBaseInfo() : wx.getSystemInfoSync();
+    return info && info.theme === 'dark' ? 'dark' : 'light';
+  } catch (error) {
+    return 'light';
+  }
+}
+
+/**
+ * 偏好转成实际生效的 light / dark。
+ * 「跟随手机」在这里读系统，其余两档直接就是答案。
+ */
+function resolveTheme(pref) {
+  const key = themeOf((pref || load()).theme).key;
+  return key === 'auto' ? systemTheme() : key;
+}
+
 function normalize(pref) {
   const source = pref || load();
   return {
@@ -167,12 +187,13 @@ function normalize(pref) {
  * 两个偏好都改的时候只需要调一次，避免 setData 两次。
  */
 function styleOf(pref) {
-  const next = normalize(pref);
-  const native = NATIVE[next.theme];
+  const source = pref || load();
+  const effective = resolveTheme(source);
+  const native = NATIVE[effective];
   // background 一起写：page-meta 的 page-style 只能碰到 page 元素本身，
   // 光给变量不动背景，滚动到边界时露出的还是浅色。
-  const fs = `--fs: ${levelOf(next.font).scale};background: ${native.background}`;
-  return next.theme === 'dark' ? `${fs};${DARK_STYLE}` : fs;
+  const fs = `--fs: ${levelOf(source.font).scale};background: ${native.background}`;
+  return effective === 'dark' ? `${fs};${DARK_STYLE}` : fs;
 }
 
 /** 兼容旧调用：只传字号 key 也认 */
@@ -187,8 +208,9 @@ function pageStyle(pref) {
  * 那些页面的导航栏也得跟着变。
  */
 function applyTheme(pref) {
-  const next = normalize(pref);
-  const native = NATIVE[next.theme];
+  const source = pref || load();
+  const effective = resolveTheme(source);
+  const native = NATIVE[effective];
   try {
     if (wx.setNavigationBarColor) {
       wx.setNavigationBarColor({
@@ -208,7 +230,7 @@ function applyTheme(pref) {
   } catch (error) {
     // 某些基础库没有这两个 API，忽略
   }
-  return styleOf(next);
+  return styleOf(source);
 }
 
 module.exports = {
@@ -220,7 +242,10 @@ module.exports = {
   applyTheme,
   levelOf,
   load,
+  normalize,
   pageStyle,
+  resolveTheme,
+  systemTheme,
   save,
   styleOf,
   themeOf

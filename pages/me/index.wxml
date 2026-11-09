@@ -46,17 +46,13 @@
       <text class="row-value">{{fontName}}</text>
       <text class="chevron">›</text>
     </view>
-    <view class="row">
+    <view class="row" bindtap="openTheme">
       <view class="row-main">
         <view class="row-title">深色模式</view>
-        <view class="row-copy">不跟随手机系统，单独开关</view>
+        <view class="row-copy">跟随手机 / 浅色 / 深色</view>
       </view>
-      <switch
-        class="theme-switch"
-        checked="{{themeDark}}"
-        bindchange="toggleTheme"
-        color="#007aff"
-      />
+      <text class="row-value">{{themeName}}</text>
+      <text class="chevron">›</text>
     </view>
     <view class="row" bindtap="exportBackup">
       <view class="row-main"><view class="row-title">备份到微信</view><view class="row-copy">课表 + 二课 + 照片打成一个 zip，发给文件传输助手</view></view>
@@ -126,6 +122,31 @@
         <text wx:if="{{fontLevel === item.key}}" class="font-check">✓</text>
       </view>
     </view>
-    <view class="font-note">字号会立刻生效，五个页面和所有子页面一起变。深色模式在「我的 → 深色模式」里单独开关，不跟手机系统走。</view>
+    <view class="font-note">字号会立刻生效，五个页面和所有子页面一起变。</view>
+  </view>
+</view>
+
+<!-- 外观：跟随手机 / 浅色 / 深色 -->
+<view wx:if="{{themeOpen}}" class="mask" bindtap="closeTheme">
+  <view class="sheet safe-bottom" catchtap="noop">
+    <view class="sheet-title">外观</view>
+    <view class="font-list">
+      <view
+        wx:for="{{themeOptions}}"
+        wx:key="key"
+        class="font-item {{theme === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="chooseTheme"
+        aria-role="button"
+        aria-selected="{{theme === item.key}}"
+      >
+        <view class="font-main">
+          <view class="font-name">{{item.name}}</view>
+          <view class="font-desc">{{item.desc}}</view>
+        </view>
+        <text wx:if="{{theme === item.key}}" class="font-check">✓</text>
+      </view>
+    </view>
+    <view class="font-note">选「跟随手机」时，手机开深色小程序就跟着深；选另外两档就固定住，不受系统影响。</view>
   </view>
 </view>

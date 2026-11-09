@@ -31,6 +31,28 @@ Page({
     if (query.share || query.shareId) {
       this.applyTab(0);
     }
+
+    // 「跟随手机」档要靠系统主题变化事件：手机切深色时小程序也得跟着换
+    if (wx.onThemeChange) {
+      this.themeListener = () => {
+        if (display.load().theme !== 'auto') return;
+        this.setData({ pageStyle: display.applyTheme() });
+        this.refreshTabs();
+      };
+      wx.onThemeChange(this.themeListener);
+    }
+  },
+
+  onUnload() {
+    if (this.themeListener && wx.offThemeChange) wx.offThemeChange(this.themeListener);
+  },
+
+  /** 让五个 tab 重算内联颜色（课表格子、二课板块色都是算进 data 的） */
+  refreshTabs() {
+    ['timetable', 'secondclass', 'uni', 'campus', 'me'].forEach((key) => {
+      const comp = this.selectComponent(`#tab-${key}`);
+      if (comp && typeof comp.notifyShow === 'function') comp.notifyShow();
+    });
   },
 
   onShow() {
@@ -95,16 +117,10 @@ Page({
     this.setData({ pageStyle: display.pageStyle({ font: event.detail.font, theme: display.load().theme }) });
   },
 
-  // 「我的」里拨了深色开关：整页的变量和导航栏一起换
+  // 「我的」里换了外观：整页的变量和导航栏一起换
   onThemeChange(event) {
     this.setData({ pageStyle: display.applyTheme({ font: display.load().font, theme: event.detail.theme }) });
-
-    // 课表格子和二课板块色都是算进内联 style 的（一门课一色），
-    // 换主题必须让各页重算一次，否则深色下那些浅色块不会跟着变
-    ['timetable', 'secondclass', 'uni', 'campus', 'me'].forEach((key) => {
-      const comp = this.selectComponent(`#tab-${key}`);
-      if (comp && typeof comp.notifyShow === 'function') comp.notifyShow();
-    });
+    this.refreshTabs();
   },
 
   applyTab(index) {

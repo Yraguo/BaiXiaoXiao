@@ -65,5 +65,3 @@
 .font-check { flex: none; color: var(--brand); font-size: calc(30rpx * var(--fs, 1)); font-weight: 700; }
 .font-note { margin-top: 24rpx; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); line-height: 1.5; }
 
-/* 深色开关：switch 默认 52px 宽，放在 104rpx 的行里偏大，缩到 0.82 */
-.theme-switch { flex: none; transform: scale(.82); transform-origin: right center; }

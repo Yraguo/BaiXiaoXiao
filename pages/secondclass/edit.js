@@ -362,12 +362,15 @@ Page({
    * 五个板块各自的累计分，挂到 plate 上给 WXML 直接用。
    *
    * 这里**不能**排除正在编辑的那条记录：用户在列表里点开刚加的那条德育，
-   * 板块条会瞬间从 10 掉回 0，看着像分数丢了。额度回显（usageOf）才需要
-   * 扣掉自己，因为算的是「还能再加多少」。
+   * 板块条会瞬间从 10 掉回 0，看着像分数丢了。
+   *
+   * 另外必须走 platesFor(theme) 而不是直接用 PLATES —— PLATES 是浅色那套，
+   * 用它覆盖 data.plates 会把 onLoad 里换好的深色板块色又刷回浅色。
    */
   platesWithTotals() {
     const totals = plateTotals(loadClasses());
-    return PLATES.map((plate) => Object.assign({}, plate, { usageText: totals[plate.key] }));
+    return platesFor(display.load().theme)
+      .map((plate) => Object.assign({}, plate, { usageText: totals[plate.key] }));
   },
 
   /* ---------------- 字段 ---------------- */

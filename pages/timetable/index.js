@@ -25,7 +25,9 @@ function monthTitle(year, monthIndex) {
   return `${year}年${monthIndex + 1}月`;
 }
 
-const ROW_HEIGHT = 96;
+// 一节课的行高（rpx）。96 时课名两行 + 地点 + 教师挤在一起，
+// 放宽到 110：单节课 55pt，三行文字刚好放得下
+const ROW_HEIGHT = 110;
 
 /* ---------------- 百宝箱浮动球 ---------------- */
 const BALL_SIZE = 52;          // px，与 wxss 里的 .tool-fab 宽高一致

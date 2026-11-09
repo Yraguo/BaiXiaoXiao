@@ -222,7 +222,7 @@
 .period-column { width: 76rpx; flex: none; border-right: 1rpx solid var(--line); }
 .period-cell {
   box-sizing: border-box;
-  height: 96rpx;
+  height: 110rpx; /* = ROW_HEIGHT，两边必须一致 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -239,7 +239,7 @@
 .day-column { position: relative; flex: 1; min-width: 0; border-right: 1rpx solid var(--line); }
 .day-column:last-child { border-right: 0; }
 .today-column { background: var(--surface-2); }
-.grid-cell { box-sizing: border-box; height: 96rpx; border-bottom: 1rpx dashed var(--line); }
+.grid-cell { box-sizing: border-box; height: 110rpx; border-bottom: 1rpx dashed var(--line); }
 
 .course-block {
   position: absolute;
@@ -382,6 +382,12 @@
   border-radius: 26rpx;
   background: var(--surface-1);
   box-shadow: 0 6rpx 24rpx rgba(38, 57, 88, .05);
+  /*
+   * 换月时网格会整体平移 26%（约 170rpx），比卡片自己的左右 padding 宽得多。
+   * 不裁的话那截日期格子会溢出到卡片外面，在屏幕最左边露出一条边——
+   * 课表卡一直有 overflow: hidden，所以只有日历出现过这个现象。
+   */
+  overflow: hidden;
 }
 .calendar-head { display: flex; align-items: center; justify-content: space-between; padding: 2rpx 4rpx 14rpx; }
 .month-nav { width: 64rpx; height: 64rpx; border-radius: 18rpx; background: var(--brand-light); color: var(--brand); font-size: calc(38rpx * var(--fs, 1)); line-height: 60rpx; text-align: center; }

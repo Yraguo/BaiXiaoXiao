@@ -486,14 +486,50 @@ test('小鸮输入框左侧是话筒图标，不是字符', () => {
   assert.ok(fs.existsSync(path.join(root, 'assets/icons/mic.png')), '白色版本也要生成，共用一个字形');
 });
 
-test('「我的」里有独立的深色开关，改完通知容器页换变量表', () => {
+test('「我的」里有三档外观选择，改完通知容器页换变量表', () => {
   const meWxml = fs.readFileSync(path.join(root, 'pages/me/index.wxml'), 'utf8');
   const meJs = fs.readFileSync(path.join(root, 'pages/me/index.js'), 'utf8');
   const mainWxml = fs.readFileSync(path.join(root, 'pages/main/index.wxml'), 'utf8');
+  const mainJs = fs.readFileSync(path.join(root, 'pages/main/index.js'), 'utf8');
 
-  assert.match(meWxml, /bindchange="toggleTheme"/, '要有开关');
-  assert.match(meWxml, /不跟随手机系统/, '文案要讲清楚不跟系统走');
+  assert.match(meWxml, /bindtap="openTheme"/, '要有外观入口');
+  assert.match(meWxml, /bindtap="chooseTheme"/, '面板里三档可点');
+  assert.match(meWxml, /跟随手机/, '文案要提到跟随手机');
+  assert.match(meJs, /display\.THEMES/, '选项取自数据层，别在页面里另写一份');
   assert.match(meJs, /triggerEvent\('themechange'/, '组件改完要通知容器页');
   assert.match(mainWxml, /bind:themechange="onThemeChange"/, '容器页要接住事件');
   assert.match(mainWxml, /class="main-page" style="\{\{pageStyle\}\}"/, '变量要真的挂到页面根节点上');
+
+  // 「跟随手机」档要靠系统主题变化事件，否则手机切深色小程序不跟着动
+  assert.match(mainJs, /wx\.onThemeChange/, '要监听系统主题变化');
+  assert.match(mainJs, /theme !== 'auto'/, '只在「跟随手机」档才响应系统变化');
+});
+
+test('课表行高：JS 的 ROW_HEIGHT 与 wxss 的格子高度必须一致', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+
+  const rowHeight = Number((js.match(/const ROW_HEIGHT = (\d+)/) || [])[1]);
+  assert.ok(rowHeight >= 100, `一节课的行高不能低于 100rpx（现在 ${rowHeight}），否则课名+地点+教师挤在一起`);
+
+  // 课程块的 top/height 是 JS 按 ROW_HEIGHT 算的，网格是 wxss 画的；
+  // 两边不一致会让色块骑在格子线上
+  const gridCell = Number((wxss.match(/\.grid-cell \{[^}]*height: (\d+)rpx/) || [])[1]);
+  const periodCell = Number((wxss.match(/\.period-cell \{[\s\S]*?height: (\d+)rpx/) || [])[1]);
+  assert.equal(gridCell, rowHeight, '.grid-cell 的高度要等于 ROW_HEIGHT');
+  assert.equal(periodCell, rowHeight, '.period-cell 的高度要等于 ROW_HEIGHT');
+});
+
+test('日历卡裁掉换月动画的越界，不再在左侧露一条边', () => {
+  const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
+  const block = (wxss.match(/\.calendar \{[\s\S]*?\n\}/) || [''])[0];
+  assert.match(block, /overflow:\s*hidden/, '.calendar 不裁剪的话，网格平移 26% 会溢出到卡片外');
+});
+
+test('二课板块条的颜色走主题，不被 platesWithTotals 刷回浅色', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  assert.match(js, /platesFor\(display\.load\(\)\.theme\)/, '板块条要按当前主题取色');
+  const body = (js.match(/platesWithTotals\(\) \{[\s\S]*?\n  \}/) || [''])[0];
+  assert.match(body, /platesFor/, 'platesWithTotals 不能用 PLATES 覆盖，否则深色板块条会变回浅色');
+  assert.doesNotMatch(body, /return PLATES\.map/, '别再用浅色那套 PLATES');
 });
