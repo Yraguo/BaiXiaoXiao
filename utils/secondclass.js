@@ -27,6 +27,18 @@ const PLATE_PALETTE = {
   lao: { ink: '#966419', bg: '#FCF1DC' }
 };
 
+/**
+ * 深色主题下的同一套板块色：色相不变，底压到明度 0.175、字提到 0.775。
+ * 两套共用同一个 key，切主题时「德永远是同一个蓝」不会串。
+ */
+const PLATE_PALETTE_DARK = {
+  de: { ink: '#A6BCE5', bg: '#1E283B' },
+  zhi: { ink: '#E7B0A5', bg: '#3C231E' },
+  ti: { ink: '#AAE1C8', bg: '#20392E' },
+  mei: { ink: '#BEACDF', bg: '#2A2337' },
+  lao: { ink: '#EDCD9F', bg: '#3C301D' }
+};
+
 const PLATES = [
   { key: 'de', short: '德', name: '道德与思想素质', full: 180, base: 144, extra: 36 },
   { key: 'zhi', short: '智', name: '学术与科技创新', full: 120, base: 96, extra: 24 },
@@ -36,6 +48,12 @@ const PLATES = [
 ].map((plate) => Object.assign({}, plate, PLATE_PALETTE[plate.key]));
 
 const TOTAL_FULL = PLATES.reduce((sum, plate) => sum + plate.full, 0);
+
+/** 按主题取一套板块（key/名称/上限都一样，只有 bg/ink 不同） */
+function platesFor(theme) {
+  const palette = theme === 'dark' ? PLATE_PALETTE_DARK : PLATE_PALETTE;
+  return PLATES.map((plate) => Object.assign({}, plate, palette[plate.key]));
+}
 
 const TERMS = ['大一上', '大一下', '大二上', '大二下', '大三上', '大三下', '大四上', '大四下'];
 
@@ -331,6 +349,7 @@ module.exports = {
   normalizeRecord,
   plateOf,
   plateTotals,
+  platesFor,
   roundScore,
   summarize,
   summarizeHours,

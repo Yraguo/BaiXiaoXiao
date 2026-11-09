@@ -24,14 +24,48 @@ const COURSE_PALETTE = [
   { bg: '#E2F0F2', ink: '#225E6B' }
 ];
 
+/**
+ * 深色主题下的同一组课：浅底压成暗色（色相不变、明度降到 0.175），
+ * 字提亮到 0.775。两套共用同一个下标，所以切主题时「一门课一个颜色」
+ * 不会错位。
+ */
+const COURSE_PALETTE_DARK = [
+  { bg: '#1E283B', ink: '#A6BCE5' },
+  { bg: '#3C231E', ink: '#E7B0A5' },
+  { bg: '#20392E', ink: '#AAE1C8' },
+  { bg: '#2A2337', ink: '#BEACDF' },
+  { bg: '#3C301D', ink: '#EDCD9F' },
+  { bg: '#1F353A', ink: '#A7D8E4' },
+  { bg: '#39202A', ink: '#E1AAC1' },
+  { bg: '#2E3723', ink: '#CADFAC' },
+  { bg: '#202239', ink: '#AAAFE2' },
+  { bg: '#3A2D1F', ink: '#E3C6A8' },
+  { bg: '#213835', ink: '#ACDFDA' },
+  { bg: '#302336', ink: '#CFACDF' },
+  { bg: '#3A221F', ink: '#E3AEA8' },
+  { bg: '#22372D', ink: '#ACDFC6' },
+  { bg: '#232936', ink: '#ACBCDF' },
+  { bg: '#382C21', ink: '#E0C4AC' },
+  { bg: '#2B2336', ink: '#C2ACDF' },
+  { bg: '#203539', ink: '#A9D8E2' }
+];
+
 /** 深色字，也用作详情页/下一节课前面的小圆点 */
 const COURSE_COLORS = COURSE_PALETTE.map((item) => item.ink);
 /** 浅色底，给课表格子用 */
 const COURSE_TINTS = COURSE_PALETTE.map((item) => item.bg);
 
-function courseTint(index) {
-  const size = COURSE_TINTS.length;
-  return COURSE_TINTS[((Number(index) || 0) % size + size) % size];
+function courseTint(index, theme) {
+  const list = theme === 'dark' ? COURSE_PALETTE_DARK.map((item) => item.bg) : COURSE_TINTS;
+  const size = list.length;
+  return list[((Number(index) || 0) % size + size) % size];
+}
+
+/** 课名文字色：浅色用深字，深色用亮字 */
+function courseInk(index, theme) {
+  const list = theme === 'dark' ? COURSE_PALETTE_DARK.map((item) => item.ink) : COURSE_COLORS;
+  const size = list.length;
+  return list[((Number(index) || 0) % size + size) % size];
 }
 
 function normalizeName(name) {
@@ -70,5 +104,14 @@ function assignCourseColors(names) {
   return output;
 }
 
-module.exports = { COURSE_COLORS, COURSE_TINTS, assignCourseColors, courseColorIndex, courseTint, normalizeName };
+module.exports = {
+  COURSE_COLORS,
+  COURSE_PALETTE_DARK,
+  COURSE_TINTS,
+  assignCourseColors,
+  courseColorIndex,
+  courseInk,
+  courseTint,
+  normalizeName
+};
 

@@ -300,3 +300,23 @@
 
 <!-- 离屏画布：生成课表分享图 -->
 <canvas type="2d" id="shareCanvas" class="share-canvas"></canvas>
+
+<!-- 分享预览：先让用户看清成品，再决定存相册还是直接发 -->
+<view wx:if="{{sharePreview}}" class="mask" bindtap="closeSharePreview">
+  <view class="sheet share-sheet safe-bottom" catchtap="stopPropagation">
+    <view class="share-head">
+      <view class="share-head-main">
+        <view class="share-title">第 {{sharePreview.week}} 周课表</view>
+        <view class="share-sub">{{sharePreview.withQr ? '带小程序码，同学扫码就能打开' : '图片模式，没开云开发也能用'}}</view>
+      </view>
+      <view class="share-close" bindtap="closeSharePreview" aria-role="button">关闭</view>
+    </view>
+    <scroll-view class="share-preview" scroll-y>
+      <image class="share-image" src="{{sharePreview.path}}" mode="widthFix"></image>
+    </scroll-view>
+    <view class="share-actions">
+      <view class="share-btn ghost" bindtap="saveShareImage" aria-role="button">保存到相册</view>
+      <view class="share-btn primary" bindtap="sendShareImage" aria-role="button">发送给好友</view>
+    </view>
+  </view>
+</view>

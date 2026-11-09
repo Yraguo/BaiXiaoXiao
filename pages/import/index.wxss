@@ -34,15 +34,15 @@
 .error-card { margin-top: 24rpx; padding: 24rpx 26rpx; border-radius: 24rpx; background: var(--surface-8); }
 /* 云服务不可用不发红：不是用户操作错了，别让人以为账号有问题 */
 .error-card.soft { background: var(--surface-9); }
-.error-card.soft .error-title { color: #35507a; }
+.error-card.soft .error-title { color: var(--tone-info); }
 .error-card.soft .error-copy { color: var(--ink-11); }
-.error-title { color: #c0392b; font-size: calc(26rpx * var(--fs, 1)); font-weight: 700; }
-.error-copy { margin-top: 10rpx; color: #8a4a42; font-size: calc(23rpx * var(--fs, 1)); line-height: 1.6; }
+.error-title { color: var(--tone-danger); font-size: calc(26rpx * var(--fs, 1)); font-weight: 700; }
+.error-copy { margin-top: 10rpx; color: var(--tone-danger-soft); font-size: calc(23rpx * var(--fs, 1)); line-height: 1.6; }
 .error-copy.sub { margin-top: 12rpx; color: var(--ink-9); font-size: calc(21rpx * var(--fs, 1)); }
 .error-steps { margin-top: 14rpx; padding-top: 14rpx; border-top: 1rpx solid rgba(192, 57, 43, .16); }
-.error-step { display: block; color: #8a4a42; font-size: calc(21rpx * var(--fs, 1)); line-height: 1.7; }
+.error-step { display: block; color: var(--tone-danger-soft); font-size: calc(21rpx * var(--fs, 1)); line-height: 1.7; }
 .fallback-button { margin-top: 18rpx; }
-.diag-toggle { margin-top: 16rpx; color: #a8635a; font-size: calc(21rpx * var(--fs, 1)); text-decoration: underline; }
+.diag-toggle { margin-top: 16rpx; color: var(--tone-danger-faint); font-size: calc(21rpx * var(--fs, 1)); text-decoration: underline; }
 .diag-body { margin-top: 12rpx; padding: 16rpx; border-radius: 14rpx; background: rgba(0, 0, 0, .04); }
 .diag-line { display: block; word-break: break-all; color: var(--ink-14); font-size: calc(19rpx * var(--fs, 1)); line-height: 1.55; font-family: monospace; }
 
@@ -79,18 +79,8 @@
 .preview-more { padding: 16rpx 0 8rpx; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); text-align: center; }
 .preview-actions { margin-top: 16rpx; display: flex; flex-direction: column; gap: 12rpx; }
 
-.weeks-note { margin: 14rpx 0 4rpx; padding: 14rpx 18rpx; border-radius: 16rpx; background: var(--surface-20); color: #8a6a24; font-size: calc(21rpx * var(--fs, 1)); line-height: 1.6; }
+.weeks-note { margin: 14rpx 0 4rpx; padding: 14rpx 18rpx; border-radius: 16rpx; background: var(--surface-20); color: var(--tone-warn); font-size: calc(21rpx * var(--fs, 1)); line-height: 1.6; }
 
 .tips { margin-top: 26rpx; padding: 0 8rpx; }
 .tips-title { margin-bottom: 10rpx; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); }
 .tip { color: var(--ink-7); font-size: calc(21rpx * var(--fs, 1)); line-height: 1.9; }
-
-/* 暗色：彩色标签的底色被压暗后，文字要跟着提亮（脚本生成） */
-@media (prefers-color-scheme: dark) {
-  .error-card.soft .error-title { color: #a2b7d7; }
-  .error-title { color: #e59289; }
-  .error-copy { color: #d2a7a1; }
-  .error-step { color: #d2a7a1; }
-  .diag-toggle { color: #cca39e; }
-  .weeks-note { color: #e3cb95; }
-}

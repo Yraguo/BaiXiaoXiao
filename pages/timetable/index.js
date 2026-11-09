@@ -1,5 +1,6 @@
 const pageAdapter = require('../../utils/pageAdapter');
-const { COURSE_COLORS, assignCourseColors, courseTint, normalizeName } = require('../../utils/colors');
+const { assignCourseColors, courseInk, courseTint, normalizeName } = require('../../utils/colors');
+const display = require('../../utils/display');
 const { DAY_NAMES } = require('../../utils/constants');
 const {
   currentWeek,
@@ -68,6 +69,8 @@ const pageLogic = {
     weekOptions: [],
     showWeekPicker: false,
     detail: null,
+    // 分享图生成后的预览：{ path, week, withQr, ratio }
+    sharePreview: null,
     nextCourse: null,
     hasCourses: true,
     touchStartX: 0,
@@ -205,6 +208,7 @@ const pageLogic = {
     });
 
     const monthOfWeek = dateForDay(settings.semesterStartMonday, week, 0).getMonth() + 1;
+    const theme = display.load().theme;
     const dayColumns = Array.from({ length: visibleDays }, (_, dayIndex) => {
       const date = dateForDay(settings.semesterStartMonday, week, dayIndex);
       const isToday = week === shownCurrentWeek && dayIndex === todayIndex;
@@ -221,14 +225,15 @@ const pageLogic = {
             && Number(course.endPeriod) >= activePeriod;
           const top = (Number(course.startPeriod) - 1) * ROW_HEIGHT + 4;
           const height = (Number(course.endPeriod) - Number(course.startPeriod) + 1) * ROW_HEIGHT - 8;
-          const ink = COURSE_COLORS[colorIndex % COURSE_COLORS.length];
+          // 深色下换一套「暗底 + 亮字」，否则整片浅色块在深色页面上刺眼
+          const ink = courseInk(colorIndex, theme);
           return {
             ...course,
             color: ink,
             isNow,
             // 单节次的格子只有 88rpx 高，塞不下两行课名 + 教室
             short: Number(course.endPeriod) - Number(course.startPeriod) < 1,
-            style: `top:${top}rpx;height:${height}rpx;background:${courseTint(colorIndex)};color:${ink};`,
+            style: `top:${top}rpx;height:${height}rpx;background:${courseTint(colorIndex, theme)};color:${ink};`,
             timeText: this.timeText(course)
           };
         });
@@ -304,7 +309,7 @@ const pageLogic = {
 
     return {
       ...best.course,
-      color: COURSE_COLORS[colorIndex % COURSE_COLORS.length],
+      color: courseInk(colorIndex, display.load().theme),
       dayLabel,
       countdown,
       timeText: this.timeText(best.course)
@@ -384,7 +389,7 @@ const pageLogic = {
     this.setData({
       detail: {
         ...course,
-        color: COURSE_COLORS[colorIndex % COURSE_COLORS.length],
+        color: courseInk(colorIndex, display.load().theme),
         dayText: DAY_NAMES[Number(course.day) - 1],
         periodText: `第 ${course.startPeriod}–${course.endPeriod} 节`,
         timeText: this.timeText(course),
@@ -612,8 +617,10 @@ const pageLogic = {
 
   /** 分享课表：先存云端拿分享码 → 生成小程序码 → 画成一张海报 */
   /**
-   * 分享课表：画一张本周课表图，走微信的「分享图片」面板。
-   * 真·让对方在小程序里看课表需要云端存一份，现在没有后端，图片是最接近的形态。
+   * 分享课表：画一张本周课表图，然后弹预览面板让用户决定存相册还是直接发。
+   *
+   * 【为什么不再直接调 showShareImageMenu】那个菜单只有「发给朋友 / 收藏」，
+   * 想留存只能自己截图；现在先给预览，两个动作分开，还能看清生成得对不对。
    */
   async shareTimetable() {
     if (!this.data.hasCourses) {
@@ -645,8 +652,8 @@ const pageLogic = {
       }
     }
 
-    // 2) 画图
-    const model = layoutWeek(this.data.dayColumns, {
+    // 2) 画图：节次行也要传进去，图上才有左侧的时间列
+    const model = layoutWeek(this.data.dayColumns, this.data.periodRows, {
       week: this.data.week,
       range: this.data.weekTitle,
       term: this.data.settings.timetableName,
@@ -678,27 +685,63 @@ const pageLogic = {
         destHeight: model.height,
         success: (file) => {
           wx.hideLoading();
-          if (!shareId) {
-            wx.showToast({ title: '云开发未启用，只生成了图片', icon: 'none' });
-          }
-          if (wx.showShareImageMenu) {
-            wx.showShareImageMenu({
+          this.setData({
+            sharePreview: {
               path: file.tempFilePath,
-              fail: (error) => {
-                const message = String((error && error.errMsg) || '');
-                if (message.indexOf('cancel') >= 0) return;
-                wx.showToast({ title: '分享失败，重试一次', icon: 'none' });
-              }
-            });
-          } else {
-            wx.previewImage({ urls: [file.tempFilePath], current: file.tempFilePath });
-          }
+              week: this.data.week,
+              withQr: Boolean(qrPath),
+              ratio: model.height / model.width
+            }
+          });
         },
         fail: () => {
           wx.hideLoading();
           wx.showToast({ title: '生成失败，重试一次', icon: 'none' });
         }
       });
+    });
+  },
+
+  closeSharePreview() {
+    this.setData({ sharePreview: null });
+  },
+
+  /** 保存到相册：被拒过一次后只能引导去设置页手动开 */
+  saveShareImage() {
+    const preview = this.data.sharePreview;
+    if (!preview) return;
+    wx.saveImageToPhotosAlbum({
+      filePath: preview.path,
+      success: () => wx.showToast({ title: '已存到相册', icon: 'success' }),
+      fail: (error) => {
+        const message = String((error && error.errMsg) || '');
+        if (message.indexOf('cancel') >= 0) return;
+        wx.showModal({
+          title: '需要相册权限',
+          content: '保存课表图要用到「保存到相册」，去设置里打开就可以了。',
+          confirmText: '去设置',
+          success: (res) => {
+            if (res.confirm && wx.openSetting) wx.openSetting({});
+          }
+        });
+      }
+    });
+  },
+
+  sendShareImage() {
+    const preview = this.data.sharePreview;
+    if (!preview) return;
+    if (!wx.showShareImageMenu) {
+      wx.previewImage({ urls: [preview.path], current: preview.path });
+      return;
+    }
+    wx.showShareImageMenu({
+      path: preview.path,
+      fail: (error) => {
+        const message = String((error && error.errMsg) || '');
+        if (message.indexOf('cancel') >= 0) return;
+        wx.showToast({ title: '分享失败，重试一次', icon: 'none' });
+      }
     });
   },
 

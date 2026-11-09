@@ -59,7 +59,7 @@
 /* 时长 */
 .sc-hours { margin-top: 18rpx; padding: 24rpx; border-radius: 24rpx; background: var(--surface-1); box-shadow: 0 6rpx 24rpx rgba(38, 57, 88, .05); }
 .sc-hours-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20rpx; }
-.sc-hours-num { color: #1f9d63; font-size: calc(64rpx * var(--fs, 1)); font-weight: 700; line-height: 1; }
+.sc-hours-num { color: var(--tone-green); font-size: calc(64rpx * var(--fs, 1)); font-weight: 700; line-height: 1; }
 .sc-hours-unit { margin-left: 8rpx; color: var(--muted); font-size: calc(24rpx * var(--fs, 1)); }
 .sc-hours-side { text-align: right; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); line-height: 1.6; }
 .sc-hours-note { margin-top: 4rpx; color: var(--ink-4); font-size: calc(19rpx * var(--fs, 1)); }
@@ -241,9 +241,4 @@
   font-size: calc(18rpx * var(--fs, 1));
   font-weight: 600;
   vertical-align: 2rpx;
-}
-
-/* 暗色：彩色标签的底色被压暗后，文字要跟着提亮（脚本生成） */
-@media (prefers-color-scheme: dark) {
-  .sc-hours-num { color: #8ee9bf; }
 }

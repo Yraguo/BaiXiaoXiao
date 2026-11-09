@@ -70,7 +70,7 @@ Page({
   },
 
   onLoad() {
-    this.setData({ pageStyle: display.pageStyle() });
+    this.setData({ pageStyle: display.applyTheme() });
     // 解析模块按需加载：即使它出问题，页面也能正常显示并给出可诊断的提示
     try {
       const pdf = require('../../utils/pdf/index.js');

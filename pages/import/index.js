@@ -53,7 +53,7 @@ Page({
   },
 
   onLoad() {
-    this.setData({ pageStyle: display.pageStyle() });
+    this.setData({ pageStyle: display.applyTheme() });
     const term = currentTerm();
     // 学年可选前后各一年：补导上一学年、或开学前先导下一学年都走得通
     const base = Number(term.xnm);

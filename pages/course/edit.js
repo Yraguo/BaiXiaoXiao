@@ -21,7 +21,7 @@ Page({
   },
 
   onLoad(options) {
-    this.setData({ pageStyle: display.pageStyle() });
+    this.setData({ pageStyle: display.applyTheme() });
     this.settings = loadSettings();
     this.courses = loadCourses();
     const existing = options.id ? this.courses.find((course) => course.id === options.id) : null;

@@ -17,7 +17,7 @@ Page({
   },
 
   onLoad() {
-    this.setData({ pageStyle: display.pageStyle() });
+    this.setData({ pageStyle: display.applyTheme() });
     const settings = loadSettings();
     this.setData({
       settings,

@@ -1,5 +1,5 @@
 <page-meta page-style="{{pageStyle}}"></page-meta>
-<view class="page-shell">
+<view class="page-shell" style="{{pageStyle}}">
   <view class="card form-card">
     <view class="field"><text>标题</text><input value="{{draft.title}}" data-field="title" bindinput="update" maxlength="40" placeholder="例如：完成高数作业" /></view>
     <view class="field"><text>内容</text><textarea value="{{draft.content}}" data-field="content" bindinput="update" maxlength="500" auto-height placeholder="补充说明（选填）" /></view>

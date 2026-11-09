@@ -6,7 +6,7 @@ Page({
   data: {
     pageStyle: '', draft: { title: '', content: '', date: '', remindAt: '', done: false } },
   onLoad(options) {
-    this.setData({ pageStyle: display.pageStyle() });
+    this.setData({ pageStyle: display.applyTheme() });
     this.id = options.id || '';
     const existing = loadNotes().find((item) => item.id === this.id);
     if (existing) {

@@ -73,7 +73,9 @@ const UI_ICONS = {
   // 回到本周（日历 + 今天标记）
   calendar: '<rect x="3.6" y="5.4" width="16.8" height="15" rx="2.6"/><path d="M8 3.2v4.4M16 3.2v4.4M3.6 10.2h16.8"/><circle cx="12" cy="15" r="2"/>',
   // 分享课表（向上出框的箭头）
-  share: '<path d="M12 15.4V4.6"/><path d="m8.4 8.2 3.6-3.6 3.6 3.6"/><path d="M5.6 13.4v5.2a1.8 1.8 0 0 0 1.8 1.8h9.2a1.8 1.8 0 0 0 1.8-1.8v-5.2"/>'
+  share: '<path d="M12 15.4V4.6"/><path d="m8.4 8.2 3.6-3.6 3.6 3.6"/><path d="M5.6 13.4v5.2a1.8 1.8 0 0 0 1.8 1.8h9.2a1.8 1.8 0 0 0 1.8-1.8v-5.2"/>',
+  // 语音输入（话筒 + 支架）：小鸮输入框左边那个按钮
+  mic: '<rect x="9.2" y="2.8" width="5.6" height="10.6" rx="2.8"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.8v3.4"/><path d="M8.6 21.2h6.8"/>'
 };
 
 function svgDocument(body, color, size, stroke) {
@@ -107,6 +109,10 @@ function main() {
   Object.keys(UI_ICONS).forEach((key) => {
     made.push(render(UI_ICONS[key], '#FFFFFF', 144, 1.7, uiDir, `${key}.png`));
   });
+
+  // 小鸮输入框那个按钮是淡蓝底（--brand-light）上的蓝图标，
+  // 白描边放上去看不见，单独出一份品牌色版本
+  made.push(render(UI_ICONS.mic, BRAND, 144, 1.7, uiDir, 'mic-blue.png'));
 
   Object.keys(TAB_ICONS).forEach((key) => {
     made.push(render(TAB_ICONS[key], MUTED, 81, 1.1, tabDir, `${key}.png`));

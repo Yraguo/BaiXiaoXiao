@@ -1,5 +1,5 @@
 <page-meta page-style="{{pageStyle}}"></page-meta>
-<view class="import-page">
+<view class="import-page" style="{{pageStyle}}">
   <view class="mode-switch">
     <view class="mode-item active">云端导入</view>
     <view class="mode-item" bindtap="openPdfImport">PDF 导入</view>

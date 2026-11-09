@@ -41,10 +41,22 @@
     <view class="row" bindtap="openFont">
       <view class="row-main">
         <view class="row-title">字号</view>
-        <view class="row-copy">深色模式跟随手机系统，无需单独开关</view>
+        <view class="row-copy">标准 / 大 / 特大，全站跟着变</view>
       </view>
       <text class="row-value">{{fontName}}</text>
       <text class="chevron">›</text>
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-title">深色模式</view>
+        <view class="row-copy">不跟随手机系统，单独开关</view>
+      </view>
+      <switch
+        class="theme-switch"
+        checked="{{themeDark}}"
+        bindchange="toggleTheme"
+        color="#007aff"
+      />
     </view>
     <view class="row" bindtap="exportBackup">
       <view class="row-main"><view class="row-title">备份到微信</view><view class="row-copy">课表 + 二课 + 照片打成一个 zip，发给文件传输助手</view></view>
@@ -114,6 +126,6 @@
         <text wx:if="{{fontLevel === item.key}}" class="font-check">✓</text>
       </view>
     </view>
-    <view class="font-note">深色 / 浅色跟随手机的「外观」设置自动切换，不需要在这里选。</view>
+    <view class="font-note">字号会立刻生效，五个页面和所有子页面一起变。深色模式在「我的 → 深色模式」里单独开关，不跟手机系统走。</view>
   </view>
 </view>

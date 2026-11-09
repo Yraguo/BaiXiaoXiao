@@ -38,11 +38,13 @@ const pageLogic = {
     profile: { avatarUrl: DEFAULT_AVATAR, nickName: '同学' },
     editing: false,
     draft: { avatarUrl: DEFAULT_AVATAR, nickName: '' },
-    // 字号：深色模式跟随系统，这里只让用户调字号
+    // 外观：字号三档 + 独立的深色开关（不吃系统设置）
     fontLevels: display.LEVELS,
     fontLevel: 'normal',
     fontName: '标准',
-    fontOpen: false
+    fontOpen: false,
+    theme: 'light',
+    themeDark: false
   },
 
   onShow() {
@@ -69,11 +71,31 @@ const pageLogic = {
 
   refreshFont() {
     const pref = display.load();
-    this.setData({ fontLevel: pref.font, fontName: display.levelOf(pref.font).name });
+    this.setData({
+      fontLevel: pref.font,
+      fontName: display.levelOf(pref.font).name,
+      theme: pref.theme,
+      themeDark: pref.theme === 'dark'
+    });
   },
 
   openFont() { this.setData({ fontOpen: true }); },
   closeFont() { this.setData({ fontOpen: false }); },
+
+  /**
+   * 深色开关。
+   *
+   * 这是唯一一处改主题的地方，改完通知容器页重算根节点的变量表——
+   * 颜色变量挂在 pages/main 的根节点上，组件自己 setData 改不到那里。
+   */
+  toggleTheme(event) {
+    const dark = Boolean(event.detail && event.detail.value);
+    const pref = display.save({ theme: dark ? 'dark' : 'light' });
+    this.setData({ theme: pref.theme, themeDark: dark });
+    // 开发者工具里切换时能立刻看到导航栏也变了
+    display.applyTheme(pref);
+    this.triggerEvent('themechange', { theme: pref.theme });
+  },
 
   chooseFont(event) {
     const key = event.currentTarget.dataset.key;

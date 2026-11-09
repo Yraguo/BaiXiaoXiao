@@ -67,6 +67,22 @@ page {
   --ink-16: #3c4657;
   --ink-17: #354052;
 
+  /* 提示色：浅色值 = 改版前的原值，深色值在 utils/display.js */
+  --tone-info: #35507a;
+  --tone-danger: #c0392b;
+  --tone-danger-soft: #8a4a42;
+  --tone-danger-faint: #a8635a;
+  --tone-danger-deep: #a8443a;
+  --tone-warn: #8a6a24;
+  --tone-warn-soft: #8a6a2f;
+  --tone-amber: #a9701c;
+  --tone-amber-deep: #b66b00;
+  --tone-amber-soft: #8a5a00;
+  --tone-success: #2f6b4f;
+  --tone-green: #1f9d63;
+  --tone-blue: #2a5aa8;
+  --tone-blue-bright: #1f6fd0;
+
   min-height: 100%;
   background: var(--background);
   color: var(--text);
@@ -74,67 +90,11 @@ page {
 }
 
 /*
- * 深色模式：跟随系统，不需要用户在 App 里拨开关。
- * 前提是 app.json 里 "darkmode": true（wxss 的 prefers-color-scheme 才生效）。
- * 页底最暗 → 卡片次之 → 输入框/选中态最亮，靠这个层次把 iOS 的观感立住。
+ * 深色模式不在这里。
+ * 它由 utils/display.js 的内联变量表提供（「我的 → 深色模式」开关），
+ * 因为系统偏好媒体查询是跟手机设置的，用户在 App 里拨不动，也压不过系统。
+ * 这里的 page 只放浅色基准值。
  */
-@media (prefers-color-scheme: dark) {
-  page {
-    --background: #0f0f11;
-    --card: #1c1c1e;
-    --text: #f2f2f7;
-    --muted: #9a9aa0;
-    --line: rgba(255, 255, 255, .12);
-    --brand-light: rgba(0, 122, 255, .18);
-  --surface-1: #1c1c1e;
-  --surface-2: #1e1e21;
-  --surface-3: #212124;
-  --surface-4: #242427;
-  --surface-5: #27272b;
-  --surface-6: #2a2a2e;
-  --surface-7: #2d2d32;
-  --surface-8: #303035;
-  --surface-9: #33333a;
-  --surface-10: #37373e;
-  --surface-11: #3b3b42;
-  --surface-12: #3f3f46;
-  --surface-13: #43434a;
-  --surface-14: #47474e;
-  --surface-15: #47474e;
-  --surface-16: #47474e;
-  --surface-17: #47474e;
-  --surface-18: #47474e;
-  --surface-19: #47474e;
-  --surface-20: #47474e;
-  --surface-21: #47474e;
-  --surface-22: #47474e;
-  --surface-23: #47474e;
-  --surface-24: #47474e;
-  --surface-25: #47474e;
-  --surface-26: #47474e;
-  --surface-27: #47474e;
-  --surface-28: #47474e;
-  --surface-29: #47474e;
-  --surface-30: #47474e;
-  --ink-1: #8e8e93;
-  --ink-2: #96969b;
-  --ink-3: #9e9ea4;
-  --ink-4: #a6a6ac;
-  --ink-5: #aeaeb4;
-  --ink-6: #b6b6bc;
-  --ink-7: #bfbfc5;
-  --ink-8: #c8c8cd;
-  --ink-9: #d1d1d6;
-  --ink-10: #d9d9de;
-  --ink-11: #e1e1e6;
-  --ink-12: #e9e9ee;
-  --ink-13: #f1f1f5;
-  --ink-14: #f1f1f5;
-  --ink-15: #f1f1f5;
-  --ink-16: #f1f1f5;
-  --ink-17: #f1f1f5;
-  }
-}
 
 button::after { border: 0; }
 

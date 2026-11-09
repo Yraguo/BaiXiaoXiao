@@ -2,6 +2,7 @@ const { loadClasses, saveClasses } = require('../../utils/appStore');
 const {
   CLAUSES,
   PLATES,
+  platesFor,
   levelsOf,
   normalizeRecord,
   plateTotals,
@@ -84,7 +85,11 @@ Page({
   },
 
   onLoad(options) {
-    this.setData({ pageStyle: display.pageStyle() });
+    this.setData({ pageStyle: display.applyTheme() });
+
+    // 板块色随主题走：浅色是浅底深字，深色是暗底亮字
+    const plates = platesFor(display.load().theme);
+    this.setData({ plates, plate: plates[0], levels: levelsOf(plates[0]) });
     const list = loadClasses().map(normalizeRecord);
     const existing = options && options.id ? list.find((record) => record.id === options.id) : null;
 
@@ -154,8 +159,9 @@ Page({
 
   /** 切换板块或档位：只改选择，分数与条款由用户自己决定要不要重置 */
   applyPlate(plateKey, levelKey) {
-    const plateIndex = Math.max(0, PLATES.findIndex((plate) => plate.key === plateKey));
-    const plate = PLATES[plateIndex];
+    const plates = this.data.plates || PLATES;
+    const plateIndex = Math.max(0, plates.findIndex((plate) => plate.key === plateKey));
+    const plate = plates[plateIndex];
     const levels = levelsOf(plate);
     const levelIndex = Math.max(0, levels.findIndex((level) => level.key === levelKey));
     this.setData({
@@ -170,7 +176,7 @@ Page({
 
   changePlate(event) {
     const index = Number(event.currentTarget.dataset.index);
-    const plate = PLATES[index];
+    const plate = (this.data.plates || PLATES)[index];
     if (!plate) return;
     const levels = levelsOf(plate);
     const levelIndex = Math.max(0, levels.findIndex((level) => level.key === this.data.draft.level));
@@ -229,7 +235,8 @@ Page({
 
     this.setData({
       clauses: list.map((clause) => {
-        const plate = PLATES.find((item) => item.key === clause.plate) || PLATES[0];
+        const plates = this.data.plates || PLATES;
+        const plate = plates.find((item) => item.key === clause.plate) || plates[0];
         return {
           text: clause.text,
           score: clause.score,
@@ -270,8 +277,9 @@ Page({
 
     // 点到别的板块的条款，先把板块切过去 —— 条款本身就决定了它属于哪一栏
     if (plateKey && plateKey !== this.data.plate.key) {
-      const index = PLATES.findIndex((item) => item.key === plateKey);
-      const plate = PLATES[index];
+      const plates = this.data.plates || PLATES;
+      const index = plates.findIndex((item) => item.key === plateKey);
+      const plate = plates[index];
       const levels = levelsOf(plate);
       const levelIndex = Math.max(0, levels.findIndex((level) => level.key === this.data.draft.level));
       this.setData({
@@ -325,12 +333,22 @@ Page({
 
   refreshUsage() {
     const level = this.data.levels[this.data.levelIndex];
-    const usage = usageOf(
-      this.records || loadClasses(),
-      this.data.plate.key,
-      level.key,
-      this.data.draft.id
-    );
+    const draft = this.data.draft;
+
+    // 把正在填的这条也合成进列表：上方「本档已用」应该等于保存后的实际总数。
+    // 之前这里把 draft.id 排除掉了，于是列表里明明已有 10 分的德育，
+    // 点进来上方却写「本档已用 0 / 144」，看着像分数丢了（用户报过）。
+    const base = (this.records || loadClasses())
+      .map(normalizeRecord)
+      .filter((record) => record.id !== draft.id);
+    const candidate = Object.assign({}, draft, {
+      plate: this.data.plate.key,
+      level: level.key,
+      score: Number(draft.score) || 0
+    });
+    const merged = candidate.score > 0 ? base.concat([candidate]) : base;
+
+    const usage = usageOf(merged, this.data.plate.key, level.key);
     this.setData({
       usage: Object.assign({}, usage, {
         percent: usage.cap ? Math.min(100, Math.round(usage.used / usage.cap * 100)) : 0

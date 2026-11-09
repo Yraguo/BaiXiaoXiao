@@ -69,8 +69,8 @@
   font-size: calc(22rpx * var(--fs, 1));
 }
 .echo-line { margin-top: 14rpx; color: var(--ink-13); font-size: calc(24rpx * var(--fs, 1)); }
-.echo-remain { color: #2f6b4f; font-weight: 600; }
-.echo-full { color: #a9701c; font-weight: 600; }
+.echo-remain { color: var(--tone-success); font-weight: 600; }
+.echo-full { color: var(--tone-amber); font-weight: 600; }
 .echo-bar { margin-top: 12rpx; height: 10rpx; border-radius: 999rpx; background: rgba(255, 255, 255, .7); overflow: hidden; }
 .echo-bar-fill { height: 100%; border-radius: 999rpx; }
 
@@ -84,7 +84,7 @@
   border-radius: 18rpx;
   background: var(--surface-15);
 }
-.restore-text { flex: 1; min-width: 0; color: #2a5aa8; font-size: calc(23rpx * var(--fs, 1)); }
+.restore-text { flex: 1; min-width: 0; color: var(--tone-blue); font-size: calc(23rpx * var(--fs, 1)); }
 .restore-clear { flex: none; min-height: 88rpx; padding: 10rpx 16rpx; color: var(--ink-15); font-size: calc(22rpx * var(--fs, 1)); line-height: 68rpx; }
 
 /* ---------------- 板块五段色带 ---------------- */
@@ -183,7 +183,7 @@
 }
 .clause-item:active { background: var(--surface-21); }
 .clause-body { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 6rpx; }
-.clause-tick { color: #2f6b4f; font-size: calc(24rpx * var(--fs, 1)); font-weight: 700; }
+.clause-tick { color: var(--tone-success); font-size: calc(24rpx * var(--fs, 1)); font-weight: 700; }
 .clause-text { color: var(--text); font-size: calc(23rpx * var(--fs, 1)); line-height: 1.5; }
 .clause-tier { color: var(--ink-10); font-size: calc(21rpx * var(--fs, 1)); }
 .clause-score {
@@ -252,11 +252,11 @@
   padding: 0 32rpx;
   border-radius: 999rpx;
   background: var(--brand-light);
-  color: #1f6fd0;
+  color: var(--tone-blue-bright);
   font-size: calc(25rpx * var(--fs, 1));
   font-weight: 600;
 }
-.photo-btn:active { background: #d9e8fd; }
+.photo-btn:active { background: var(--surface-25); }
 .photo-grid { display: flex; flex-wrap: wrap; gap: 14rpx; }
 .photo-item { position: relative; width: 190rpx; height: 190rpx; }
 .photo-img { width: 190rpx; height: 190rpx; border-radius: 16rpx; background: var(--surface-14); }
@@ -316,13 +316,4 @@
   color: var(--ink-10);
   font-size: calc(21rpx * var(--fs, 1));
   line-height: 1.5;
-}
-
-/* 暗色：彩色标签的底色被压暗后，文字要跟着提亮（脚本生成） */
-@media (prefers-color-scheme: dark) {
-  .echo-remain { color: #a5d7c0; }
-  .echo-full { color: #ebc489; }
-  .restore-text { color: #8fafe3; }
-  .clause-tick { color: #a5d7c0; }
-  .photo-btn { color: #82b1eb; }
 }

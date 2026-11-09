@@ -13,7 +13,8 @@ const {
   normalizeRecord,
   plateTotals,
   summarize,
-  summarizeHours
+  summarizeHours,
+  usageOf
 } = require('../utils/secondclass');
 
 const { layout: layoutSheet, fitText } = require('../utils/materials');
@@ -174,4 +175,20 @@ test('板块条上的「已得/满分」：按板块汇总、按满分封顶、�
   PLATES.forEach((plate) => {
     assert.equal(empty[plate.key], `0/${plate.full}`, `${plate.short} 空数据回显不对`);
   });
+});
+
+test('填报表单上方的「本档已用」含自己：列表里 10 分，进来就不能显示 0', () => {
+  // 这条记录已经在列表里了（用户点「编辑」进来）
+  const records = [
+    { id: 'sc-1', plate: 'de', title: '吃屎', date: '2026-11-08', score: 10, level: 'base' }
+  ];
+
+  // 之前 refreshUsage 把 draft.id 当 excludeId 传进去，于是上方永远是 0 ——
+  // 明明下面板块条写着「德 10/180」，上面却是「本档已用 0 / 144」。
+  const withoutSelf = usageOf(records, 'de', 'base', 'sc-1');
+  assert.equal(withoutSelf.used, 0, '排除自己确实是 0，这正是那个 bug 的来源');
+
+  const withSelf = usageOf(records, 'de', 'base');
+  assert.equal(withSelf.used, 10, '不排除自己才是用户看到的真实值');
+  assert.equal(withSelf.remain, 134, '「还能加」也要按含自己的口径算');
 });

@@ -80,11 +80,6 @@
 }
 
 .tab-item.is-active .tab-text {
-  color: #007aff;
+  color: var(--brand);
   font-weight: 500;
-}
-
-/* 暗色：彩色标签的底色被压暗后，文字要跟着提亮（脚本生成） */
-@media (prefers-color-scheme: dark) {
-  .tab-item.is-active .tab-text { color: #80b3ea; }
 }

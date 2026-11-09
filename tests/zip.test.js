@@ -127,13 +127,16 @@ test('课表 CSV 的周次写成「1-3周」，不是原始数组', () => {
   assert.match(csv, /工程训练,周六,1,4,1-4、6周/, '周次要压缩成 1-4、6周 这种可读写法');
 });
 
-test('课表分享图：课程多的那天更高，空白日也有位置', () => {
+test('课表分享图：行数按最大节次撑开，空白天也保留一列', () => {
   const { layoutWeek } = require('../utils/shareCard');
   const model = layoutWeek([
-    { label: '周一', date: '11/9', blocks: [{ name: 'A' }, { name: 'B' }] },
+    { label: '周一', date: '11/9', blocks: [{ name: 'A', startPeriod: 1, endPeriod: 4 }] },
     { label: '周二', date: '11/10', blocks: [] }
-  ], { week: 11, range: '11/9–11/15', term: '2026-2027-1' });
-  assert.ok(model.days[0].height > model.days[1].height, '有课的那天要撑开');
+  ], [{ period: 1 }, { period: 2 }], { week: 11, range: '11/9–11/15', term: '2026-2027-1' });
+
+  // 作息只配了两节，但课排到第 4 节：网格必须撑到 4 行，否则色块会画出格
+  assert.equal(model.rowCount, 4, '导入的课表排到第 4 节，网格就得有 4 行');
+  assert.equal(model.days.length, 2, '没有课的那天也要占一列');
   assert.equal(model.days[1].blocks.length, 0);
   assert.ok(model.height > 300);
 });

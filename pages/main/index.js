@@ -22,7 +22,10 @@ Page({
 
   onLoad(options) {
     const query = options || {};
-    this.setData({ pageQuery: query, pageStyle: display.pageStyle() });
+    this.setData({ pageQuery: query });
+
+    // 字号 + 深色：一次算好挂到页面根节点，顺带把导航栏也刷成同一套
+    this.setData({ pageStyle: display.applyTheme() });
 
     // 从分享卡片进来时直接落在课表，用户扫一眼就能看到内容
     if (query.share || query.shareId) {
@@ -33,6 +36,8 @@ Page({
   onShow() {
     // 从别的页面返回时不会切 tab，得主动让当前那一页刷新一次
     this.notifyCurrent();
+    // 子页面里可能改过主题（虽然目前只有「我的」能改），回来对齐一次
+    this.setData({ pageStyle: display.applyTheme() });
   },
 
   notifyCurrent() {
@@ -87,7 +92,19 @@ Page({
 
   // 「我的」里改了字号：组件自己存好，这里只负责把页面根的 --fs 换掉
   onFontChange(event) {
-    this.setData({ pageStyle: display.pageStyle(event.detail.font) });
+    this.setData({ pageStyle: display.pageStyle({ font: event.detail.font, theme: display.load().theme }) });
+  },
+
+  // 「我的」里拨了深色开关：整页的变量和导航栏一起换
+  onThemeChange(event) {
+    this.setData({ pageStyle: display.applyTheme({ font: display.load().font, theme: event.detail.theme }) });
+
+    // 课表格子和二课板块色都是算进内联 style 的（一门课一色），
+    // 换主题必须让各页重算一次，否则深色下那些浅色块不会跟着变
+    ['timetable', 'secondclass', 'uni', 'campus', 'me'].forEach((key) => {
+      const comp = this.selectComponent(`#tab-${key}`);
+      if (comp && typeof comp.notifyShow === 'function') comp.notifyShow();
+    });
   },
 
   applyTab(index) {

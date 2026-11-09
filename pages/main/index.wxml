@@ -1,6 +1,6 @@
-<!-- 字号：把 --fs 挂在页面根节点上，五个 tab 里的所有字号都跟着缩放 -->
+<!-- 字号与深色：把 --fs 和整套颜色变量挂在页面根节点上，五个 tab 一起变 -->
 <page-meta page-style="{{pageStyle}}"></page-meta>
-<view class="main-page" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+<view class="main-page" style="{{pageStyle}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
   <!-- 不用 swiper：它的 disable-touch 在手势竞争下并不总能拦住原生滑动，
        会和页面自己的手势一起切屏。改成纯 transform 轨道，位移完全由 current 决定 -->
   <view class="tab-viewport">
@@ -24,6 +24,7 @@
           page-query="{{pageQuery}}"
           bind:tabrequest="onTabRequest"
           bind:fontchange="onFontChange"
+          bind:themechange="onThemeChange"
         />
       </view>
     </view>

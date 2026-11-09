@@ -38,28 +38,36 @@ test('课表页能从 scene / share 参数打开分享，并且是只读的', ()
   assert.match(wxml, /ballReady && !shared/, '分享模式下不显示百宝箱浮球');
 });
 
-test('分享图带二维码时更高，并且画了扫码文案', () => {
+test('分享图是节次 × 星期的网格，带二维码时更高', () => {
   const { layoutWeek, drawWeek } = require('../utils/shareCard');
-  const days = [{ label: '周一', date: '11/9', blocks: [{ name: 'A', timeText: '08:00' }] }];
-  const plain = layoutWeek(days, { week: 1, range: '', term: '' });
-  const withQr = layoutWeek(days, { week: 1, range: '', term: '' }, { withQr: true });
-  assert.ok(withQr.height > plain.height, '带码要留出二维码的位置');
+  const days = [{ label: '周一', date: '11/9', blocks: [{ name: 'A', startPeriod: 1, endPeriod: 2, color: '#1f6fd0' }] }];
+  const periods = [{ period: 1, start: '08:00', end: '08:45' }, { period: 2, start: '08:55', end: '09:40' }];
+
+  const plain = layoutWeek(days, periods, { week: 1, range: '', term: '' });
+  const withQr = layoutWeek(days, periods, { week: 1, range: '', term: '' }, { withQr: true });
+
+  assert.equal(plain.rowCount, 2, '两节作息就该两行');
+  assert.ok(plain.cellW > 0, '列宽要算出来');
+  assert.ok(plain.gridBottom > plain.tableY, '网格要有高度');
+  assert.ok(withQr.height > plain.height, '带码要给二维码留位置');
   assert.ok(withQr.qr && withQr.qr.size > 0, '要有 qr 盒子');
   assert.equal(plain.qr, null);
 
   // 用一个最小的假 ctx，确认走到二维码分支不会崩
   const calls = [];
   const ctx = {
-    fillStyle: '', strokeStyle: '', font: '', textAlign: '',
+    fillStyle: '', strokeStyle: '', font: '', textAlign: '', lineWidth: 1,
     fillRect() {}, createLinearGradient: () => ({ addColorStop() {} }),
     beginPath() {}, closePath() {}, moveTo() {}, lineTo() {}, arcTo() {},
-    fill() {}, stroke() {}, measureText: (t) => ({ width: String(t).length * 10 }),
+    fill() {}, stroke() {}, save() {}, restore() {}, clip() {},
+    measureText: (t) => ({ width: String(t).length * 10 }),
     fillText: (t) => calls.push(t), drawImage() { calls.push('qr'); }
   };
   withQr.qr.image = { width: 200, height: 200 };
   drawWeek(ctx, withQr);
   assert.ok(calls.includes('qr'), '传了二维码图片就要画出来');
   assert.ok(calls.some((text) => String(text).indexOf('扫码') >= 0), '要有扫码提示');
+  assert.ok(calls.some((text) => String(text).indexOf('周一') >= 0), '表头要有星期');
 });
 
 

@@ -1,5 +1,5 @@
 <page-meta page-style="{{pageStyle}}"></page-meta>
-<view class="settings-page safe-bottom">
+<view class="settings-page safe-bottom" style="{{pageStyle}}">
   <view class="section">
     <view class="section-title">学期</view>
     <view class="setting-row vertical">

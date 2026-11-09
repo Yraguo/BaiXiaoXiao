@@ -1,5 +1,5 @@
 <page-meta page-style="{{pageStyle}}"></page-meta>
-<view class="page-shell">
+<view class="page-shell" style="{{pageStyle}}">
 
   <!-- 顶部回显：这条记录会加到哪一栏、还剩多少分 -->
   <view class="echo" style="background:{{plate.bg}};border-left-color:{{plate.ink}}">

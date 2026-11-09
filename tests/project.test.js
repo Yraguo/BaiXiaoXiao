@@ -229,7 +229,8 @@ test('板块色从数据层统一取，表单和列表是同一套色', () => {
   assert.match(wxml, /item\.ink/, '色带颜色取自数据层的板块');
   // 列表页不能再自己按下标另算一套，否则两页又对不上了
   assert.doesNotMatch(indexJs, /COURSE_COLORS/, '列表页不再从课表色板取色');
-  assert.match(indexJs, /color: plate\.ink/, '列表页直接用数据层的板块色');
+  assert.match(indexJs, /platesFor\(display\.load\(\)\.theme\)/, '列表页按当前主题取那一套板块色');
+  assert.match(indexJs, /color: colors\.ink/, '列表页直接用数据层的板块色');
 });
 
 test('板块色与正文对比度全部达到 WCAG AA', () => {
@@ -392,20 +393,27 @@ test('仓库里的 AppID 只能是占位符，真实的留在 project.private.co
   assert.deepEqual(hits, [], `真实 AppID 应该只存在 project.private.config.json（已 gitignore）：\n${hits.join('\n')}`);
 });
 
-test('深色模式跟随系统：app.json 开了 darkmode，theme.json 两套都在', () => {
-  const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
-  assert.equal(app.darkmode, true, '不开 darkmode，wxss 里的 prefers-color-scheme 不生效');
-  assert.equal(app.themeLocation, 'theme.json');
+test('深色模式是 App 内的独立开关，不跟手机系统走', () => {
+  const display = require('../utils/display');
 
-  const theme = JSON.parse(fs.readFileSync(path.join(root, 'theme.json'), 'utf8'));
-  ['light', 'dark'].forEach((scheme) => {
-    assert.ok(theme[scheme], `theme.json 缺少 ${scheme}`);
-    assert.ok(theme[scheme].navigationBarBackgroundColor, `${scheme} 缺少导航栏底色`);
-  });
+  assert.ok(display.THEMES.some((item) => item.key === 'dark'), '要有深色档');
+  assert.ok(display.THEMES.some((item) => item.key === 'light'), '要有浅色档');
 
+  const light = display.styleOf({ font: 'normal', theme: 'light' });
+  const dark = display.styleOf({ font: 'normal', theme: 'dark' });
+  assert.doesNotMatch(light, /--card:/, '浅色不用塞变量：app.wxss 里的基准值就是浅色');
+  assert.match(dark, /--card:\s*#1d1d21/, '深色要把 --card 换掉');
+  assert.match(dark, /--background:\s*#0d0d0f/, '深色要把页面底色换掉');
+  assert.match(display.styleOf({ font: 'xlarge', theme: 'dark' }), /--fs:\s*1\.16/, '字号和深色要能同时生效');
+
+  // 关键点：深色不能写在媒体查询里，否则用户在 App 里拨不动、也压不过系统
   const appWxss = fs.readFileSync(path.join(root, 'app.wxss'), 'utf8');
-  assert.match(appWxss, /@media \(prefers-color-scheme: dark\)/, '要有暗色媒体查询');
-  assert.match(appWxss, /--background:\s*#0f0f11/, '暗色页面底色要落到变量里');
+  assert.doesNotMatch(appWxss, /@media\s*\(prefers-color-scheme:\s*dark\)/, '深色改由 utils/display.js 注入，app.wxss 不该再有暗色媒体查询');
+
+  // 关掉 darkmode：否则系统深色时导航栏会先按 theme.json 变黑，再被 JS 覆盖，闪一下
+  const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
+  assert.ok(!app.darkmode, 'darkmode 要关掉，深色完全由 App 内开关决定');
+  assert.ok(!fs.existsSync(path.join(root, 'theme.json')), 'theme.json 是系统跟随时代的产物，已删除');
 });
 
 test('字号可缩放：字号都乘了 --fs，且页面挂了 page-meta', () => {
@@ -437,4 +445,55 @@ test('字号可缩放：字号都乘了 --fs，且页面挂了 page-meta', () =>
     const wxml = fs.readFileSync(path.join(root, `${page}.wxml`), 'utf8');
     assert.match(wxml, /<page-meta page-style="\{\{pageStyle\}\}">/, `${page} 缺少 page-meta`);
   });
+});
+
+test('二课填报页把正在填的这条合成进额度，不再排除自己', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/secondclass/edit.js'), 'utf8');
+  assert.match(js, /base\.concat\(\[candidate\]\)/, '正在填的这条要合成进列表再算额度');
+  assert.match(js, /usageOf\(merged,/, 'usageOf 要拿合并后的列表算');
+  assert.doesNotMatch(
+    js,
+    /usageOf\([\s\S]{0,80}draft\.id\s*\)/,
+    '不能再把 draft.id 当 excludeId 传进去，否则上方永远显示 0'
+  );
+});
+
+test('分享课表：先出预览，再让用户选存相册还是发出去', () => {
+  const js = fs.readFileSync(path.join(root, 'pages/timetable/index.js'), 'utf8');
+  const wxml = fs.readFileSync(path.join(root, 'pages/timetable/index.wxml'), 'utf8');
+
+  assert.match(js, /sharePreview/, '生成完要把图放进预览态');
+  assert.match(js, /saveImageToPhotosAlbum/, '要能存相册');
+  assert.match(js, /showShareImageMenu/, '要能发给好友');
+  assert.match(wxml, /保存到相册/);
+  assert.match(wxml, /发送给好友/);
+  assert.match(wxml, /share-image/, '预览里要有图');
+
+  // 分享图是网格：调用时必须把节次行也传进去，否则左侧没有时间列
+  assert.match(js, /layoutWeek\(this\.data\.dayColumns,\s*this\.data\.periodRows/, '要把 periodRows 传进布局函数');
+});
+
+test('小鸮输入框左侧是话筒图标，不是字符', () => {
+  const wxml = fs.readFileSync(path.join(root, 'pages/uni/index.wxml'), 'utf8');
+  assert.match(wxml, /assets\/icons\/mic-blue\.png/, '要用生成好的话筒图标');
+  assert.match(
+    wxml,
+    /class="composer-icon"[\s\S]{0,120}?<image/,
+    'composer-icon 里要放 <image>，不能再拿 ⌁ 这类字符顶图标'
+  );
+  assert.doesNotMatch(wxml, />⌁</, '那个字符已经删掉');
+  assert.ok(fs.existsSync(path.join(root, 'assets/icons/mic-blue.png')), '先跑 scripts/build-icons.js');
+  assert.ok(fs.existsSync(path.join(root, 'assets/icons/mic.png')), '白色版本也要生成，共用一个字形');
+});
+
+test('「我的」里有独立的深色开关，改完通知容器页换变量表', () => {
+  const meWxml = fs.readFileSync(path.join(root, 'pages/me/index.wxml'), 'utf8');
+  const meJs = fs.readFileSync(path.join(root, 'pages/me/index.js'), 'utf8');
+  const mainWxml = fs.readFileSync(path.join(root, 'pages/main/index.wxml'), 'utf8');
+
+  assert.match(meWxml, /bindchange="toggleTheme"/, '要有开关');
+  assert.match(meWxml, /不跟随手机系统/, '文案要讲清楚不跟系统走');
+  assert.match(meJs, /triggerEvent\('themechange'/, '组件改完要通知容器页');
+  assert.match(mainWxml, /bind:themechange="onThemeChange"/, '容器页要接住事件');
+  assert.match(mainWxml, /class="main-page" style="\{\{pageStyle\}\}"/, '变量要真的挂到页面根节点上');
 });

@@ -214,8 +214,8 @@
 .period-month { font-size: calc(24rpx * var(--fs, 1)); font-weight: 700; }
 .period-month-unit { margin-top: 2rpx; color: var(--muted); font-size: calc(18rpx * var(--fs, 1)); }
 .day-head { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); line-height: 1.15; }
-.day-week { font-size: calc(20rpx * var(--fs, 1)); }
-.day-date { margin-top: 4rpx; color: var(--ink-4); font-size: calc(19rpx * var(--fs, 1)); }
+.day-week { font-size: calc(21rpx * var(--fs, 1)); }
+.day-date { margin-top: 4rpx; color: var(--ink-4); font-size: calc(20rpx * var(--fs, 1)); }
 .day-head.today .day-week, .day-head.today .day-date { color: var(--brand); font-weight: 700; }
 .day-head.today { background: var(--brand-light); color: var(--brand); font-weight: 700; }
 
@@ -232,9 +232,9 @@
   font-size: calc(16rpx * var(--fs, 1));
   line-height: 1.25;
 }
-.period-number { color: var(--text); font-size: calc(22rpx * var(--fs, 1)); font-weight: 700; }
-.period-cell.active { background: #fff6e6; }
-.period-cell.active .period-number { color: #b66b00; }
+.period-number { color: var(--text); font-size: calc(23rpx * var(--fs, 1)); font-weight: 700; }
+.period-cell.active { background: var(--surface-20); }
+.period-cell.active .period-number { color: var(--tone-amber-deep); }
 
 .day-column { position: relative; flex: 1; min-width: 0; border-right: 1rpx solid var(--line); }
 .day-column:last-child { border-right: 0; }
@@ -247,32 +247,33 @@
   left: 4rpx;
   box-sizing: border-box;
   overflow: hidden;
-  padding: 8rpx 7rpx;
+  padding: 7rpx 6rpx;
   border-radius: 12rpx;
-  font-size: calc(17rpx * var(--fs, 1));
+  font-size: calc(18rpx * var(--fs, 1));
   line-height: 1.2;
   box-shadow: 0 2rpx 8rpx rgba(22, 32, 49, .05);
 }
 /* 底和字都由内联 style 给出（一门课一对颜色），这里只补"正在进行"的描边 */
-.course-block.is-now { border: 3rpx solid currentColor; padding: 5rpx 4rpx; }
+.course-block.is-now { border: 3rpx solid currentColor; padding: 4rpx 3rpx; }
 /*
  * 格子里只有一列宽（约 90px）。课名最多两行，下面按「@校区 / 地点 / 教师」
- * 一行一条竖着排；单节次的格子只有 88rpx 高，只留课名和教室。
+ * 一行一条竖着排；单节次的格子只有 88rpx 高，塞不下教师，直接省略。
  */
 .course-name {
-  font-size: calc(18rpx * var(--fs, 1));
+  font-size: calc(20rpx * var(--fs, 1));
   font-weight: 700;
-  line-height: 1.22;
+  line-height: 1.2;
   word-break: break-all;
 }
 .course-meta {
-  margin-top: 3rpx;
-  font-size: calc(14rpx * var(--fs, 1));
-  line-height: 1.25;
-  opacity: .85;
+  margin-top: 2rpx;
+  font-size: calc(16rpx * var(--fs, 1));
+  line-height: 1.22;
+  opacity: .88;
   word-break: break-all;
 }
-.course-block.is-short { padding: 6rpx; }
+.course-block.is-short .course-teacher { display: none; }
+.course-block.is-short { padding: 5rpx; }
 
 
 /*
@@ -546,7 +547,24 @@
   font-weight: 600;
 }
 
-/* 暗色：彩色标签的底色被压暗后，文字要跟着提亮（脚本生成） */
-@media (prefers-color-scheme: dark) {
-  .period-cell.active .period-number { color: #ecc48b; }
-}
+/* ---------------- 分享预览 ---------------- */
+
+.share-sheet { display: flex; flex-direction: column; max-height: 88vh; }
+.share-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20rpx; padding: 2rpx 4rpx 20rpx; }
+.share-head-main { flex: 1; min-width: 0; }
+.share-title { color: var(--text); font-size: calc(34rpx * var(--fs, 1)); font-weight: 700; }
+.share-sub { margin-top: 6rpx; color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); }
+.share-close { flex: none; padding: 10rpx 22rpx; border-radius: 999rpx; background: var(--surface-16); color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); }
+
+/*
+ * 预览区高度写死 58vh 而不是 flex:1。
+ * scroll-view 在 flex 列里靠 flex 分配高度会塌成 0（项目踩过好几次），
+ * 给确定高度最省事。
+ */
+.share-preview { height: 58vh; border-radius: 20rpx; background: var(--surface-16); }
+.share-image { display: block; width: 100%; }
+
+.share-actions { display: flex; gap: 16rpx; padding-top: 22rpx; }
+.share-btn { flex: 1; height: 88rpx; border-radius: 22rpx; font-size: calc(28rpx * var(--fs, 1)); font-weight: 600; line-height: 88rpx; text-align: center; }
+.share-btn.ghost { background: var(--surface-16); color: var(--text); }
+.share-btn.primary { background: var(--brand); color: #fff; }

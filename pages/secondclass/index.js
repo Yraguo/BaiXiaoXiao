@@ -1,4 +1,5 @@
 const pageAdapter = require('../../utils/pageAdapter');
+const display = require('../../utils/display');
 const { loadClasses, loadHours, saveHours } = require('../../utils/appStore');
 const { loadSettings } = require('../../utils/storage');
 const { currentWeek, dateStamp, todayDayIndex } = require('../../utils/date');
@@ -12,6 +13,7 @@ const {
   TERMS,
   TOTAL_FULL,
   formatScore,
+  platesFor,
   summarize,
   summarizeHours
 } = require('../../utils/secondclass');
@@ -85,13 +87,20 @@ const pageLogic = {
 
   reload() {
     const summary = summarize(loadClasses());
-    // 颜色直接取数据层里的板块色，不再在页面里按下标另算一套
-    const plates = summary.plates.map((plate) => ({
-      ...plate,
-      scoreText: formatScore(plate.score),
-      color: plate.ink,
-      tint: plate.bg
-    }));
+    // 颜色取数据层里的板块色（顺序与 PLATES 一致），并按当前主题选浅色/深色那套。
+    // summarize 只算分数、不带颜色，这里必须补上，否则 color/tint 全是 undefined。
+    const palette = platesFor(display.load().theme);
+    const plates = summary.plates.map((plate, index) => {
+      const colors = palette[index] || palette[0];
+      return {
+        ...plate,
+        ink: colors.ink,
+        bg: colors.bg,
+        scoreText: formatScore(plate.score),
+        color: colors.ink,
+        tint: colors.bg
+      };
+    });
 
     const filter = this.data.filter;
     const records = summary.list

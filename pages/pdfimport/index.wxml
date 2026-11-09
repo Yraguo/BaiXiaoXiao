@@ -1,5 +1,5 @@
 <page-meta page-style="{{pageStyle}}"></page-meta>
-<view class="import-page">
+<view class="import-page" style="{{pageStyle}}">
   <view wx:if="{{success}}" class="success-card">
     <image class="success-owl" src="/assets/owl/owl-celebrate.png" mode="aspectFit"></image>
     <view class="success-title">导入完成</view>
