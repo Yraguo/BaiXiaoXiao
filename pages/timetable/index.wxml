@@ -34,30 +34,6 @@
     <view class="share-banner-btn" bindtap="saveShared">存到我的课表</view>
   </view>
 
-  <view class="week-card">
-    <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
-    <view
-      class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
-      bindtap="previousWeek"
-      aria-role="button"
-      aria-label="上一周"
-    >‹</view>
-    <view class="week-center" bindtap="openWeekPicker">
-      <view class="week-heading">
-        <text class="week-num">第 {{week}} 周</text>
-        <text class="week-range">{{weekTitle}}</text>
-      </view>
-      <view class="semester">{{settings.timetableName}} · 共 {{settings.totalWeeks}} 周</view>
-    </view>
-    <view
-      class="week-arrow {{week >= settings.totalWeeks ? 'is-disabled' : ''}}"
-      bindtap="nextWeek"
-      aria-role="button"
-      aria-label="下一周"
-    >›</view>
-    <view wx:if="{{week !== currentWeek}}" class="today-chip" bindtap="goCurrentWeek">回到本周</view>
-  </view>
-
   <view wx:if="{{!hasCourses}}" class="empty-state">
     <image class="empty-owl" src="/assets/owl/owl-study.png" mode="aspectFit"></image>
     <view class="empty-title">还没有课程</view>
@@ -121,6 +97,30 @@
     </view>
   </view>
 
+  <view class="week-card">
+    <!-- 用 view 而不是 button：button 在 flex 容器里宽度约束会失效，曾把中间的周次挤成竖排单字 -->
+    <view
+      class="week-arrow {{week <= 1 ? 'is-disabled' : ''}}"
+      bindtap="previousWeek"
+      aria-role="button"
+      aria-label="上一周"
+    >‹</view>
+    <view class="week-center" bindtap="openWeekPicker">
+      <view class="week-heading">
+        <text class="week-num">第 {{week}} 周</text>
+        <text class="week-range">{{weekTitle}}</text>
+      </view>
+      <view class="semester">{{settings.timetableName}} · 共 {{settings.totalWeeks}} 周</view>
+    </view>
+    <view
+      class="week-arrow {{week >= settings.totalWeeks ? 'is-disabled' : ''}}"
+      bindtap="nextWeek"
+      aria-role="button"
+      aria-label="下一周"
+    >›</view>
+    <view wx:if="{{week !== currentWeek}}" class="today-chip" bindtap="goCurrentWeek">回到本周</view>
+  </view>
+
   <view wx:if="{{nextCourse}}" class="next-card" data-id="{{nextCourse.id}}" bindtap="showCourse">
     <view class="next-dot" style="background:{{nextCourse.color}}"></view>
     <view class="next-content">
@@ -163,7 +163,7 @@
       </view>
     </view>
 
-    <view class="day-head">
+    <view class="day-bar">
       <text class="day-title">{{selectedLabel}}</text>
       <text class="day-action" bindtap="goToday">回到今天</text>
     </view>

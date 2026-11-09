@@ -93,8 +93,8 @@ test('切换周次有横向滑入动画', () => {
   assert.match(js, /weekAnim/, '切换时要设置动画类');
   assert.doesNotMatch(wxml, /week-card \{\{weekAnim\}\}/, '周次卡片不参与动画，切周时保持不动');
   assert.match(wxml, /timetable-card \{\{weekAnim\}\}/, '课表卡片要挂上动画类');
-  assert.match(wxss, /@keyframes week-in-right/, '往后翻从右侧滑入');
-  assert.match(wxss, /@keyframes week-in-left/, '往前翻从左侧滑入');
+  assert.match(wxss, /@keyframes wk-enter-right/, '往后翻从右侧进入');
+  assert.match(wxss, /@keyframes wk-enter-left/, '往前翻从左侧进入');
 });
 
 test('切周次走两段式过渡（对齐 UniMate：只判起止，不跟手）', () => {

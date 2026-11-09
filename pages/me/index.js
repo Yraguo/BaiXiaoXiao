@@ -133,8 +133,9 @@ const pageLogic = {
   },
 
   /** 课表 + 二课 + 照片打成一个 zip，发到微信里长期留存 */
-  async exportBackup() {
+  async exportBackup(options) {
     if (this.exporting) return;
+    const skipPhotos = Boolean(options && options.skipPhotos);
     const courses = loadCourses();
     const settings = loadSettings();
     const classes = loadClasses();
@@ -142,7 +143,7 @@ const pageLogic = {
     const summary = summarize(classes);
 
     this.exporting = true;
-    wx.showLoading({ title: '正在打包', mask: true });
+    wx.showLoading({ title: skipPhotos ? '正在打包（不含照片）' : '正在打包', mask: true });
     try {
       const manager = wx.getFileSystemManager();
       const photoEntries = [];
@@ -152,6 +153,10 @@ const pageLogic = {
       for (let index = 0; index < summary.list.length; index += 1) {
         const record = summary.list[index];
         const names = [];
+        if (skipPhotos) {
+          photoNamesByIndex[index] = names;
+          continue;
+        }
         for (let photoIndex = 0; photoIndex < (record.photos || []).length; photoIndex += 1) {
           const path = record.photos[photoIndex];
           const type = await this.imageType(path);
@@ -177,8 +182,17 @@ const pageLogic = {
       const zip = buildZip(entries);
       const now = new Date();
       const pad = (value) => String(value).padStart(2, '0');
-      const fileName = `百小鸮备份-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}.zip`;
-      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+      const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`
+        + `-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      const fileName = `百小鸮备份-${stamp}.zip`;
+      /*
+       * 落盘用纯 ASCII 文件名。
+       * 之前路径里直接写中文，iOS 上 wx.shareFileMessage 会失败；
+       * 而且文件名固定成日期，一天里导出第二次就是覆盖同名文件，
+       * 上一次分享还没结束时会读不到。分享出去显示的仍是中文名。
+       */
+      const diskName = `baixiaoxiao-backup-${stamp}.zip`;
+      const filePath = `${wx.env.USER_DATA_PATH}/${diskName}`;
       manager.writeFileSync(filePath, zip.buffer);
 
       wx.hideLoading();
@@ -187,7 +201,7 @@ const pageLogic = {
         ? `${(zip.length / 1024 / 1024).toFixed(1)} MB`
         : `${Math.max(1, Math.round(zip.length / 1024))} KB`;
       if (missing) wx.showToast({ title: `${missing} 张照片丢失，其余已打包`, icon: 'none' });
-      this.shareFile(filePath, fileName, size);
+      this.shareFile(filePath, fileName, size, skipPhotos);
     } catch (error) {
       wx.hideLoading();
       this.exporting = false;
@@ -195,28 +209,98 @@ const pageLogic = {
     }
   },
 
-  shareFile(filePath, fileName, sizeText) {
+  /** 发文件：失败会自动再试一次，仍失败就给「复制备份数据」这条兜底路 */
+  async shareFile(filePath, fileName, sizeText, skipPhotos) {
+    this.lastBackup = { filePath, fileName, sizeText, skipPhotos: Boolean(skipPhotos) };
+
     if (!wx.shareFileMessage) {
       wx.showModal({
         title: '已打包',
-        content: `${fileName}（${sizeText}）已存到小程序目录。当前微信版本不支持转发文件，升级后再试。`,
-        showCancel: false
+        content: `${fileName}（${sizeText}）已存到小程序目录。当前微信版本不支持转发文件，可以改用「复制备份数据」。`,
+        confirmText: '复制数据',
+        cancelText: '知道了',
+        success: (res) => {
+          if (res.confirm) this.copyBackupText();
+        }
       });
       return;
     }
-    wx.shareFileMessage({
-      filePath,
-      fileName,
-      success: () => wx.showToast({ title: '已发送', icon: 'success' }),
-      fail: (error) => {
-        const message = String((error && error.errMsg) || '');
-        if (message.indexOf('cancel') >= 0) return;
-        wx.showModal({
-          title: '没发出去',
-          content: `文件已存在小程序目录（${sizeText}），可以重试一次。`,
-          showCancel: false
-        });
-      }
+
+    let result = await this.tryShare(filePath, fileName);
+    if (result === true) {
+      wx.showToast({ title: '已发送', icon: 'success' });
+      return;
+    }
+    if (result === 'cancel') return;
+
+    // wx.shareFileMessage 第一次调用偶尔会失败，隔一会儿再试一次
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    result = await this.tryShare(filePath, fileName);
+    if (result === true) {
+      wx.showToast({ title: '已发送', icon: 'success' });
+      return;
+    }
+    if (result === 'cancel') return;
+
+    this.showBackupFallback();
+  },
+
+  tryShare(filePath, fileName) {
+    return new Promise((resolve) => {
+      wx.shareFileMessage({
+        filePath,
+        fileName,
+        success: () => resolve(true),
+        fail: (error) => {
+          const message = String((error && error.errMsg) || '');
+          resolve(message.indexOf('cancel') >= 0 ? 'cancel' : false);
+        }
+      });
+    });
+  },
+
+  /**
+   * 发不出去时别只说一句「没发出去」。
+   *
+   * 用户要的是「把数据留下来」这件事，转发只是路径之一：
+   * 再试一次不行，就把课表/二课/时长导成 JSON 复制到剪贴板，
+   * 随便粘到哪都能存住（照片没办法，只能靠 zip）。
+   */
+  showBackupFallback() {
+    const backup = this.lastBackup || {};
+    wx.showActionSheet({
+      itemList: ['再试一次', '复制备份数据（不含照片）'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          if (backup.filePath) this.shareFile(backup.filePath, backup.fileName, backup.sizeText, backup.skipPhotos);
+        } else {
+          this.copyBackupText();
+        }
+      },
+      fail: () => {}
+    });
+  },
+
+  /** 兜底出口：把结构化数据复制到剪贴板，任何情况下都能存下来 */
+  copyBackupText() {
+    const payload = {
+      app: 'BaiXiaoXiao',
+      format: 'baixiaoxiao-backup-text/1',
+      exportedAt: new Date().toISOString(),
+      note: '这是纯文本备份，不含照片。要恢复照片请用 zip 备份。',
+      courses: loadCourses(),
+      settings: loadSettings(),
+      secondclass: loadClasses(),
+      hours: loadHours()
+    };
+    wx.setClipboardData({
+      data: JSON.stringify(payload),
+      success: () => wx.showModal({
+        title: '已复制',
+        content: '课表、二课记录和时长已经复制到剪贴板。粘到文件传输助手或备忘录里就能长期保存（照片不在里面）。',
+        showCancel: false
+      }),
+      fail: () => wx.showToast({ title: '复制失败，重试一次', icon: 'none' })
     });
   },
 

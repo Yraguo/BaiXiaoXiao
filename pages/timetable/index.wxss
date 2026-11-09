@@ -10,7 +10,12 @@
  */
 .page { padding: 20rpx 20rpx 160rpx; }
 
+/*
+ * 周次卡放在课表下方（不是顶部）：顶部那行留给课表本身，一屏能多看到课。
+ * 它贴着课表卡当「脚注」，所以 margin 比普通卡片小一点。
+ */
 .week-card {
+  margin-top: 12rpx;
   display: flex;
   align-items: center;
   gap: 12rpx;
@@ -94,118 +99,34 @@
  * 往后翻从右边进来，往前翻从左边进来，位移只有 56rpx，不会看到空白。
  * 只动 transform 和 opacity，不触发重排。
  */
-/* 只有课表网格 / 日历数字区动，其它卡片保持不动 */
-.timetable-card.wk-leave-left, .grid.wk-leave-left { animation: wk-leave-left .12s ease-in forwards; }
-.timetable-card.wk-leave-right, .grid.wk-leave-right { animation: wk-leave-right .12s ease-in forwards; }
-.timetable-card.wk-enter-right, .grid.wk-enter-right { animation: wk-enter-right .2s ease-out; }
-.timetable-card.wk-enter-left, .grid.wk-enter-left { animation: wk-enter-left .2s ease-out; }
+/*
+ * 只有课表网格 / 日历数字区动，其它卡片保持不动。
+ *
+ * 课表卡用 26% 的整块滑出，观感是「翻到下一周」。
+ * 日历不能这么干：它比课表卡窄，26% 有 170rpx，滑到一半会在卡片左边缘
+ * 露出半截日期数字，看着像屏幕边上多了一条边。所以日历单独一套——
+ * 位移只给 8%，靠快速淡出来完成转场。
+ */
+.timetable-card.wk-leave-left { animation: wk-leave-left .12s ease-in forwards; }
+.timetable-card.wk-leave-right { animation: wk-leave-right .12s ease-in forwards; }
+.timetable-card.wk-enter-right { animation: wk-enter-right .2s ease-out; }
+.timetable-card.wk-enter-left { animation: wk-enter-left .2s ease-out; }
+
+.grid.wk-leave-left { animation: grid-leave-left .12s ease-out forwards; }
+.grid.wk-leave-right { animation: grid-leave-right .12s ease-out forwards; }
+.grid.wk-enter-right { animation: grid-enter-right .2s ease-out; }
+.grid.wk-enter-left { animation: grid-enter-left .2s ease-out; }
 
 @keyframes wk-leave-left { to { transform: translateX(-26%); opacity: 0; } }
 @keyframes wk-leave-right { to { transform: translateX(26%); opacity: 0; } }
 @keyframes wk-enter-right { from { transform: translateX(26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes wk-enter-left { from { transform: translateX(-26%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-.page { padding: 20rpx 20rpx 160rpx; }
+@keyframes grid-leave-left { from { opacity: 1; } to { transform: translateX(-8%); opacity: 0; } }
+@keyframes grid-leave-right { from { opacity: 1; } to { transform: translateX(8%); opacity: 0; } }
+@keyframes grid-enter-right { from { transform: translateX(8%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes grid-enter-left { from { transform: translateX(-8%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-.week-card {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 16rpx;
-  border-radius: 24rpx;
-  background: var(--card);
-  box-shadow: 0 6rpx 26rpx rgba(38, 57, 88, .06);
-}
-
-/*
- * 周次箭头。
- * 【坑】原来是 <button>，在 flex 容器里 width 约束会失效，两个按钮被拉成
- * 各自 ~300rpx 的长条，把中间的"第 10 周 / 11月2日–11月8日"挤成竖排单字，
- * 整个周次卡片被撑得又高又空。改成 view，并把宽高四重锁定（flex + width +
- * min/max），与平台实现无关。
- */
-.week-arrow {
-  display: flex;
-  flex: 0 0 68rpx;
-  align-items: center;
-  justify-content: center;
-  width: 68rpx;
-  min-width: 68rpx;
-  max-width: 68rpx;
-  height: 68rpx;
-  min-height: 68rpx;
-  max-height: 68rpx;
-  box-sizing: border-box;
-  border-radius: 18rpx;
-  background: var(--surface-23);
-  color: var(--brand);
-  font-size: calc(42rpx * var(--fs, 1));
-  line-height: 1;
-}
-
-.week-arrow.is-disabled { opacity: .35; }
-.week-center { flex: 1; min-width: 0; text-align: center; }
-/* 周次与日期原来是裸文本 + inline text，挤成一团；改成 flex 基线对齐并留出间距 */
-.week-heading { display: flex; align-items: baseline; justify-content: center; gap: 14rpx; overflow: hidden; font-size: calc(30rpx * var(--fs, 1)); font-weight: 700; white-space: nowrap; }
-.week-num { flex: none; }
-.week-range { min-width: 0; overflow: hidden; color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); font-weight: 400; text-overflow: ellipsis; }
-.semester { margin-top: 8rpx; overflow: hidden; color: var(--muted); font-size: calc(22rpx * var(--fs, 1)); line-height: 1.5; text-overflow: ellipsis; white-space: nowrap; }
-
-/* 「回到本周」：只在翻到别的周时出现，做成一条可点的提示，不占常驻空间 */
-.back-current { margin-top: 12rpx; padding: 14rpx; border-radius: 16rpx; background: rgba(0, 122, 255, .08); color: var(--brand); font-size: calc(23rpx * var(--fs, 1)); text-align: center; }
-.back-current:active { background: rgba(0, 122, 255, .16); }
-
-/* 导入入口下沉到课表下方：这是低频操作，不该占着首屏 */
-
-.next-card {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-top: 16rpx;
-  padding: 16rpx 18rpx;
-  border-radius: 20rpx;
-  background: var(--card);
-  box-shadow: 0 6rpx 22rpx rgba(38, 57, 88, .06);
-}
-.next-card:active { background: var(--surface-7); }
-
-.next-dot { width: 18rpx; height: 18rpx; flex: none; border-radius: 6rpx; }
-.next-content { flex: 1; min-width: 0; }
-.next-title { overflow: hidden; font-size: calc(25rpx * var(--fs, 1)); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.next-title text { margin-left: 12rpx; color: var(--brand); font-size: calc(21rpx * var(--fs, 1)); font-weight: 500; }
-.next-meta { margin-top: 4rpx; overflow: hidden; color: var(--muted); font-size: calc(21rpx * var(--fs, 1)); text-overflow: ellipsis; white-space: nowrap; }
-.chevron { color: var(--ink-5); font-size: calc(34rpx * var(--fs, 1)); }
-
-/* 周次卡片与课表卡片原来直接贴在一起，中间没有任何间隙 */
-.timetable-card {
-  margin-top: 20rpx;
-  overflow: hidden;
-  border-radius: 22rpx;
-  background: var(--card);
-  box-shadow: 0 6rpx 26rpx rgba(38, 57, 88, .06);
-}
-
-/*
- * 切换周次的入场动画。
- * 原来点箭头是整块内容"啪"地换掉，很生硬；现在按方向横向滑入：
- * 往后翻从右边进来，往前翻从左边进来，位移只有 56rpx，不会看到空白。
- * 只动 transform 和 opacity，不触发重排。
- */
-.week-card.week-in-right,
-.timetable-card.week-in-right { animation: week-in-right .24s cubic-bezier(.22, .61, .36, 1); }
-
-.week-card.week-in-left,
-.timetable-card.week-in-left { animation: week-in-left .24s cubic-bezier(.22, .61, .36, 1); }
-
-@keyframes week-in-right {
-  from { opacity: .3; transform: translateX(56rpx); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes week-in-left {
-  from { opacity: .3; transform: translateX(-56rpx); }
-  to { opacity: 1; transform: translateX(0); }
-}
 
 .table-head,
 .table-body { display: flex; }
@@ -374,7 +295,7 @@
   width: 200%;
   transition: transform .3s cubic-bezier(.22, .61, .36, 1);
 }
-.view-page { width: 50%; flex: none; min-width: 0; }
+.view-page { width: 50%; flex: none; min-width: 0; background: var(--background); }
 
 .calendar {
   margin-top: 4rpx;
@@ -409,7 +330,9 @@
 .cell.selected .day-number { color: #fff; font-weight: 700; }
 .cell.selected .dot.show { background: var(--surface-1); }
 
-.day-head { display: flex; align-items: center; justify-content: space-between; padding: 26rpx 10rpx 12rpx; }
+/* 记事本的日期栏。原本也叫 .day-head，和课表表头的单元格撞了：
+   这里的 padding 与 space-between 会把表头列挤歪 */
+.day-bar { display: flex; align-items: center; justify-content: space-between; padding: 26rpx 10rpx 12rpx; }
 .day-title { font-size: calc(27rpx * var(--fs, 1)); font-weight: 600; }
 .day-action { color: var(--brand); font-size: calc(22rpx * var(--fs, 1)); }
 
