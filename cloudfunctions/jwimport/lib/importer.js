@@ -25,6 +25,7 @@ const {
 } = require('./zfClient');
 
 const { createSession } = require('./net');
+const { fetchExamList } = require('./exam');
 
 const DEFAULT_LOGIN = 'https://jwglxt.buct.edu.cn/jwglxt/xtgl/login_slogin.html';
 
@@ -68,6 +69,28 @@ function fail(kind, message, steps) {
 
 function note(steps, step, detail) {
   steps.push(Object.assign({ step }, detail));
+}
+
+/**
+ * 拼接服务端返回的 Location。
+ *
+ * 不能直接用 new URL：本校部署在 /jwglxt 这个 context path 下，
+ * 服务端有时回 /jwglxt/xtgl/xxx（带 context），有时回 xtgl/xxx（相对）。
+ * 前者交给 new URL 会被解析到 host 根路径，把 context 丢掉，跳到 404 或首页去。
+ */
+function resolveUrl(location, root) {
+  const value = String(location || '');
+  const origin = String(root || '');
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const host = (origin.match(/^https?:\/\/[^/]+/i) || [''])[0];
+  const context = (origin.match(/^https?:\/\/[^/]+(\/.*)$/i) || [])[1] || '';
+
+  if (value.charAt(0) === '/') {
+    if (context && value.indexOf(context + '/') === 0) return host + value;
+    return host + context + value;
+  }
+  return origin.replace(/\/+$/, '') + '/' + value;
 }
 
 /** 跑一遍完整链路。返回 ok=true 或带 kind 的失败对象 */
@@ -123,12 +146,24 @@ async function runOnce(params) {
       bytes: post.bytes,
       ms: post.ms,
       pageBytes: page.bytes,
-      location: post.location ? '(redirect)' : '',
+      // 跳去哪一定要记下来：跳到首页是登录成功，跳回 login_slogin 就是没进去
+      location: post.location || '',
       cookies: session.cookieNames(host)
     });
 
-    const redirectedAway =
-      post.status >= 300 && post.status < 400 && post.location && !/login_slogin/i.test(post.location);
+    const bouncedToLogin =
+      post.status >= 300 && post.status < 400 && !!post.location && /login_slogin/i.test(post.location);
+
+    /*
+     * 只要 3xx 且带 Location 就算「跳走」。
+     *
+     * 注意不能因为 Location 里有 login_slogin 就判定登录失败：
+     * 本校登录成功后会 302 回 login_slogin.html?time=xxx，那个页面自己再跳首页，
+     * 浏览器跟随即可。曾经按字符串把这个当失败，结果把正常登录全判成失败，
+     * 课表也跟着导入不了。真正算失败的是「返回 200 且是登录表单页」。
+     */
+    const redirectedAway = post.status >= 300 && post.status < 400 && !!post.location;
+    const bouncedNote = bouncedToLogin ? '（302 指向登录页，按正常跳转处理）' : '';
 
     if (!redirectedAway && looksLikeLoginPage(post.body)) {
       const failure = parseLoginFailure(post.body);
@@ -159,6 +194,28 @@ async function runOnce(params) {
 
     if (!redirectedAway && !looksLikeLoginPage(post.body) && post.status >= 400) {
       return fail('NETWORK_RETRYABLE', '登录接口返回 HTTP ' + post.status, steps);
+    }
+
+    /*
+     * 这里**不主动跟随 302**。
+     *
+     * 试过两版跟随逻辑，都出了问题：
+     *   · 按 Location 里有没有 login_slogin 判成败 —— 本校登录成功后正是 302 回
+     *     login_slogin.html?time=xxx（再由那页跳首页），于是把成功全判成失败，
+     *     课表也跟着导入不了；
+     *   · 跟到首页再判是否登录页 —— 跟随请求本身可能让服务端重发 JSESSIONID，
+     *     反而把刚建立的登录态顶掉。
+     *
+     * 登录是否真的成立，交给下一步「探活」判断就够了：直接请求课表页，
+     * 拿得回来就是登录成功，拿回登录页就报会话失效。这一步不额外制造副作用。
+     */
+    if (bouncedNote && steps) {
+      steps.push({ step: '3c-note', detail: '登录返回 302' + bouncedNote });
+    }
+
+    // 考试查询：登录链路完全一致，只是登录后换接口
+    if (params.task === 'exam') {
+      return fetchExamList({ session, root, xnm, xqm, steps });
     }
 
     // 4. 探活：区分「没权限」和「会话失效」
@@ -197,11 +254,39 @@ async function runOnce(params) {
       return fail('QUERY_DENIED', '教务系统有返回数据，但没解析出课程。可能这个学期还没排课，或学期选错了。', steps);
     }
 
+    /*
+     * 顺手把考试安排也取回来，用**同一个会话**。
+     *
+     * 这么做是因为：短时间内第二次登录经常拿不到有效会话（课表能过、考试过不去），
+     * 而导课表这次登录是有效的。多问一次接口，比让用户再登一次划算得多。
+     * 失败不影响课表：考试取不到就留空，页面照常导入。
+     */
+    let exams = [];
+    try {
+      const examSync = await fetchExamList({
+        session,
+        root,
+        xnm,
+        xqm,
+        steps,
+        maxAttempts: 1
+      });
+      if (examSync && examSync.ok) {
+        exams = examSync.exams || [];
+        note(steps, '7-exam-sync', { ok: true, exams: exams.length });
+      } else {
+        note(steps, '7-exam-sync', { skipped: (examSync && examSync.kind) || 'EMPTY' });
+      }
+    } catch (error) {
+      note(steps, '7-exam-sync', { error: error.code || error.message });
+    }
+
     return {
       ok: true,
       kind: '',
       error: '',
       courses: courses,
+      exams: exams,
       term: {
         xnm: xnm,
         xqm: xqm,
@@ -252,7 +337,8 @@ async function importTimetable(input) {
     password,
     xnm,
     xqm,
-    semester
+    semester,
+    task: source.task === 'exam' ? 'exam' : 'timetable'
   };
 
   let steps = [];
@@ -261,9 +347,23 @@ async function importTimetable(input) {
   // 只在「会话没建立」时重来一次：这类失败没走到密码校验，不会累计锁定次数
   for (let attempt = 0; attempt < 2; attempt += 1) {
     steps = [];
+    // 版本标记：诊断第一行就能确认云端跑的是哪一版代码（改代码时记得改这里）
+    steps.push({ step: '0-build', detail: 'import-1116-e' });
+
+    // 重登之前先停一下：连续两次登录挨太近，服务端容易把新会话判成异常
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 1200));
+
     try {
       const result = await runOnce(Object.assign({}, params, { steps }));
-      if (result.ok || result.kind !== 'SESSION_LOST') return result;
+      /*
+       * 只在「登录提交没被认成同一会话」时重来一次。
+       *
+       * 注意不要对 SESSION_EXPIRED 自动重登：这类失败多半是账号被临时限制
+       * 或请求落到了别的节点，再登一次等于又多一次登录，只会让限制更严。
+       * 让用户自己隔一会儿再试，比程序连着试更安全。
+       */
+      if (result.ok) return result;
+      if (result.kind !== 'SESSION_LOST') return result;
       last = result;
     } catch (error) {
       const kind = error instanceof ZfError ? error.kind : error.kind || 'NETWORK_RETRYABLE';

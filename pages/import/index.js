@@ -4,7 +4,7 @@ const { confirmReplace } = require('../../utils/confirm');
 const { currentTerm } = require('../../utils/jw/zfClient');
 const { maxWeekOf, toCourses } = require('../../utils/jw/mapper');
 const { cloudImport, isCloudReady, stepLines } = require('../../utils/jw/cloudClient');
-const { loadCourses, loadSettings, saveCourses, saveSettings } = require('../../utils/storage');
+const { loadCourses, loadSettings, saveCourses, saveSettings, saveExams } = require('../../utils/storage');
 const { refreshTimetable } = require('../../utils/nav');
 const { currentWeek } = require('../../utils/date');
 const { formatWeeks } = require('../../utils/weeks');
@@ -171,6 +171,11 @@ Page({
     }
 
     const rows = result.courses || [];
+
+    // 云函数这次登录顺手把考试也取回来了，存下来，考试页就不用再登一次
+    if (Array.isArray(result.exams) && result.exams.length) {
+      saveExams(result.exams);
+    }
     const settings = loadSettings();
     const totalWeeks = Math.max(Number(settings.totalWeeks) || 18, maxWeekOf(rows));
 

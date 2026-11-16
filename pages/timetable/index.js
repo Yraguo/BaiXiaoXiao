@@ -895,8 +895,8 @@ const pageLogic = {
     }
     // 与切周同一套节奏：旧月份先飘出淡掉，新月份再从反方向飘回来
     this.switching = true;
-    // 往后翻（delta > 0）内容向上走，往前翻向下走，和切周的方向感一致
-    const dir = delta > 0 ? 'up' : 'down';
+    // 往后翻（delta > 0）整块内容向左滑走，往前翻向右滑走，与左右手势方向一致
+    const dir = delta > 0 ? 'left' : 'right';
     // 旧格子留一层影子垫在下面，新月份在它上面淡入 —— 中间不会出现空白帧
     this.setData({ ghostCells: this.data.cells, ghostDir: dir, monthAnim: '' });
     apply();

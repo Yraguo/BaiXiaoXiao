@@ -1,0 +1,100 @@
+<page-meta page-style="{{pageStyle}}"></page-meta>
+<view class="exam-page">
+  <view class="exam-hero">
+    <view class="exam-title">考试查询</view>
+    <view class="exam-sub">用教务系统账号查询考试安排。密码只在本次查询里经云函数转发给学校，不保存、不写日志。</view>
+  </view>
+
+  <view wx:if="{{!exams.length}}" class="form-card">
+    <view class="field">
+      <text class="field-label">学号</text>
+      <input
+        class="field-input"
+        value="{{username}}"
+        bindinput="updateUsername"
+        placeholder="教务系统学号"
+        placeholder-class="field-placeholder"
+      />
+    </view>
+
+    <view class="field">
+      <text class="field-label">密码</text>
+      <input
+        class="field-input"
+        password
+        value="{{password}}"
+        bindinput="updatePassword"
+        placeholder="教务系统密码"
+        placeholder-class="field-placeholder"
+      />
+    </view>
+
+    <view class="field-row">
+      <view class="field half">
+        <text class="field-label">学年</text>
+        <picker mode="selector" range="{{yearOptions}}" value="{{yearIndex}}" bindchange="changeYear">
+          <view class="picker-value">
+            <text>{{yearOptions[yearIndex]}}</text>
+            <text class="chevron">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="field half">
+        <text class="field-label">学期</text>
+        <picker mode="selector" range="{{semesterLabels}}" value="{{semesterIndex}}" bindchange="changeSemester">
+          <view class="picker-value">
+            <text>{{semesterLabels[semesterIndex]}}</text>
+            <text class="chevron">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <button class="primary-button query-button" bindtap="startQuery" disabled="{{loading}}">
+      {{loading ? loadingText : '查询考试安排'}}
+    </button>
+  </view>
+
+  <view wx:if="{{error}}" class="error-card">
+    <view class="error-title">没能查到考试安排</view>
+    <view class="error-copy">{{error}}</view>
+    <view wx:if="{{errorKind === 'QUERY_DENIED'}}" class="error-steps">
+      <text class="error-step">1. 先确认教务系统里「考试信息查询」这个功能你能打开</text>
+      <text class="error-step">2. 打不开说明账号没有这个权限，找教务老师开通</text>
+      <text class="error-step">3. 能打开但还是失败，把下面的诊断信息发给开发者</text>
+    </view>
+    <view wx:if="{{errorKind === 'SESSION_EXPIRED' || errorKind === 'INVALID_CREDENTIALS'}}" class="error-steps">
+      <text class="error-step">1. 密码连续错 5 次会锁定 30 分钟，别反复重试</text>
+      <text class="error-step">2. 先用电脑浏览器确认密码能登上教务系统</text>
+      <text class="error-step">3. 确认后回来再查一次</text>
+    </view>
+    <view wx:if="{{steps.length}}" class="diag-toggle" bindtap="toggleSteps">
+      {{showSteps ? '收起诊断信息' : '查看诊断信息（排查用）'}}
+    </view>
+    <view wx:if="{{showSteps}}" class="diag-body">
+      <text wx:for="{{steps}}" wx:key="*this" class="diag-line">{{item}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{exams.length}}" class="result">
+    <view wx:if="{{syncedLabel}}" class="sync-note">以下数据来自 {{syncedLabel}} 导入课表时的同步，想拿最新的点「再查一次」</view>
+
+    <view class="result-head">
+      <view class="result-title">{{termText || '考试安排'}}</view>
+      <view class="result-sub">共 {{exams.length}} 场考试</view>
+    </view>
+
+    <view wx:for="{{exams}}" wx:key="key" class="exam-item">
+      <view class="exam-name">{{item.name}}</view>
+      <view wx:if="{{item.type}}" class="exam-type">{{item.type}}</view>
+      <view class="exam-time">{{item.time || '时间待定'}}</view>
+      <view wx:if="{{item.room || item.campus || item.seat || item.form}}" class="exam-meta">
+        {{item.campus}}{{item.campus && item.room ? ' · ' : ''}}{{item.room}}{{item.seat ? ' · 座位 ' + item.seat : ''}}{{item.form ? ' · ' + item.form : ''}}
+      </view>
+      <view wx:if="{{item.remark}}" class="exam-remark">{{item.remark}}</view>
+    </view>
+
+    <button class="secondary-button reset-button" bindtap="reset">再查一次</button>
+  </view>
+</view>

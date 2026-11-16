@@ -520,24 +520,25 @@ test('课表行高：JS 的 ROW_HEIGHT 与 wxss 的格子高度必须一致', ()
   assert.equal(periodCell, rowHeight, '.period-cell 的高度要等于 ROW_HEIGHT');
 });
 
-test('换月只飘纵向，绝不做横向位移（横向会把边缘日期切掉半截）', () => {
+test('换月做横向滑移，靠容器裁剪保证边缘日期不被切掉', () => {
   const wxss = fs.readFileSync(path.join(root, 'pages/timetable/index.wxss'), 'utf8');
 
   const grab = (name) => (wxss.match(new RegExp(`@keyframes ${name} \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
-  ['month-in-up', 'month-in-down', 'month-ghost-up', 'month-ghost-down'].forEach((name) => {
+  ['month-in-left', 'month-in-right', 'month-ghost-left', 'month-ghost-right'].forEach((name) => {
     const block = grab(name);
     assert.ok(block, `缺少 @keyframes ${name}`);
-    // 横向位移哪怕只有 8%（约 48px），最左/最右那列日期也会被卡片边切掉半截，
-    // 看起来就是「屏幕左边多了一条边」——这个坑踩过两次
-    assert.doesNotMatch(block, /translateX/, `${name} 里不能有横向位移，会把边缘日期切掉`);
-    // 纵向也别飘太远：格子高 94rpx，飘出 24rpx 以上就会切到数字
-    const drift = Number((block.match(/translateY\((-?\d+)rpx\)/) || [])[1] || 0);
-    assert.ok(Math.abs(drift) <= 24, `${name} 纵向漂移 ${drift}rpx 太大，会顶到格子边缘`);
+    // 滑动方向要和左右手势对上，否则滑一下动画却上下刷，观感很割裂
+    assert.match(block, /translateX/, `${name} 要做横向位移`);
+    const drift = Number((block.match(/translateX\((-?\d+)rpx\)/) || [])[1] || 0);
+    // 位移过大整块日历会晃得厉害，56rpx 左右足够看出方向
+    assert.ok(Math.abs(drift) <= 64, `${name} 横向位移 ${drift}rpx 太大`);
   });
 
-  // 旧的两套横向位移关键帧已经删掉，别又被人加回来
-  assert.doesNotMatch(wxss, /@keyframes grid-leave-left/, '别再给日历网格加横向位移');
-  assert.doesNotMatch(wxss, /@keyframes grid-enter-right/, '别再给日历网格加横向位移');
+  // 横向滑移的前提是容器裁掉越界，否则最左/最右那列日期会被顶出卡片，看着像屏幕左边多一条边
+  assert.match(wxss, /\.month-body \{[^}]*overflow: hidden/, '.month-body 必须裁剪横向越界');
+
+  assert.doesNotMatch(wxss, /@keyframes grid-leave-left/, '别再给日历网格加另一套横向位移');
+  assert.doesNotMatch(wxss, /@keyframes grid-enter-right/, '别再给日历网格加另一套横向位移');
 });
 
 test('换月节奏要和切周同一档，不能快到像闪一下', () => {

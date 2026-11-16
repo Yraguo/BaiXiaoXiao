@@ -63,7 +63,9 @@ exports.main = async (event) => {
   });
 
   try {
-    return await Promise.race([importTimetable(input), timeout]);
+    const task = action === 'exam' ? 'exam' : 'timetable';
+    const payload = Object.assign({}, input, { task });
+    return await Promise.race([importTimetable(payload), timeout]);
   } catch (error) {
     return {
       ok: false,

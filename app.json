@@ -6,7 +6,8 @@
     "pages/settings/index",
     "pages/import/index",
     "pages/pdfimport/index",
-    "pages/secondclass/edit"
+    "pages/secondclass/edit",
+    "pages/exam/index"
   ],
   "window": {
     "navigationBarTitleText": "百小鸮",

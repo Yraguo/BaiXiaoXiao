@@ -78,7 +78,7 @@ function createSession(options) {
     });
   }
 
-  function request(url, config) {
+  function once(url, config) {
     const cfg = config || {};
     const host = hostOf(url);
     if (!host) return Promise.reject(Object.assign(new Error('地址不正确'), { kind: 'VALIDATION_FAILED' }));
@@ -148,6 +148,24 @@ function createSession(options) {
 
       if (payload) req.write(payload);
       req.end();
+    });
+  }
+
+  /*
+   * 连接层错误自动重试一次。
+   *
+   * keepAlive 的连接可能在两次请求之间被服务端关掉，复用时直接 ECONNRESET。
+   * 这类错误发生在 TCP/TLS 握手阶段，请求根本没有送到应用层，所以重试是安全的：
+   * 不会重复提交表单，也不会多算一次登录失败。
+   *
+   * 重试前先销毁连接池，确保这一次是全新的 TCP —— 否则会又挑到同一条死连接。
+   */
+  function request(url, config) {
+    return once(url, config).catch((error) => {
+      const code = String((error && error.code) || '');
+      if (!/ECONNRESET|EPIPE|ECONNABORTED|ETIMEDOUT/i.test(code)) throw error;
+      agent.destroy();
+      return once(url, config);
     });
   }
 
